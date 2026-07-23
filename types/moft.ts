@@ -10,7 +10,6 @@ export type CategoryId =
 
 export type OfferCategory = Exclude<CategoryId, "all">;
 export type PickupPeriod = "evening" | "late" | "tomorrow";
-export type OfferTone = "pistachio" | "apricot" | "berry" | "honey" | "sky" | "plum" | "tomato" | "mint";
 
 export type Offer = {
   id: string;
@@ -31,8 +30,7 @@ export type Offer = {
   originalPrice: number;
   price: number;
   allergens: string[];
-  visual: string;
-  tone: OfferTone;
+  image: string;
   endingSoon?: boolean;
   popular?: boolean;
 };

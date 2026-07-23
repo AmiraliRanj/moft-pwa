@@ -4,7 +4,8 @@ export type IconName =
   | "home" | "search" | "bag" | "user" | "pin" | "heart" | "arrow" | "spark"
   | "clock" | "star" | "sliders" | "list" | "map" | "close" | "minus" | "plus"
   | "check" | "leaf" | "calendar" | "route" | "bell" | "moon" | "sun" | "info"
-  | "wifi" | "chevron" | "trash" | "store" | "share";
+  | "wifi" | "chevron" | "trash" | "store" | "share"
+  | "grid" | "coffee" | "utensils" | "pizza" | "bread" | "cake" | "apple" | "cart";
 
 const paths: Record<IconName, ReactNode> = {
   home: <><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10.5V20h13v-9.5"/><path d="M9.5 20v-6h5v6"/></>,
@@ -35,7 +36,15 @@ const paths: Record<IconName, ReactNode> = {
   chevron: <path d="m9 5 7 7-7 7"/>,
   trash: <><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13M10 11v5M14 11v5"/></>,
   store: <><path d="M4 10v10h16V10M3 10l2-6h14l2 6"/><path d="M3 10a3 3 0 0 0 5 2 3 3 0 0 0 5 0 3 3 0 0 0 5 0 3 3 0 0 0 3-2M9 20v-5h6v5"/></>,
-  share: <><circle cx="18" cy="5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="19" r="2.5"/><path d="m8.2 10.8 7.6-4.5M8.2 13.2l7.6 4.5"/></>
+  share: <><circle cx="18" cy="5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="19" r="2.5"/><path d="m8.2 10.8 7.6-4.5M8.2 13.2l7.6 4.5"/></>,
+  grid: <><rect x="4" y="4" width="6" height="6" rx="1.5"/><rect x="14" y="4" width="6" height="6" rx="1.5"/><rect x="4" y="14" width="6" height="6" rx="1.5"/><rect x="14" y="14" width="6" height="6" rx="1.5"/></>,
+  coffee: <><path d="M5 8h11v6a5 5 0 0 1-5 5H10a5 5 0 0 1-5-5V8Z"/><path d="M16 10h1a3 3 0 0 1 0 6h-2M8 4v2M12 4v2"/></>,
+  utensils: <><path d="M7 3v7M4.5 3v4.5A2.5 2.5 0 0 0 7 10a2.5 2.5 0 0 0 2.5-2.5V3M7 10v11"/><path d="M16 3v18M16 3c3 2 3 7 0 9"/></>,
+  pizza: <><path d="m12 3 9 18H3L12 3Z"/><path d="M7 13c3 1.5 7 1.5 10 0"/><circle cx="11" cy="10" r="1"/><circle cx="14" cy="16" r="1"/></>,
+  bread: <><path d="M5 19c-2-1-2.5-4-.5-5.5C2.5 9 5 5 9 5c2-3 7-2 8 1 4 0 5 5 2 7 2 4-1 7-4 6H5Z"/><path d="m8 9 2 2M12 7l2 2M15 10l2 2"/></>,
+  cake: <><path d="M5 10h14v10H5V10Z"/><path d="M4 10c2-3 4 1 6-2 2 3 4-1 6 2 1-2 3-1 4 0M12 4v4M10 4h4"/></>,
+  apple: <><path d="M12 7c-5-4-9 0-8 6 1 5 4 8 8 6 4 2 7-1 8-6 1-6-3-10-8-6Z"/><path d="M12 7c0-3 2-5 5-5M12 7c-2-2-4-2-6-1"/></>,
+  cart: <><path d="M3 4h2l2.2 10.5h9.8l2-7H6"/><circle cx="9" cy="19" r="1.5"/><circle cx="17" cy="19" r="1.5"/></>
 };
 
 export function Icon({ name, filled = false }: { name: IconName; filled?: boolean }) {

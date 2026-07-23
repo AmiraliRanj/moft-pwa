@@ -13,6 +13,10 @@ export function money(value: number) {
   return `${faNumber.format(value)} تومان`;
 }
 
+export function moneyCompact(value: number) {
+  return `${faNumber.format(Math.round(value / 1000))} هزار تومان`;
+}
+
 export function discountPercent(originalPrice: number, price: number) {
   return Math.round((1 - price / originalPrice) * 100);
 }

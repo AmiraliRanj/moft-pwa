@@ -30,7 +30,7 @@ export function DialogShell({ titleId, label, onClose, children, size = "sheet" 
 
   return (
     <div className={`dialog-layer ${size === "center" ? "centered" : ""}`} onMouseDown={onBackdrop}>
-      <section ref={dialogRef} className={`dialog-panel ${size}`} role="dialog" aria-modal="true" aria-labelledby={titleId} aria-label={label}>
+      <section ref={dialogRef} className={`dialog-panel glass-strong ${size}`} role="dialog" aria-modal="true" aria-labelledby={titleId} aria-label={label}>
         <button ref={closeRef} className="dialog-close" type="button" onClick={onClose} aria-label="بستن"><Icon name="close" /></button>
         {children}
       </section>

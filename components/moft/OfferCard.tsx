@@ -1,27 +1,26 @@
+import { FoodImage } from "@/components/moft/FoodImage";
 import { Icon } from "@/components/moft/Icon";
-import { decimalFa, discountPercent, distanceFa, money, numberFa } from "@/lib/moft-format";
+import { decimalFa, distanceFa, moneyCompact, numberFa } from "@/lib/moft-format";
 import type { Offer } from "@/types/moft";
 
-export function OfferCard({ offer, favorite, onFavorite, onSelect, compact = false }: { offer: Offer; favorite: boolean; onFavorite: (id: string) => void; onSelect: (offer: Offer) => void; compact?: boolean }) {
+export function OfferCard({ offer, favorite, onFavorite, onSelect, compact = false, priority = false }: { offer: Offer; favorite: boolean; onFavorite: (id: string) => void; onSelect: (offer: Offer) => void; compact?: boolean; priority?: boolean }) {
   return (
-    <article className={`offer-card ${compact ? "compact" : ""}`}>
+    <article className={`offer-card glass-subtle ${compact ? "compact" : ""}`}>
       <button className="offer-card-main" type="button" onClick={() => onSelect(offer)} aria-label={`مشاهده ${offer.title} از ${offer.merchantName}`}>
-        <div className={`offer-visual tone-${offer.tone}`}>
-          <span>{offer.visual}</span>
-          <small>جعبهٔ سورپرایزی</small>
-          <em>{discountPercent(offer.originalPrice, offer.price)}٪</em>
+        <div className="offer-visual">
+          <FoodImage src={offer.image} sizes={compact ? "320px" : "(max-width: 700px) 100vw, 340px"} priority={priority} />
+          <span className={`availability-badge ${offer.quantityLeft <= 2 ? "low" : ""}`}>{numberFa(offer.quantityLeft)} جعبه مانده</span>
         </div>
         <div className="offer-body">
           <div className="offer-topline">
             <span>{offer.categoryLabel}</span>
-            <span className="rating"><Icon name="star" filled /> {decimalFa(offer.rating)} <i>({numberFa(offer.reviewCount)})</i></span>
+            <span className="rating"><Icon name="star" filled /> {decimalFa(offer.rating)} <i>از {numberFa(offer.reviewCount)} نظر</i></span>
           </div>
           <h3>{offer.merchantName}</h3>
           <p>{offer.title}</p>
           <div className="pickup-line"><span><Icon name="clock" /> {offer.pickup}</span><span><Icon name="pin" /> {distanceFa(offer.distanceKm)}</span></div>
           <div className="price-line">
-            <div><del>{money(offer.originalPrice)}</del><strong>{money(offer.price)}</strong></div>
-            <span className={offer.quantityLeft <= 2 ? "low" : ""}>{numberFa(offer.quantityLeft)} جعبه مانده</span>
+            <div><del>ارزش {moneyCompact(offer.originalPrice)}</del><strong>{moneyCompact(offer.price)}</strong></div>
           </div>
         </div>
       </button>
@@ -33,5 +32,5 @@ export function OfferCard({ offer, favorite, onFavorite, onSelect, compact = fal
 }
 
 export function OfferList({ offers, favorites, onFavorite, onSelect }: { offers: Offer[]; favorites: Set<string>; onFavorite: (id: string) => void; onSelect: (offer: Offer) => void }) {
-  return <div className="offer-list">{offers.map((offer) => <OfferCard key={offer.id} offer={offer} favorite={favorites.has(offer.id)} onFavorite={onFavorite} onSelect={onSelect} />)}</div>;
+  return <div className="offer-list">{offers.map((offer, index) => <OfferCard key={offer.id} offer={offer} favorite={favorites.has(offer.id)} onFavorite={onFavorite} onSelect={onSelect} priority={index === 0} />)}</div>;
 }

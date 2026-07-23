@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
+import "@fontsource-variable/vazirmatn";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -15,8 +16,7 @@ export const metadata: Metadata = {
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
-    title: "مفت",
-    statusBarStyle: "black-translucent"
+    title: "مفت"
   },
   formatDetection: { telephone: false },
   icons: {
@@ -31,16 +31,39 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  viewportFit: "cover",
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f4f2ea" },
-    { media: "(prefers-color-scheme: dark)", color: "#101814" }
-  ]
+  viewportFit: "cover"
 };
+
+const themeBootScript = `
+(() => {
+  const root = document.documentElement;
+  try {
+    const preference = localStorage.getItem("moft-theme-v2") || "system";
+    const hour = new Date().getHours();
+    const automatic = hour >= 7 && hour < 19 ? "light" : "dark";
+    const resolved = preference === "system" ? automatic : preference;
+    root.dataset.theme = resolved;
+    root.style.colorScheme = resolved;
+    const themeMeta = document.getElementById("theme-color");
+    const statusMeta = document.getElementById("apple-status-bar-style");
+    if (themeMeta) themeMeta.setAttribute("content", resolved === "dark" ? "#07110C" : "#F4F8F3");
+    if (statusMeta) statusMeta.setAttribute("content", resolved === "dark" ? "black-translucent" : "default");
+  } catch {
+    const resolved = new Date().getHours() >= 7 && new Date().getHours() < 19 ? "light" : "dark";
+    root.dataset.theme = resolved;
+    root.style.colorScheme = resolved;
+  }
+})();
+`;
 
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
   return (
-    <html lang="fa" dir="rtl">
+    <html lang="fa" dir="rtl" suppressHydrationWarning>
+      <head>
+        <meta id="theme-color" name="theme-color" content="#F4F8F3" />
+        <meta id="apple-status-bar-style" name="apple-mobile-web-app-status-bar-style" content="default" />
+        <script dangerouslySetInnerHTML={{ __html: themeBootScript }} />
+      </head>
       <body>
         {children}
         <ServiceWorkerRegister />

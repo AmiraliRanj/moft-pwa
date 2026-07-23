@@ -5,6 +5,7 @@ import { BottomNavigation } from "@/components/moft/BottomNavigation";
 import { CategorySelector } from "@/components/moft/CategorySelector";
 import { DialogShell } from "@/components/moft/DialogShell";
 import { EmptyState } from "@/components/moft/EmptyState";
+import { FoodImage } from "@/components/moft/FoodImage";
 import { Icon } from "@/components/moft/Icon";
 import { LoadingSkeleton } from "@/components/moft/LoadingSkeleton";
 import { OfferCard, OfferList } from "@/components/moft/OfferCard";
@@ -48,6 +49,7 @@ export default function MoftPreview() {
   const [storageWarning, setStorageWarning] = useState(false);
   const [online, setOnline] = useState(true);
   const [theme, setTheme] = useState<ThemePreference>("system");
+  const [themeReady, setThemeReady] = useState(false);
   const [notifications, setNotifications] = useState(true);
   const [installPrompt, setInstallPrompt] = useState<InstallPromptEvent | null>(null);
   const [installed, setInstalled] = useState(false);
@@ -85,6 +87,7 @@ export default function MoftPreview() {
       if (savedReservations) setReservations(savedReservations);
       if (savedFavorites) setFavorites(new Set(savedFavorites));
       if (savedTheme && ["light", "dark", "system"].includes(savedTheme)) setTheme(savedTheme);
+      setThemeReady(true);
       if (invalidStorage) setStorageWarning(true);
       if (shortcut === "discover" || shortcut === "reservations") setTab(shortcut);
       setOnline(navigator.onLine);
@@ -109,12 +112,30 @@ export default function MoftPreview() {
   }, []);
 
   useEffect(() => {
-    const systemDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    const resolved = theme === "system" ? (systemDark ? "dark" : "light") : theme;
-    document.documentElement.dataset.theme = resolved;
-    document.documentElement.style.colorScheme = resolved;
+    if (!themeReady) return;
+    const applyTheme = () => {
+      const hour = new Date().getHours();
+      const resolved = theme === "system" ? (hour >= 7 && hour < 19 ? "light" : "dark") : theme;
+      const root = document.documentElement;
+      root.dataset.theme = resolved;
+      root.style.colorScheme = resolved;
+      const themeMeta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
+      const statusMeta = document.querySelector<HTMLMetaElement>('meta[name="apple-mobile-web-app-status-bar-style"]');
+      if (themeMeta) themeMeta.content = resolved === "dark" ? "#07110C" : "#F4F8F3";
+      if (statusMeta) statusMeta.content = resolved === "dark" ? "black-translucent" : "default";
+    };
+    applyTheme();
     localStorage.setItem(storageKeys.theme, theme);
-  }, [theme]);
+    const onVisibility = () => { if (document.visibilityState === "visible") applyTheme(); };
+    const hourTimer = window.setInterval(applyTheme, 60_000);
+    document.addEventListener("visibilitychange", onVisibility);
+    const readyFrame = window.requestAnimationFrame(() => { document.documentElement.dataset.themeReady = "true"; });
+    return () => {
+      window.clearInterval(hourTimer);
+      window.cancelAnimationFrame(readyFrame);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
+  }, [theme, themeReady]);
 
   const activeReservations = reservations.filter((item) => item.status === "active");
   const historyReservations = reservations.filter((item) => item.status !== "active");
@@ -249,7 +270,7 @@ export default function MoftPreview() {
       {islandVisible && successReservation && <div className="island-notice" role="status"><span className="island-check"><Icon name="check" /></span><span><strong>رزرو آماده شد</strong><small>کد دریافت {successReservation.code}</small></span></div>}
 
       <section className="app-canvas">
-        <header className="topbar">
+        <header className="topbar glass-medium">
           <button className="location-button" type="button" onClick={() => setLayer("location")} aria-label={`تغییر موقعیت فعلی؛ ${location}`}>
             <span className="location-icon"><Icon name="pin" /></span>
             <span><small>نزدیک شما</small><strong>{location}</strong></span>
@@ -294,15 +315,16 @@ function HomePage({ query, setQuery, category, setCategory, offers, allOffers, f
       <p className="greeting">سلام امیر، عصر بخیر 👋</p>
       <section className="hero-card">
         <div className="hero-copy">
-          <span className="mini-pill"><Icon name="leaf" /> انتخاب خوبِ امروز</span>
-          <h1>خوب‌ها رو قبل از دورریز بردار.</h1>
-          <p>جعبه‌های غافلگیرکنندهٔ غذای سالم با قیمت کمتر و دریافت حضوری.</p>
-          <button type="button" onClick={onDiscover}>فرصت‌های نزدیک <Icon name="arrow" /></button>
+          <h1>غذای خوب، قبل از دورریز</h1>
+          <p>جعبه‌های فروش‌نرفته را با قیمت کمتر رزرو کن و همان روز تحویل بگیر.</p>
+          <button type="button" onClick={onDiscover}>دیدن فرصت‌های نزدیک <Icon name="arrow" /></button>
         </div>
-        <div className="hero-art" aria-hidden="true"><span className="food food-one">🥐</span><span className="food food-two">🍏</span><span className="food food-three">🥖</span><i>م</i></div>
+        <div className="hero-image" aria-hidden="true">
+          <FoodImage src="/images/offers/offer-16.webp" sizes="(max-width: 700px) 92vw, 440px" priority />
+        </div>
       </section>
 
-      {!installed && installPrompt && <button className="install-banner" type="button" onClick={onInstall}><span className="install-icon">م</span><span><strong>مفت را نصب کن</strong><small>سریع‌تر بازش کن و آفلاین هم ببین</small></span><Icon name="arrow" /></button>}
+      {!installed && installPrompt && <button className="install-banner glass-subtle" type="button" onClick={onInstall}><span className="install-icon">م</span><span><strong>مفت را نصب کن</strong><small>سریع‌تر بازش کن و آفلاین هم ببین</small></span><Icon name="arrow" /></button>}
 
       <SearchBar value={query} onChange={setQuery} placeholder="کافه، رستوران یا محله..." />
       <CategorySelector value={category} onChange={setCategory} />
@@ -326,10 +348,10 @@ function HomePage({ query, setQuery, category, setCategory, offers, allOffers, f
 
           <section className="content-section" aria-labelledby="popular-title">
             <SectionHeading eyebrow="محبوب این هفته" title="همسایه‌های خوش‌سلیقه" id="popular-title" />
-            <div className="store-strip">{popular.map((offer) => <button type="button" key={offer.id} onClick={() => onSelect(offer)}><span className={`store-logo tone-${offer.tone}`}>{offer.visual}</span><span><strong>{offer.merchantName}</strong><small>{offer.neighborhood} · امتیاز {decimalFa(offer.rating)}</small></span><Icon name="chevron" /></button>)}</div>
+            <div className="store-strip">{popular.map((offer) => <button className="glass-subtle" type="button" key={offer.id} onClick={() => onSelect(offer)}><span className="store-logo"><FoodImage src={offer.image} sizes="52px" /></span><span><strong>{offer.merchantName}</strong><small>{offer.neighborhood} · امتیاز {decimalFa(offer.rating)}</small></span><Icon name="chevron" /></button>)}</div>
           </section>
 
-          <section className="impact-home-card">
+          <section className="impact-home-card glass-subtle">
             <div><span className="impact-leaf"><Icon name="leaf" /></span><p className="eyebrow">اثر کوچک، حال خوب بزرگ</p><h2>تا امروز {numberFa(savedMeals || 1)} وعده از دورریز دور شده.</h2><p>{savedMeals ? "این عدد با رزروهای نمایشی تو به‌روز می‌شود." : "اولین جعبه‌ات می‌تواند شروع این مسیر باشد."}</p></div>
             <div className="impact-ring"><strong>{numberFa((savedMeals || 1) * 11)}</strong><small>لیتر آب<br />تخمینی</small></div>
           </section>
@@ -363,7 +385,7 @@ function MapPreview({ offers, onSelect }: { offers: Offer[]; onSelect: (offer: O
     <div className="map-preview" aria-label="پیش‌نمایش نمایشی موقعیت فروشگاه‌ها">
       <div className="map-streets" aria-hidden="true"><i /><i /><i /><i /></div>
       <div className="map-user"><span /><small>شما</small></div>
-      {offers.slice(0, 8).map((offer, index) => <button key={offer.id} type="button" className="map-pin" style={{ insetInlineStart: `${14 + (index * 23) % 72}%`, top: `${17 + (index * 31) % 62}%` }} onClick={() => onSelect(offer)} aria-label={`نمایش ${offer.merchantName}`}><span>{offer.visual}</span><small>{money(offer.price)}</small></button>)}
+      {offers.slice(0, 8).map((offer, index) => <button key={offer.id} type="button" className="map-pin" style={{ insetInlineStart: `${14 + (index * 23) % 72}%`, top: `${17 + (index * 31) % 62}%` }} onClick={() => onSelect(offer)} aria-label={`نمایش ${offer.merchantName}`}><span><FoodImage src={offer.image} sizes="44px" /></span><small>{money(offer.price)}</small></button>)}
       <div className="map-note"><Icon name="info" /> این نقشه برای ارائه، نمایشی است.</div>
     </div>
   );
@@ -383,7 +405,7 @@ function ReservationsPage({ active, history, view, setView, onCancel, onDiscover
 function ReservationCard({ reservation, onCancel, onDirections }: { reservation: Reservation; onCancel: (id: string) => void; onDirections: () => void }) {
   const status = reservation.status === "active" ? "آمادهٔ دریافت" : reservation.status === "collected" ? "دریافت شد" : reservation.status === "cancelled" ? "لغو شد" : "زمان دریافت گذشته";
   return (
-    <article className={`reservation-card status-${reservation.status}`}>
+    <article className={`reservation-card glass-subtle status-${reservation.status}`}>
       <div className="reservation-status"><span className="status-dot" /> {status}</div>
       <h2>{reservation.merchantName}</h2><p>{reservation.title} · {numberFa(reservation.quantity)} جعبه</p>
       <div className="reservation-details"><span><Icon name="clock" /> {reservation.pickup}</span><span><Icon name="pin" /> {reservation.address}</span></div>
@@ -400,13 +422,13 @@ function ProfilePage({ savedMeals, favoriteOffers, reservations, theme, setTheme
   return (
     <div className="page-content secondary-page profile-page">
       <div className="profile-head"><div className="avatar">ا</div><div><p>همراه سبز مفت</p><h1>امیر رضایی</h1></div><span>نسخهٔ نمایشی</span></div>
-      <section className="impact-card"><div className="impact-card-head"><span><Icon name="leaf" /></span><div><p>اثر تو تا امروز</p><h2>{numberFa(savedMeals)} وعده نجات‌یافته</h2></div></div><div className="impact-grid"><span><strong>{decimalFa(preventedWaste)}</strong><small>کیلو غذای برآوردی</small></span><span><strong>{decimalFa(co2)}</strong><small>کیلو CO₂ برآوردی</small></span><span><strong>{numberFa(savedMeals * 11)}</strong><small>لیتر آب برآوردی</small></span></div><p className="estimate-note">این اعداد برای ارائه، تقریبی‌اند و ادعای زیست‌محیطی قطعی نیستند.</p></section>
+      <section className="impact-card glass-subtle"><div className="impact-card-head"><span><Icon name="leaf" /></span><div><p>اثر تو تا امروز</p><h2>{numberFa(savedMeals)} وعده نجات‌یافته</h2></div></div><div className="impact-grid"><span><strong>{decimalFa(preventedWaste)}</strong><small>کیلو غذای برآوردی</small></span><span><strong>{decimalFa(co2)}</strong><small>کیلو CO₂ برآوردی</small></span><span><strong>{numberFa(savedMeals * 11)}</strong><small>لیتر آب برآوردی</small></span></div><p className="estimate-note">این اعداد برای ارائه، تقریبی‌اند و ادعای زیست‌محیطی قطعی نیستند.</p></section>
 
-      <section className="profile-section"><SectionHeading eyebrow="ذخیره‌شده‌ها" title="فروشگاه‌های محبوب" />{favoriteOffers.length ? <div className="favorite-stores">{favoriteOffers.slice(0, 5).map((offer) => <button type="button" onClick={() => onOpenOffer(offer)} key={offer.id}><span className={`store-logo tone-${offer.tone}`}>{offer.visual}</span><small>{offer.merchantName}</small></button>)}</div> : <div className="inline-empty"><Icon name="heart" /><span>هنوز فروشگاهی را ذخیره نکردی.</span></div>}</section>
+      <section className="profile-section glass-subtle"><SectionHeading eyebrow="ذخیره‌شده‌ها" title="فروشگاه‌های محبوب" />{favoriteOffers.length ? <div className="favorite-stores">{favoriteOffers.slice(0, 5).map((offer) => <button type="button" onClick={() => onOpenOffer(offer)} key={offer.id}><span className="store-logo"><FoodImage src={offer.image} sizes="60px" /></span><small>{offer.merchantName}</small></button>)}</div> : <div className="inline-empty"><Icon name="heart" /><span>هنوز فروشگاهی را ذخیره نکردی.</span></div>}</section>
 
-      <section className="profile-section"><p className="eyebrow">ظاهر برنامه</p><h2>حال‌وهوای دلخواهت</h2><div className="theme-picker" role="radiogroup" aria-label="انتخاب پوسته"><button type="button" role="radio" aria-checked={theme === "light"} className={theme === "light" ? "active" : ""} onClick={() => setTheme("light")}><Icon name="sun" /> روشن</button><button type="button" role="radio" aria-checked={theme === "dark"} className={theme === "dark" ? "active" : ""} onClick={() => setTheme("dark")}><Icon name="moon" /> تیره</button><button type="button" role="radio" aria-checked={theme === "system"} className={theme === "system" ? "active" : ""} onClick={() => setTheme("system")}>خودکار</button></div></section>
+      <section className="profile-section glass-subtle"><p className="eyebrow">ظاهر برنامه</p><h2>حال‌وهوای دلخواهت</h2><div className="theme-picker" role="radiogroup" aria-label="انتخاب پوسته"><button type="button" role="radio" aria-checked={theme === "light"} className={theme === "light" ? "active" : ""} onClick={() => setTheme("light")}><Icon name="sun" /> روشن</button><button type="button" role="radio" aria-checked={theme === "dark"} className={theme === "dark" ? "active" : ""} onClick={() => setTheme("dark")}><Icon name="moon" /> تاریک</button><button type="button" role="radio" aria-checked={theme === "system"} className={theme === "system" ? "active" : ""} onClick={() => setTheme("system")}>خودکار</button></div><p className="theme-note">حالت خودکار از ساعت ۷ تا ۱۹ روشن و پس از آن تاریک است.</p></section>
 
-      <div className="settings-card">
+      <div className="settings-card glass-subtle">
         <button type="button" onClick={() => setNotifications(!notifications)}><span className="setting-icon"><Icon name="bell" /></span><div><strong>یادآوری زمان دریافت</strong><small>اعلان‌ها در این دمو شبیه‌سازی می‌شوند</small></div><span className={`switch ${notifications ? "on" : ""}`} aria-label={notifications ? "روشن" : "خاموش"}><i /></span></button>
         <button type="button" onClick={onInstall}><span className="setting-icon"><Icon name="share" /></span><div><strong>{installed ? "مفت روی دستگاه نصب است" : "نصب برنامه"}</strong><small>{installed ? "اجرای مستقل فعال است" : "افزودن به صفحهٔ اصلی"}</small></div><Icon name="chevron" /></button>
         <button type="button" onClick={() => showToast("تنظیمات آلرژی در نسخهٔ بعدی دمو اضافه می‌شود؛ فعلاً هشدار هر جعبه را بخوان.")}><span className="setting-icon">⚠️</span><div><strong>آلرژی‌ها و ترجیحات</strong><small>هشدارهای هر جعبه را بررسی کن</small></div><Icon name="chevron" /></button>
@@ -422,7 +444,7 @@ function OfferDetails({ offer, favorite, onFavorite, onClose, onReserve, related
   return (
     <DialogShell titleId="offer-title" onClose={onClose}>
       <button className={`dialog-favorite ${favorite ? "active" : ""}`} type="button" onClick={() => onFavorite(offer.id)} aria-label={favorite ? "حذف از علاقه‌مندی‌ها" : "افزودن به علاقه‌مندی‌ها"}><Icon name="heart" filled={favorite} /></button>
-      <div className={`detail-visual tone-${offer.tone}`}><span>{offer.visual}</span><div><small>{offer.categoryLabel}</small><strong>{offer.title}</strong></div><em>{discountPercent(offer.originalPrice, offer.price)}٪ کمتر</em></div>
+      <div className="detail-visual"><FoodImage src={offer.image} alt={`تصویر نمونهٔ ${offer.title}`} sizes="(max-width: 700px) 100vw, 720px" priority /><div><small>{offer.categoryLabel}</small><strong>{offer.title}</strong></div><em>{discountPercent(offer.originalPrice, offer.price)}٪ کمتر</em></div>
       <div className="detail-content">
         <div className="detail-rating"><span><Icon name="star" filled /> {decimalFa(offer.rating)} از {numberFa(offer.reviewCount)} نظر</span><span><Icon name="pin" /> {distanceFa(offer.distanceKm)}</span></div>
         <h2 id="offer-title">{offer.merchantName}</h2><p className="detail-description">{offer.description}</p>
@@ -444,7 +466,7 @@ function ReservationFlow({ offer, step, setStep, quantity, setQuantity, confirmi
       <div className="flow-header"><span>رزرو نمایشی</span><strong>{step < 5 ? `${numberFa(step)} از ۴` : "انجام شد"}</strong></div>
       {step < 5 && <div className="flow-progress" aria-label={`مرحله ${numberFa(step)} از ۴`}>{[1, 2, 3, 4].map((item) => <i className={item <= step ? "active" : ""} key={item} />)}</div>}
       <div className="flow-content">
-        {step === 1 && <><p className="eyebrow">مرور جعبه</p><h2 id="reservation-title">همین را می‌خواهی؟</h2><div className="review-box"><span className={`store-logo large tone-${offer.tone}`}>{offer.visual}</span><div><strong>{offer.merchantName}</strong><p>{offer.title}</p><small>{offer.pickup}</small></div></div><div className="simulation-note"><Icon name="info" /><p><strong>برای ارائهٔ دانشگاهی</strong> این رزرو شبیه‌سازی می‌شود؛ هیچ پرداخت یا انتقال پولی انجام نمی‌شود.</p></div></>}
+        {step === 1 && <><p className="eyebrow">مرور جعبه</p><h2 id="reservation-title">همین را می‌خواهی؟</h2><div className="review-box glass-subtle"><span className="store-logo large"><FoodImage src={offer.image} sizes="72px" /></span><div><strong>{offer.merchantName}</strong><p>{offer.title}</p><small>{offer.pickup}</small></div></div><div className="simulation-note"><Icon name="info" /><p><strong>برای ارائهٔ دانشگاهی</strong> این رزرو شبیه‌سازی می‌شود؛ هیچ پرداخت یا انتقال پولی انجام نمی‌شود.</p></div></>}
         {step === 2 && <><p className="eyebrow">تعداد جعبه</p><h2 id="reservation-title">چند تا نجات می‌دی؟</h2><p className="flow-subtitle">حداکثر {numberFa(Math.min(3, offer.quantityLeft))} جعبه در این رزرو نمایشی.</p><div className="quantity-picker"><button type="button" onClick={() => setQuantity(Math.max(1, quantity - 1))} disabled={quantity <= 1} aria-label="کم کردن تعداد"><Icon name="minus" /></button><strong>{numberFa(quantity)}</strong><button type="button" onClick={() => setQuantity(Math.min(Math.min(3, offer.quantityLeft), quantity + 1))} disabled={quantity >= Math.min(3, offer.quantityLeft)} aria-label="زیاد کردن تعداد"><Icon name="plus" /></button></div><div className="flow-price"><span>جمع رزرو نمایشی</span><strong>{money(total)}</strong></div></>}
         {step === 3 && <><p className="eyebrow">زمان دریافت</p><h2 id="reservation-title">سر وقت می‌رسی؟</h2><button className="pickup-choice selected" type="button" aria-pressed="true"><span><Icon name="clock" /></span><div><strong>{offer.pickup}</strong><small>دریافت حضوری از {offer.neighborhood}</small></div><Icon name="check" /></button><div className="pickup-reminder"><Icon name="bell" /><p>یادآوری نمایشی ۳۰ دقیقه قبل از شروع بازه برایت روشن می‌شود.</p></div></>}
         {step === 4 && <><p className="eyebrow">تأیید نهایی</p><h2 id="reservation-title">همه‌چیز آماده‌ست</h2><div className="confirmation-list"><span><small>فروشگاه</small><strong>{offer.merchantName}</strong></span><span><small>تعداد</small><strong>{numberFa(quantity)} جعبه</strong></span><span><small>دریافت</small><strong>{offer.pickup}</strong></span><span><small>مبلغ نمایشی</small><strong>{money(total)}</strong></span></div><label className="confirm-check"><input type="checkbox" defaultChecked /><span><Icon name="check" /></span><p>می‌دانم محتویات دقیق جعبه متغیر است و باید هشدار آلرژی را بررسی کنم.</p></label></>}

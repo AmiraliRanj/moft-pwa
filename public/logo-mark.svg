@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="نشان مفت">
-  <rect width="128" height="128" rx="34" fill="#173f35"/>
-  <rect x="21" y="21" width="86" height="86" rx="28" fill="#fffdf8"/>
-  <rect x="40" y="58" width="48" height="31" rx="9" fill="#173f35"/>
-  <ellipse cx="72" cy="47" rx="14" ry="11" transform="rotate(-35 72 47)" fill="#e96f55"/>
-  <path d="M61 64 76 43" stroke="#173f35" stroke-width="4" stroke-linecap="round"/>
+  <rect width="128" height="128" rx="34" fill="#14532D"/>
+  <rect x="21" y="21" width="86" height="86" rx="28" fill="#F4F8F3"/>
+  <rect x="40" y="58" width="48" height="31" rx="9" fill="#14532D"/>
+  <ellipse cx="72" cy="47" rx="14" ry="11" transform="rotate(-35 72 47)" fill="#22C55E"/>
+  <path d="M61 64 76 43" stroke="#14532D" stroke-width="4" stroke-linecap="round"/>
 </svg>

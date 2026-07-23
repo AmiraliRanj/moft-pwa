@@ -1,14 +1,14 @@
 import type { CategoryId, Offer, Reservation } from "@/types/moft";
 
-export const categories: Array<{ id: CategoryId; label: string; icon: string }> = [
-  { id: "all", label: "همه", icon: "✦" },
-  { id: "cafe", label: "کافه", icon: "☕" },
-  { id: "restaurant", label: "رستوران", icon: "🍲" },
-  { id: "fast-food", label: "فست‌فود", icon: "🍕" },
-  { id: "bakery", label: "نانوایی", icon: "🥖" },
-  { id: "confectionery", label: "شیرینی", icon: "🧁" },
-  { id: "fruit", label: "میوه", icon: "🍑" },
-  { id: "grocery", label: "سوپرمارکت", icon: "🛒" }
+export const categories: Array<{ id: CategoryId; label: string }> = [
+  { id: "all", label: "همه" },
+  { id: "cafe", label: "کافه" },
+  { id: "restaurant", label: "رستوران" },
+  { id: "fast-food", label: "فست‌فود" },
+  { id: "bakery", label: "نانوایی" },
+  { id: "confectionery", label: "شیرینی" },
+  { id: "fruit", label: "میوه" },
+  { id: "grocery", label: "سوپرمارکت" }
 ];
 
 export const initialOffers: Offer[] = [
@@ -31,8 +31,7 @@ export const initialOffers: Offer[] = [
     originalPrice: 390000,
     price: 125000,
     allergens: ["گلوتن", "لبنیات", "احتمال وجود مغزها"],
-    visual: "🥐",
-    tone: "apricot",
+    image: "/images/offers/offer-01.webp",
     endingSoon: true,
     popular: true
   },
@@ -55,8 +54,7 @@ export const initialOffers: Offer[] = [
     originalPrice: 285000,
     price: 89000,
     allergens: ["گلوتن", "کنجد", "احتمال لبنیات"],
-    visual: "🥖",
-    tone: "honey",
+    image: "/images/offers/offer-02.webp",
     popular: true
   },
   {
@@ -78,8 +76,7 @@ export const initialOffers: Offer[] = [
     originalPrice: 640000,
     price: 210000,
     allergens: ["گلوتن", "لبنیات", "تخم‌مرغ"],
-    visual: "🍔",
-    tone: "tomato",
+    image: "/images/offers/offer-03.webp",
     endingSoon: true,
     popular: true
   },
@@ -102,8 +99,7 @@ export const initialOffers: Offer[] = [
     originalPrice: 520000,
     price: 159000,
     allergens: ["ترکیب میوه متغیر است"],
-    visual: "🍑",
-    tone: "mint",
+    image: "/images/offers/offer-04.webp",
     endingSoon: true
   },
   {
@@ -125,8 +121,7 @@ export const initialOffers: Offer[] = [
     originalPrice: 470000,
     price: 149000,
     allergens: ["گلوتن", "لبنیات", "تخم‌مرغ", "مغزها"],
-    visual: "🧁",
-    tone: "berry",
+    image: "/images/offers/offer-05.webp",
     popular: true
   },
   {
@@ -148,8 +143,7 @@ export const initialOffers: Offer[] = [
     originalPrice: 690000,
     price: 219000,
     allergens: ["برچسب محصول هنگام تحویل بررسی شود"],
-    visual: "🧃",
-    tone: "sky"
+    image: "/images/offers/offer-06.webp"
   },
   {
     id: "mana-cafe",
@@ -170,8 +164,7 @@ export const initialOffers: Offer[] = [
     originalPrice: 360000,
     price: 119000,
     allergens: ["گلوتن", "لبنیات", "احتمال مغزها"],
-    visual: "☕",
-    tone: "plum"
+    image: "/images/offers/offer-07.webp"
   },
   {
     id: "kooche-pizza",
@@ -192,8 +185,7 @@ export const initialOffers: Offer[] = [
     originalPrice: 590000,
     price: 189000,
     allergens: ["گلوتن", "لبنیات", "گوشت فرآوری‌شده احتمالی"],
-    visual: "🍕",
-    tone: "tomato",
+    image: "/images/offers/offer-08.webp",
     endingSoon: true
   },
   {
@@ -215,8 +207,7 @@ export const initialOffers: Offer[] = [
     originalPrice: 430000,
     price: 139000,
     allergens: ["گلوتن", "لبنیات", "تخم‌مرغ"],
-    visual: "🥯",
-    tone: "apricot",
+    image: "/images/offers/offer-09.webp",
     popular: true
   },
   {
@@ -238,8 +229,7 @@ export const initialOffers: Offer[] = [
     originalPrice: 720000,
     price: 249000,
     allergens: ["اطلاعات آلرژن روی بسته‌بندی درج شده"],
-    visual: "🥛",
-    tone: "sky"
+    image: "/images/offers/offer-10.webp"
   },
   {
     id: "sham-e-shahr",
@@ -260,8 +250,7 @@ export const initialOffers: Offer[] = [
     originalPrice: 620000,
     price: 199000,
     allergens: ["لبنیات احتمالی", "حبوبات", "ترکیب متغیر"],
-    visual: "🍲",
-    tone: "pistachio"
+    image: "/images/offers/offer-11.webp"
   },
   {
     id: "toranj-pastry",
@@ -282,8 +271,7 @@ export const initialOffers: Offer[] = [
     originalPrice: 410000,
     price: 129000,
     allergens: ["گلوتن", "تخم‌مرغ", "لبنیات", "مغزها"],
-    visual: "🍰",
-    tone: "berry",
+    image: "/images/offers/offer-12.webp",
     endingSoon: true
   },
   {
@@ -305,8 +293,7 @@ export const initialOffers: Offer[] = [
     originalPrice: 760000,
     price: 259000,
     allergens: ["گردو احتمالی", "لبنیات احتمالی", "ترکیب متغیر"],
-    visual: "🍛",
-    tone: "pistachio",
+    image: "/images/offers/offer-13.webp",
     popular: true
   },
   {
@@ -328,8 +315,7 @@ export const initialOffers: Offer[] = [
     originalPrice: 450000,
     price: 139000,
     allergens: ["ترکیب میوه متغیر است"],
-    visual: "🍓",
-    tone: "mint"
+    image: "/images/offers/offer-14.webp"
   },
   {
     id: "sobhaneh-no",
@@ -350,8 +336,7 @@ export const initialOffers: Offer[] = [
     originalPrice: 580000,
     price: 189000,
     allergens: ["گلوتن", "لبنیات", "تخم‌مرغ"],
-    visual: "🥞",
-    tone: "honey"
+    image: "/images/offers/offer-15.webp"
   }
 ];
 
