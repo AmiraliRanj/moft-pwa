@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { BottomNavigation } from "@/components/moft/BottomNavigation";
 import { CategorySelector } from "@/components/moft/CategorySelector";
 import { DialogShell } from "@/components/moft/DialogShell";
@@ -121,7 +121,7 @@ export default function MoftPreview() {
       root.style.colorScheme = resolved;
       const themeMeta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
       const statusMeta = document.querySelector<HTMLMetaElement>('meta[name="apple-mobile-web-app-status-bar-style"]');
-      if (themeMeta) themeMeta.content = resolved === "dark" ? "#07110C" : "#F4F8F3";
+      if (themeMeta) themeMeta.content = resolved === "dark" ? "#151816" : "#F4F8F3";
       if (statusMeta) statusMeta.content = resolved === "dark" ? "black-translucent" : "default";
     };
     applyTheme();
@@ -441,18 +441,29 @@ function ProfilePage({ savedMeals, favoriteOffers, reservations, theme, setTheme
 }
 
 function OfferDetails({ offer, favorite, onFavorite, onClose, onReserve, related, onSelect, favorites }: { offer: Offer; favorite: boolean; onFavorite: (id: string) => void; onClose: () => void; onReserve: () => void; related: Offer[]; onSelect: (offer: Offer) => void; favorites: Set<string> }) {
+  const detailScrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => {
+      if (detailScrollRef.current) detailScrollRef.current.scrollTop = 0;
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [offer.id]);
+
   return (
-    <DialogShell titleId="offer-title" onClose={onClose}>
+    <DialogShell titleId="offer-title" onClose={onClose} size="detail">
       <button className={`dialog-favorite ${favorite ? "active" : ""}`} type="button" onClick={() => onFavorite(offer.id)} aria-label={favorite ? "حذف از علاقه‌مندی‌ها" : "افزودن به علاقه‌مندی‌ها"}><Icon name="heart" filled={favorite} /></button>
-      <div className="detail-visual"><FoodImage src={offer.image} alt={`تصویر نمونهٔ ${offer.title}`} sizes="(max-width: 700px) 100vw, 720px" priority /><div><small>{offer.categoryLabel}</small><strong>{offer.title}</strong></div><em>{discountPercent(offer.originalPrice, offer.price)}٪ کمتر</em></div>
-      <div className="detail-content">
-        <div className="detail-rating"><span><Icon name="star" filled /> {decimalFa(offer.rating)} از {numberFa(offer.reviewCount)} نظر</span><span><Icon name="pin" /> {distanceFa(offer.distanceKm)}</span></div>
-        <h2 id="offer-title">{offer.merchantName}</h2><p className="detail-description">{offer.description}</p>
-        <div className="detail-stats"><div><Icon name="clock" /><span><small>زمان دریافت حضوری</small><strong>{offer.pickup}</strong></span></div><div><Icon name="bag" /><span><small>موجودی این لحظه</small><strong>{numberFa(offer.quantityLeft)} جعبه</strong></span></div></div>
-        <section className="unknown-note"><span><Icon name="spark" /></span><div><strong>داخل جعبه غافلگیر می‌شوی</strong><p>فروشگاه تا پایان روز دقیقاً نمی‌داند چه چیزهایی باقی می‌ماند؛ تصویر فقط حال‌وهوای بسته را نشان می‌دهد.</p></div></section>
-        <section className="allergy-note"><span>!</span><div><strong>هشدار آلرژی و ایمنی</strong><p>فقط غذای سالم عرضه می‌شود، اما ترکیب متغیر است. اگر آلرژی جدی داری، پیش از دریافت با فروشگاه هماهنگ کن.</p><div>{offer.allergens.map((item) => <em key={item}>{item}</em>)}</div></div></section>
-        <section className="location-preview"><div><p className="eyebrow">محل دریافت</p><h3>{offer.address}</h3><small>دریافت فقط حضوری و در بازهٔ مشخص‌شده است.</small></div><div className="mini-map" aria-hidden="true"><i /><span><Icon name="pin" /></span></div></section>
-        {related.length > 0 && <section className="related-section"><SectionHeading eyebrow="همین اطراف" title="شاید این‌ها را هم دوست داشته باشی" />{related.map((item) => <OfferCard compact key={item.id} offer={item} favorite={favorites.has(item.id)} onFavorite={onFavorite} onSelect={onSelect} />)}</section>}
+      <div ref={detailScrollRef} className="detail-scroll">
+        <div className="detail-visual"><FoodImage src={offer.image} alt={`تصویر نمونهٔ ${offer.title}`} sizes="(max-width: 700px) 100vw, 540px" priority /><div><small>{offer.categoryLabel}</small><strong>{offer.title}</strong></div><em>{discountPercent(offer.originalPrice, offer.price)}٪ کمتر</em></div>
+        <div className="detail-content">
+          <div className="detail-rating"><span><Icon name="star" filled /> {decimalFa(offer.rating)} از {numberFa(offer.reviewCount)} نظر</span><span><Icon name="pin" /> {distanceFa(offer.distanceKm)}</span></div>
+          <h2 id="offer-title">{offer.merchantName}</h2><p className="detail-description">{offer.description}</p>
+          <div className="detail-stats"><div><Icon name="clock" /><span><small>زمان دریافت حضوری</small><strong>{offer.pickup}</strong></span></div><div><Icon name="bag" /><span><small>موجودی این لحظه</small><strong>{numberFa(offer.quantityLeft)} جعبه</strong></span></div></div>
+          <section className="unknown-note"><span><Icon name="spark" /></span><div><strong>داخل جعبه غافلگیر می‌شوی</strong><p>فروشگاه تا پایان روز دقیقاً نمی‌داند چه چیزهایی باقی می‌ماند؛ تصویر فقط حال‌وهوای بسته را نشان می‌دهد.</p></div></section>
+          <section className="allergy-note"><span>!</span><div><strong>هشدار آلرژی و ایمنی</strong><p>فقط غذای سالم عرضه می‌شود، اما ترکیب متغیر است. اگر آلرژی جدی داری، پیش از دریافت با فروشگاه هماهنگ کن.</p><div>{offer.allergens.map((item) => <em key={item}>{item}</em>)}</div></div></section>
+          <section className="location-preview"><div><p className="eyebrow">محل دریافت</p><h3>{offer.address}</h3><small>دریافت فقط حضوری و در بازهٔ مشخص‌شده است.</small></div><div className="mini-map" aria-hidden="true"><i /><span><Icon name="pin" /></span></div></section>
+          {related.length > 0 && <section className="related-section"><SectionHeading eyebrow="همین اطراف" title="شاید این‌ها را هم دوست داشته باشی" />{related.map((item) => <OfferCard compact key={item.id} offer={item} favorite={favorites.has(item.id)} onFavorite={onFavorite} onSelect={onSelect} />)}</section>}
+        </div>
       </div>
       <div className="sticky-action"><div><del>{money(offer.originalPrice)}</del><strong>{money(offer.price)}</strong><small>برای هر جعبه</small></div><button className="primary-button" type="button" disabled={offer.quantityLeft < 1} onClick={onReserve}>{offer.quantityLeft > 0 ? "رزرو جعبه" : "تمام شد"}</button></div>
     </DialogShell>

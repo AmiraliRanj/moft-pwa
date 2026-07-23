@@ -3,11 +3,12 @@
 import { useEffect, useRef, type MouseEvent, type ReactNode } from "react";
 import { Icon } from "@/components/moft/Icon";
 
-export function DialogShell({ titleId, label, onClose, children, size = "sheet" }: { titleId?: string; label?: string; onClose: () => void; children: ReactNode; size?: "sheet" | "center" }) {
+export function DialogShell({ titleId, label, onClose, children, size = "sheet" }: { titleId?: string; label?: string; onClose: () => void; children: ReactNode; size?: "sheet" | "center" | "detail" }) {
   const dialogRef = useRef<HTMLElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
+    const previouslyFocused = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     document.body.classList.add("dialog-open");
     closeRef.current?.focus();
     const onKey = (event: KeyboardEvent) => {
@@ -21,15 +22,21 @@ export function DialogShell({ titleId, label, onClose, children, size = "sheet" 
       if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
     };
     window.addEventListener("keydown", onKey);
-    return () => { document.body.classList.remove("dialog-open"); window.removeEventListener("keydown", onKey); };
+    return () => {
+      document.body.classList.remove("dialog-open");
+      window.removeEventListener("keydown", onKey);
+      previouslyFocused?.focus();
+    };
   }, [onClose]);
 
   const onBackdrop = (event: MouseEvent<HTMLDivElement>) => {
     if (event.target === event.currentTarget) onClose();
   };
 
+  const isCentered = size === "center" || size === "detail";
+
   return (
-    <div className={`dialog-layer ${size === "center" ? "centered" : ""}`} onMouseDown={onBackdrop}>
+    <div className={`dialog-layer ${isCentered ? "centered" : ""} ${size === "detail" ? "detail-layer" : ""}`} onMouseDown={onBackdrop}>
       <section ref={dialogRef} className={`dialog-panel glass-strong ${size}`} role="dialog" aria-modal="true" aria-labelledby={titleId} aria-label={label}>
         <button ref={closeRef} className="dialog-close" type="button" onClick={onClose} aria-label="بستن"><Icon name="close" /></button>
         {children}

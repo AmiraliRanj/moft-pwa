@@ -46,7 +46,7 @@ const themeBootScript = `
     root.style.colorScheme = resolved;
     const themeMeta = document.getElementById("theme-color");
     const statusMeta = document.getElementById("apple-status-bar-style");
-    if (themeMeta) themeMeta.setAttribute("content", resolved === "dark" ? "#07110C" : "#F4F8F3");
+    if (themeMeta) themeMeta.setAttribute("content", resolved === "dark" ? "#151816" : "#F4F8F3");
     if (statusMeta) statusMeta.setAttribute("content", resolved === "dark" ? "black-translucent" : "default");
   } catch {
     const resolved = new Date().getHours() >= 7 && new Date().getHours() < 19 ? "light" : "dark";
