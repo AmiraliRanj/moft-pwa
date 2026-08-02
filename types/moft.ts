@@ -48,6 +48,9 @@ export type Reservation = {
   quantity: number;
   total: number;
   status: ReservationStatus;
+  orderStatus?: import("@/types/demo").OrderStatus;
+  hasReview?: boolean;
+  reviewResponse?: string;
   createdAt: string;
 };
 

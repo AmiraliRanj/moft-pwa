@@ -75,7 +75,7 @@
 
 * { box-sizing: border-box; }
 html { background: var(--canvas); scroll-behavior: smooth; }
-body { margin: 0; min-width: 320px; color: var(--ink); background: var(--canvas); font-family: "Vazirmatn Variable", "Vazirmatn", Tahoma, Arial, sans-serif; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+body { margin: 0; min-width: 0; color: var(--ink); background: var(--canvas); font-family: "Vazirmatn Variable", "Vazirmatn", Tahoma, Arial, sans-serif; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
 button, input, select { font: inherit; }
 button { color: inherit; }
 button, a, input, select { -webkit-tap-highlight-color: transparent; }

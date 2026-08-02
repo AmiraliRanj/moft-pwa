@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { BottomNavigation } from "@/components/moft/BottomNavigation";
 import { CategorySelector } from "@/components/moft/CategorySelector";
@@ -10,8 +11,10 @@ import { Icon } from "@/components/moft/Icon";
 import { LoadingSkeleton } from "@/components/moft/LoadingSkeleton";
 import { OfferCard, OfferList } from "@/components/moft/OfferCard";
 import { SearchBar } from "@/components/moft/SearchBar";
-import { demoHistory, initialOffers } from "@/data/offers";
-import { decimalFa, discountPercent, distanceFa, money, numberFa, pickupCode } from "@/lib/moft-format";
+import { useDemo } from "@/demo/DemoProvider";
+import { orderStatusLabel, remainingQuantity } from "@/lib/demo-format";
+import { decimalFa, discountPercent, distanceFa, money, numberFa } from "@/lib/moft-format";
+import type { MarketplaceOffer, Order } from "@/types/demo";
 import type { AppTab, CategoryId, Offer, PickupPeriod, Reservation, ThemePreference } from "@/types/moft";
 
 type InstallPromptEvent = Event & {
@@ -19,23 +22,55 @@ type InstallPromptEvent = Event & {
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 };
 
-type Layer = "detail" | "reserve" | "filters" | "location" | "about" | "cancel" | null;
+type Layer = "detail" | "reserve" | "filters" | "location" | "about" | "cancel" | "review" | "reset" | null;
 type SortMode = "nearest" | "popular" | "discount";
 type ReservationView = "active" | "history";
 
 const storageKeys = {
-  reservations: "moft-reservations-v2",
   favorites: "moft-favorites-v2",
   theme: "moft-theme-v2"
 };
 
-export default function MoftPreview() {
-  const [tab, setTab] = useState<AppTab>("home");
+const faDigits = (value: string) => value.replace(/\d/g, (digit) => "۰۱۲۳۴۵۶۷۸۹"[Number(digit)]);
+
+function customerOffer(offer: MarketplaceOffer): Offer {
+  const dateLabel = offer.pickupPeriod === "tomorrow" ? "فردا" : "امروز";
+  return {
+    id: offer.id, merchantName: offer.merchantName, category: offer.category, categoryLabel: offer.categoryLabel,
+    title: offer.title, description: offer.description, address: offer.address, neighborhood: offer.neighborhood,
+    coordinates: offer.coordinates, distanceKm: offer.distanceKm, rating: offer.rating, reviewCount: offer.reviewCount,
+    pickup: `${dateLabel}، ${faDigits(offer.pickupStart)} تا ${faDigits(offer.pickupEnd)}`, pickupPeriod: offer.pickupPeriod,
+    quantityLeft: remainingQuantity(offer), originalPrice: offer.originalValue, price: offer.salePrice, allergens: offer.allergens,
+    image: offer.image, endingSoon: offer.endingSoon, popular: offer.popular,
+  };
+}
+
+function customerReservation(order: Order, offers: MarketplaceOffer[], reviews: import("@/types/demo").Review[]): Reservation {
+  const offer = offers.find((item) => item.id === order.items[0].offerId);
+  const review = reviews.find((item) => item.orderId === order.id);
+  const status: Reservation["status"] = order.status === "completed" ? "collected" : ["cancelled", "refunded", "no_show"].includes(order.status) ? "cancelled" : "active";
+  return {
+    id: order.id, offerId: order.items[0].offerId, merchantName: offer?.merchantName ?? "کافه ویونا", title: order.items[0].title,
+    pickup: `${faDigits(order.pickupDate)}، ${faDigits(order.pickupStart)} تا ${faDigits(order.pickupEnd)}`, address: offer?.address ?? "شعبه انتخاب‌شده",
+    code: faDigits(order.pickupCode.value), quantity: order.items[0].quantity, total: order.total, status, orderStatus: order.status,
+    hasReview: Boolean(review), reviewResponse: review?.response, createdAt: order.createdAt,
+  };
+}
+
+type MoftPreviewProps = {
+  initialTab?: AppTab;
+  initialFavoritesOnly?: boolean;
+  initialOfferId?: string;
+};
+
+export default function MoftPreview({ initialTab = "home", initialFavoritesOnly = false, initialOfferId }: MoftPreviewProps) {
+  const { state, placeOrder, transitionOrder, submitReview, resetDemo } = useDemo();
+  const [tab, setTab] = useState<AppTab>(initialTab);
   const [category, setCategory] = useState<CategoryId>("all");
   const [query, setQuery] = useState("");
-  const [offers, setOffers] = useState(initialOffers);
+  const offers = useMemo(() => state.offers.filter((offer) => ["active", "sold_out"].includes(offer.status)).map(customerOffer), [state.offers]);
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
-  const [reservations, setReservations] = useState<Reservation[]>(demoHistory);
+  const reservations = useMemo(() => state.orders.filter((order) => order.customerId === state.customer.id).map((order) => customerReservation(order, state.offers, state.reviews)), [state.customer.id, state.offers, state.orders, state.reviews]);
   const [selected, setSelected] = useState<Offer | null>(null);
   const [layer, setLayer] = useState<Layer>(null);
   const [reservationStep, setReservationStep] = useState(1);
@@ -43,6 +78,7 @@ export default function MoftPreview() {
   const [confirming, setConfirming] = useState(false);
   const [successReservation, setSuccessReservation] = useState<Reservation | null>(null);
   const [cancelId, setCancelId] = useState<string | null>(null);
+  const [reviewOrderId, setReviewOrderId] = useState<string | null>(null);
   const [reservationView, setReservationView] = useState<ReservationView>("active");
   const [toast, setToast] = useState("");
   const [pageLoading, setPageLoading] = useState(false);
@@ -59,8 +95,9 @@ export default function MoftPreview() {
   const [pickupFilter, setPickupFilter] = useState<"all" | PickupPeriod>("all");
   const [sort, setSort] = useState<SortMode>("nearest");
   const [viewMode, setViewMode] = useState<"list" | "map">("list");
-  const [favoritesOnly, setFavoritesOnly] = useState(false);
+  const [favoritesOnly, setFavoritesOnly] = useState(initialFavoritesOnly);
   const [location, setLocation] = useState("تهران، ونک");
+  const routeHandledRef = useRef(false);
 
   const showToast = useCallback((message: string) => {
     setToast(message);
@@ -68,15 +105,12 @@ export default function MoftPreview() {
   }, []);
 
   useEffect(() => {
-    let savedReservations: Reservation[] | null = null;
     let savedFavorites: string[] | null = null;
     let savedTheme: ThemePreference | null = null;
     let invalidStorage = false;
     try {
-      const reservationJson = localStorage.getItem(storageKeys.reservations);
       const favoritesJson = localStorage.getItem(storageKeys.favorites);
       savedTheme = localStorage.getItem(storageKeys.theme) as ThemePreference | null;
-      if (reservationJson) savedReservations = JSON.parse(reservationJson) as Reservation[];
       if (favoritesJson) savedFavorites = JSON.parse(favoritesJson) as string[];
     } catch {
       invalidStorage = true;
@@ -84,7 +118,6 @@ export default function MoftPreview() {
 
     const shortcut = new URLSearchParams(window.location.search).get("tab");
     const hydrateTimer = window.setTimeout(() => {
-      if (savedReservations) setReservations(savedReservations);
       if (savedFavorites) setFavorites(new Set(savedFavorites));
       if (savedTheme && ["light", "dark", "system"].includes(savedTheme)) setTheme(savedTheme);
       setThemeReady(true);
@@ -110,6 +143,16 @@ export default function MoftPreview() {
       window.removeEventListener("offline", onOffline);
     };
   }, []);
+
+  useEffect(() => {
+    if (routeHandledRef.current || !offers.length) return;
+    routeHandledRef.current = true;
+    if (!initialOfferId) return;
+    const offer = offers.find((item) => item.id === initialOfferId);
+    if (!offer) return;
+    const timer = window.setTimeout(() => { setSelected(offer); setLayer("detail"); }, 0);
+    return () => window.clearTimeout(timer);
+  }, [initialOfferId, offers]);
 
   useEffect(() => {
     if (!themeReady) return;
@@ -179,6 +222,8 @@ export default function MoftPreview() {
     if (nextTab === tab) return;
     setPageLoading(true);
     setTab(nextTab);
+    const paths: Record<AppTab, string> = { home: "/customer", discover: "/customer/offers", reservations: "/customer/orders", profile: "/customer/profile" };
+    window.history.pushState({}, "", paths[nextTab]);
     window.scrollTo({ top: 0, behavior: "smooth" });
     window.setTimeout(() => setPageLoading(false), 360);
   };
@@ -186,6 +231,13 @@ export default function MoftPreview() {
   const openOffer = (offer: Offer) => {
     setSelected(offer);
     setLayer("detail");
+    window.history.pushState({}, "", `/customer/offers/${encodeURIComponent(offer.id)}`);
+  };
+
+  const closeOffer = () => {
+    setLayer(null);
+    const paths: Record<AppTab, string> = { home: "/customer", discover: "/customer/offers", reservations: "/customer/orders", profile: "/customer/profile" };
+    window.history.replaceState({}, "", paths[tab]);
   };
 
   const openReservation = () => {
@@ -201,23 +253,13 @@ export default function MoftPreview() {
     if (!selected || confirming) return;
     setConfirming(true);
     window.setTimeout(() => {
-      const reservation: Reservation = {
-        id: `${selected.id}-${Date.now()}`,
-        offerId: selected.id,
-        merchantName: selected.merchantName,
-        title: selected.title,
-        pickup: selected.pickup,
-        address: selected.address,
-        code: pickupCode(),
-        quantity,
-        total: selected.price * quantity,
-        status: "active",
-        createdAt: new Date().toISOString()
-      };
-      const next = [reservation, ...reservations];
-      setReservations(next);
-      localStorage.setItem(storageKeys.reservations, JSON.stringify(next));
-      setOffers((current) => current.map((offer) => offer.id === selected.id ? { ...offer, quantityLeft: Math.max(0, offer.quantityLeft - quantity) } : offer));
+      const result = placeOrder(selected.id, quantity);
+      if (!result.ok) {
+        setConfirming(false);
+        showToast(result.error);
+        return;
+      }
+      const reservation = customerReservation(result.value, result.state.offers, result.state.reviews);
       setSelected((current) => current ? { ...current, quantityLeft: Math.max(0, current.quantityLeft - quantity) } : current);
       setSuccessReservation(reservation);
       setReservationStep(5);
@@ -234,12 +276,11 @@ export default function MoftPreview() {
 
   const confirmCancel = () => {
     if (!cancelId) return;
-    const next = reservations.map((item) => item.id === cancelId ? { ...item, status: "cancelled" as const } : item);
-    setReservations(next);
-    localStorage.setItem(storageKeys.reservations, JSON.stringify(next));
+    const result = transitionOrder(cancelId, "cancelled");
+    if (!result.ok) { showToast(result.error); setLayer(null); setCancelId(null); return; }
     setLayer(null);
     setCancelId(null);
-    showToast("رزرو نمایشی لغو شد.");
+    showToast("رزرو نمایشی لغو و موجودی مجاز بازگردانده شد.");
   };
 
   const install = async () => {
@@ -255,6 +296,12 @@ export default function MoftPreview() {
     setCategory("all");
     setQuery("");
     switchTab("discover");
+    window.history.replaceState({}, "", "/customer/favorites");
+  };
+
+  const requestReview = (id: string) => {
+    setReviewOrderId(id);
+    setLayer("review");
   };
 
   const savedMeals = reservations.filter((item) => item.status === "active" || item.status === "collected").reduce((sum, item) => sum + item.quantity, 0);
@@ -284,8 +331,8 @@ export default function MoftPreview() {
             <>
               {tab === "home" && <HomePage query={query} setQuery={setQuery} category={category} setCategory={setCategory} offers={baseFilteredOffers} allOffers={offers} favorites={favorites} onFavorite={toggleFavorite} onSelect={openOffer} onDiscover={() => switchTab("discover")} installPrompt={installPrompt} installed={installed} onInstall={install} savedMeals={savedMeals} />}
               {tab === "discover" && <DiscoverPage query={query} setQuery={setQuery} category={category} setCategory={setCategory} offers={discoverOffers} favorites={favorites} onFavorite={toggleFavorite} onSelect={openOffer} viewMode={viewMode} setViewMode={setViewMode} sort={sort} setSort={setSort} onFilters={() => setLayer("filters")} favoritesOnly={favoritesOnly} setFavoritesOnly={setFavoritesOnly} />}
-              {tab === "reservations" && <ReservationsPage active={activeReservations} history={historyReservations} view={reservationView} setView={setReservationView} onCancel={requestCancel} onDiscover={() => switchTab("discover")} onDirections={() => showToast("مسیر فروشگاه در نسخهٔ نمایشی روی نقشه باز نمی‌شود.")} />}
-              {tab === "profile" && <ProfilePage savedMeals={savedMeals} favoriteOffers={offers.filter((offer) => favorites.has(offer.id))} reservations={reservations} theme={theme} setTheme={setTheme} notifications={notifications} setNotifications={setNotifications} installed={installed} onInstall={install} onOpenOffer={openOffer} onAbout={() => setLayer("about")} showToast={showToast} />}
+              {tab === "reservations" && <ReservationsPage active={activeReservations} history={historyReservations} view={reservationView} setView={setReservationView} onCancel={requestCancel} onReview={requestReview} onDiscover={() => switchTab("discover")} onDirections={() => showToast("مسیر فروشگاه در نسخهٔ نمایشی روی نقشه باز نمی‌شود.")} />}
+              {tab === "profile" && <ProfilePage savedMeals={savedMeals} favoriteOffers={offers.filter((offer) => favorites.has(offer.id))} reservations={reservations} theme={theme} setTheme={setTheme} notifications={notifications} setNotifications={setNotifications} installed={installed} onInstall={install} onOpenOffer={openOffer} onAbout={() => setLayer("about")} onReset={() => setLayer("reset")} showToast={showToast} customerName={state.customer.name} />}
             </>
           )}
         </div>
@@ -293,12 +340,14 @@ export default function MoftPreview() {
         <BottomNavigation value={tab} onChange={switchTab} reservationCount={activeReservations.length} />
       </section>
 
-      {layer === "detail" && selected && <OfferDetails offer={selected} favorite={favorites.has(selected.id)} onFavorite={toggleFavorite} onClose={() => setLayer(null)} onReserve={openReservation} related={offers.filter((offer) => offer.category === selected.category && offer.id !== selected.id).slice(0, 2)} onSelect={openOffer} favorites={favorites} />}
+      {layer === "detail" && selected && <OfferDetails offer={selected} favorite={favorites.has(selected.id)} onFavorite={toggleFavorite} onClose={closeOffer} onReserve={openReservation} related={offers.filter((offer) => offer.category === selected.category && offer.id !== selected.id).slice(0, 2)} onSelect={openOffer} favorites={favorites} />}
       {layer === "reserve" && selected && <ReservationFlow offer={selected} step={reservationStep} setStep={setReservationStep} quantity={quantity} setQuantity={setQuantity} confirming={confirming} onConfirm={completeReservation} success={successReservation} onClose={() => setLayer(null)} onDone={() => { setLayer(null); switchTab("reservations"); }} onDirections={() => showToast("مسیریابی در این نمونه شبیه‌سازی شده است.")} onCalendar={() => addToCalendar(successReservation, showToast)} />}
       {layer === "filters" && <FilterSheet maxDistance={maxDistance} setMaxDistance={setMaxDistance} maxPrice={maxPrice} setMaxPrice={setMaxPrice} pickup={pickupFilter} setPickup={setPickupFilter} onReset={() => { setMaxDistance(10); setMaxPrice(300000); setPickupFilter("all"); }} onClose={() => setLayer(null)} resultCount={discoverOffers.length} />}
       {layer === "location" && <LocationSheet value={location} onChange={(value) => { setLocation(value); setLayer(null); showToast("موقعیت نمونه تغییر کرد."); }} onClose={() => setLayer(null)} />}
       {layer === "about" && <AboutSheet onClose={() => setLayer(null)} />}
       {layer === "cancel" && <CancelDialog onClose={() => setLayer(null)} onConfirm={confirmCancel} />}
+      {layer === "review" && reviewOrderId && <ReviewDialog orderId={reviewOrderId} onClose={() => { setLayer(null); setReviewOrderId(null); }} onSubmit={(rating, comment) => { const result = submitReview(reviewOrderId, rating, comment); if (!result.ok) { showToast(result.error); return false; } showToast("نظرت ثبت شد و در پنل کیفیت کسب‌وکار دیده می‌شود."); setLayer(null); setReviewOrderId(null); return true; }} />}
+      {layer === "reset" && <ResetDialog onClose={() => setLayer(null)} onConfirm={() => { resetDemo(); setFavorites(new Set()); setLayer(null); showToast("اطلاعات دمو به حالت اولیه برگشت؛ پوسته حفظ شد."); }} />}
       {toast && <div className="toast" role="status"><Icon name="check" /> {toast}</div>}
     </main>
   );
@@ -312,7 +361,7 @@ function HomePage({ query, setQuery, category, setCategory, offers, allOffers, f
   const ending = allOffers.filter((offer) => offer.endingSoon).slice(0, 5);
   return (
     <div className="page-content home-page">
-      <p className="greeting">سلام امیر، عصر بخیر 👋</p>
+      <p className="greeting">سلام سارا، عصر بخیر 👋</p>
       <section className="hero-card">
         <div className="hero-copy">
           <h1>غذای خوب، قبل از دورریز</h1>
@@ -391,19 +440,20 @@ function MapPreview({ offers, onSelect }: { offers: Offer[]; onSelect: (offer: O
   );
 }
 
-function ReservationsPage({ active, history, view, setView, onCancel, onDiscover, onDirections }: { active: Reservation[]; history: Reservation[]; view: ReservationView; setView: (view: ReservationView) => void; onCancel: (id: string) => void; onDiscover: () => void; onDirections: () => void }) {
+function ReservationsPage({ active, history, view, setView, onCancel, onReview, onDiscover, onDirections }: { active: Reservation[]; history: Reservation[]; view: ReservationView; setView: (view: ReservationView) => void; onCancel: (id: string) => void; onReview: (id: string) => void; onDiscover: () => void; onDirections: () => void }) {
   const items = view === "active" ? active : history;
   return (
     <div className="page-content secondary-page">
       <PageTitle eyebrow="رزروهای من" title="جعبه‌ات منتظرته" text="کد دریافت را فقط وقتی به فروشنده نشان بده که جعبه را تحویل می‌گیری." />
       <div className="segmented-control" role="tablist" aria-label="نوع رزرو"><button type="button" role="tab" aria-selected={view === "active"} className={view === "active" ? "active" : ""} onClick={() => setView("active")}>فعال <span>{numberFa(active.length)}</span></button><button type="button" role="tab" aria-selected={view === "history"} className={view === "history" ? "active" : ""} onClick={() => setView("history")}>گذشته <span>{numberFa(history.length)}</span></button></div>
-      {items.length ? <div className="reservation-list">{items.map((reservation) => <ReservationCard key={reservation.id} reservation={reservation} onCancel={onCancel} onDirections={onDirections} />)}</div> : <EmptyState icon="bag" title={view === "active" ? "رزرو فعالی نداری" : "هنوز سابقه‌ای نیست"} text={view === "active" ? "یک جعبهٔ نزدیک پیدا کن و همین امشب نجاتش بده." : "رزروهای دریافت‌شده یا لغوشده اینجا می‌مانند."} action={view === "active" ? "کشف جعبه‌ها" : undefined} onAction={onDiscover} />}
+      {items.length ? <div className="reservation-list">{items.map((reservation) => <ReservationCard key={reservation.id} reservation={reservation} onCancel={onCancel} onReview={onReview} onDirections={onDirections} />)}</div> : <EmptyState icon="bag" title={view === "active" ? "رزرو فعالی نداری" : "هنوز سابقه‌ای نیست"} text={view === "active" ? "یک جعبهٔ نزدیک پیدا کن و همین امشب نجاتش بده." : "رزروهای دریافت‌شده یا لغوشده اینجا می‌مانند."} action={view === "active" ? "کشف جعبه‌ها" : undefined} onAction={onDiscover} />}
     </div>
   );
 }
 
-function ReservationCard({ reservation, onCancel, onDirections }: { reservation: Reservation; onCancel: (id: string) => void; onDirections: () => void }) {
-  const status = reservation.status === "active" ? "آمادهٔ دریافت" : reservation.status === "collected" ? "دریافت شد" : reservation.status === "cancelled" ? "لغو شد" : "زمان دریافت گذشته";
+function ReservationCard({ reservation, onCancel, onReview, onDirections }: { reservation: Reservation; onCancel: (id: string) => void; onReview: (id: string) => void; onDirections: () => void }) {
+  const status = reservation.orderStatus ? orderStatusLabel[reservation.orderStatus] : reservation.status === "active" ? "فعال" : reservation.status === "collected" ? "دریافت شد" : reservation.status === "cancelled" ? "لغو شد" : "زمان دریافت گذشته";
+  const cancellable = reservation.orderStatus ? ["paid", "reviewed", "preparing", "ready_for_pickup"].includes(reservation.orderStatus) : reservation.status === "active";
   return (
     <article className={`reservation-card glass-subtle status-${reservation.status}`}>
       <div className="reservation-status"><span className="status-dot" /> {status}</div>
@@ -411,17 +461,18 @@ function ReservationCard({ reservation, onCancel, onDirections }: { reservation:
       <div className="reservation-details"><span><Icon name="clock" /> {reservation.pickup}</span><span><Icon name="pin" /> {reservation.address}</span></div>
       {reservation.status === "active" && <div className="countdown"><span>زمان باقی‌مانده تا شروع دریافت</span><strong>۲ ساعت و ۱۲ دقیقه</strong></div>}
       <div className="pickup-code"><span><small>کد دریافت نمایشی</small><strong>{reservation.code}</strong></span><MiniQr code={reservation.code} /></div>
-      {reservation.status === "active" && <div className="reservation-actions"><button type="button" onClick={onDirections}><Icon name="route" /> مسیریابی</button><button className="danger" type="button" onClick={() => onCancel(reservation.id)}>لغو رزرو</button></div>}
+      {reservation.reviewResponse && <blockquote className="customer-review-response"><strong>پاسخ فروشگاه</strong>{reservation.reviewResponse}</blockquote>}
+      <div className="reservation-actions">{reservation.status === "active" && <button type="button" onClick={onDirections}><Icon name="route" /> مسیریابی</button>}{cancellable && <button className="danger" type="button" onClick={() => onCancel(reservation.id)}>لغو رزرو</button>}{reservation.status === "collected" && !reservation.hasReview && <button type="button" onClick={() => onReview(reservation.id)}><Icon name="star" /> ثبت نظر</button>}{reservation.status === "collected" && reservation.hasReview && <span className="review-submitted"><Icon name="check" /> نظر ثبت شده</span>}</div>
     </article>
   );
 }
 
-function ProfilePage({ savedMeals, favoriteOffers, reservations, theme, setTheme, notifications, setNotifications, installed, onInstall, onOpenOffer, onAbout, showToast }: { savedMeals: number; favoriteOffers: Offer[]; reservations: Reservation[]; theme: ThemePreference; setTheme: (theme: ThemePreference) => void; notifications: boolean; setNotifications: (value: boolean) => void; installed: boolean; onInstall: () => void; onOpenOffer: (offer: Offer) => void; onAbout: () => void; showToast: (message: string) => void }) {
+function ProfilePage({ savedMeals, favoriteOffers, reservations, theme, setTheme, notifications, setNotifications, installed, onInstall, onOpenOffer, onAbout, onReset, showToast, customerName }: { savedMeals: number; favoriteOffers: Offer[]; reservations: Reservation[]; theme: ThemePreference; setTheme: (theme: ThemePreference) => void; notifications: boolean; setNotifications: (value: boolean) => void; installed: boolean; onInstall: () => void; onOpenOffer: (offer: Offer) => void; onAbout: () => void; onReset: () => void; showToast: (message: string) => void; customerName: string }) {
   const preventedWaste = savedMeals * 0.78;
   const co2 = savedMeals * 2.4;
   return (
     <div className="page-content secondary-page profile-page">
-      <div className="profile-head"><div className="avatar">ا</div><div><p>همراه سبز مفت</p><h1>امیر رضایی</h1></div><span>نسخهٔ نمایشی</span></div>
+      <div className="profile-head"><div className="avatar">{customerName[0]}</div><div><p>همراه سبز مفت</p><h1>{customerName}</h1></div><span>نسخهٔ نمایشی</span></div>
       <section className="impact-card glass-subtle"><div className="impact-card-head"><span><Icon name="leaf" /></span><div><p>اثر تو تا امروز</p><h2>{numberFa(savedMeals)} وعده نجات‌یافته</h2></div></div><div className="impact-grid"><span><strong>{decimalFa(preventedWaste)}</strong><small>کیلو غذای برآوردی</small></span><span><strong>{decimalFa(co2)}</strong><small>کیلو CO₂ برآوردی</small></span><span><strong>{numberFa(savedMeals * 11)}</strong><small>لیتر آب برآوردی</small></span></div><p className="estimate-note">این اعداد برای ارائه، تقریبی‌اند و ادعای زیست‌محیطی قطعی نیستند.</p></section>
 
       <section className="profile-section glass-subtle"><SectionHeading eyebrow="ذخیره‌شده‌ها" title="فروشگاه‌های محبوب" />{favoriteOffers.length ? <div className="favorite-stores">{favoriteOffers.slice(0, 5).map((offer) => <button type="button" onClick={() => onOpenOffer(offer)} key={offer.id}><span className="store-logo"><FoodImage src={offer.image} sizes="60px" /></span><small>{offer.merchantName}</small></button>)}</div> : <div className="inline-empty"><Icon name="heart" /><span>هنوز فروشگاهی را ذخیره نکردی.</span></div>}</section>
@@ -434,6 +485,9 @@ function ProfilePage({ savedMeals, favoriteOffers, reservations, theme, setTheme
         <button type="button" onClick={() => showToast("تنظیمات آلرژی در نسخهٔ بعدی دمو اضافه می‌شود؛ فعلاً هشدار هر جعبه را بخوان.")}><span className="setting-icon">⚠️</span><div><strong>آلرژی‌ها و ترجیحات</strong><small>هشدارهای هر جعبه را بررسی کن</small></div><Icon name="chevron" /></button>
         <button type="button" onClick={onAbout}><span className="setting-icon"><Icon name="info" /></span><div><strong>دربارهٔ مفت</strong><small>ماموریت، ایمنی و نحوهٔ کار</small></div><Icon name="chevron" /></button>
         <button type="button" onClick={() => showToast("پیام نمونه برای پشتیبانی ثبت شد؛ این دمو سرویس واقعی ارسال پیام ندارد.")}><span className="setting-icon">؟</span><div><strong>راهنما و پشتیبانی</strong><small>پاسخ پرسش‌های رایج</small></div><Icon name="chevron" /></button>
+        <Link href="/business"><span className="setting-icon"><Icon name="store" /></span><div><strong>رفتن به پنل کسب‌وکار</strong><small>مدیریت پیشنهادها و سفارش‌ها</small></div><Icon name="chevron" /></Link>
+        <Link href="/"><span className="setting-icon"><Icon name="home" /></span><div><strong>انتخاب نوع ورود</strong><small>بازگشت به صفحه آغاز</small></div><Icon name="chevron" /></Link>
+        <button type="button" onClick={onReset}><span className="setting-icon"><Icon name="trash" /></span><div><strong>بازنشانی اطلاعات نمایشی</strong><small>برگرداندن داده‌های اولیه دمو</small></div><Icon name="chevron" /></button>
       </div>
       <p className="profile-footnote">{numberFa(reservations.length)} رزرو در حافظهٔ محلی این دستگاه · بدون حساب کاربری و پرداخت واقعی</p>
     </div>
@@ -520,6 +574,16 @@ function AboutSheet({ onClose }: { onClose: () => void }) {
 
 function CancelDialog({ onClose, onConfirm }: { onClose: () => void; onConfirm: () => void }) {
   return <DialogShell label="تأیید لغو رزرو" onClose={onClose} size="center"><div className="cancel-dialog"><span className="danger-icon"><Icon name="trash" /></span><h2>رزرو لغو شود؟</h2><p>این کار فقط وضعیت رزرو نمایشی را تغییر می‌دهد و مبلغی جابه‌جا نشده است.</p><div><button className="secondary-button" type="button" onClick={onClose}>نه، نگهش دار</button><button className="danger-button" type="button" onClick={onConfirm}>بله، لغو کن</button></div></div></DialogShell>;
+}
+
+function ReviewDialog({ orderId, onClose, onSubmit }: { orderId: string; onClose: () => void; onSubmit: (rating: number, comment: string) => boolean }) {
+  const [rating, setRating] = useState(5);
+  const [comment, setComment] = useState("");
+  return <DialogShell titleId="customer-review-title" onClose={onClose}><form className="customer-review-dialog" onSubmit={(event) => { event.preventDefault(); onSubmit(rating, comment); }}><p className="eyebrow">تجربه دریافت</p><h2 id="customer-review-title">نظرت درباره این سفارش چیست؟</h2><p>پاسخ شما در پنل کیفیت کسب‌وکار دیده می‌شود. سفارش: <b>{orderId}</b></p><div className="customer-rating" role="radiogroup" aria-label="امتیاز از پنج">{[1, 2, 3, 4, 5].map((value) => <button type="button" role="radio" aria-checked={rating === value} className={rating >= value ? "active" : ""} onClick={() => setRating(value)} key={value} aria-label={`${value} ستاره`}>★</button>)}</div><label><span>توضیح اختیاری</span><textarea rows={4} value={comment} onChange={(event) => setComment(event.target.value)} placeholder="چه چیزی خوب بود یا بهتر می‌شد؟" /></label><button className="primary-button full" type="submit">ثبت نظر نمایشی</button></form></DialogShell>;
+}
+
+function ResetDialog({ onClose, onConfirm }: { onClose: () => void; onConfirm: () => void }) {
+  return <DialogShell label="تأیید بازنشانی دمو" onClose={onClose} size="center"><div className="cancel-dialog"><span className="danger-icon"><Icon name="trash" /></span><h2>اطلاعات دمو بازنشانی شود؟</h2><p>پیشنهادها، موجودی، سفارش‌ها، نظرها، پیگیری‌ها، اعلان‌ها و امور مالی به seed اولیه برمی‌گردند. پوسته حفظ می‌شود.</p><div><button className="secondary-button" type="button" onClick={onClose}>انصراف</button><button className="danger-button" type="button" onClick={onConfirm}>بازنشانی</button></div></div></DialogShell>;
 }
 
 function SectionHeading({ eyebrow, title, id, action, onAction }: { eyebrow: string; title: string; id?: string; action?: string; onAction?: () => void }) {

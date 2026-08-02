@@ -1,8 +1,10 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
+import { DemoProvider } from "@/demo/DemoProvider";
 import "@fontsource-variable/vazirmatn";
 import "./globals.css";
+import "./unified.css";
 
 export const metadata: Metadata = {
   title: {
@@ -65,7 +67,7 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
         <script dangerouslySetInnerHTML={{ __html: themeBootScript }} />
       </head>
       <body>
-        {children}
+        <DemoProvider>{children}</DemoProvider>
         <ServiceWorkerRegister />
       </body>
     </html>

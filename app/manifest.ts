@@ -12,15 +12,15 @@ export default function manifest(): MetadataRoute.Manifest {
     theme_color: "#14532D",
     dir: "rtl",
     lang: "fa",
-    orientation: "portrait-primary",
     icons: [
       { src: "/icons/icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
       { src: "/icons/icon-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
       { src: "/icons/icon-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" }
     ],
     shortcuts: [
-      { name: "کشف جعبه‌ها", short_name: "کشف", url: "/?tab=discover", icons: [{ src: "/icons/icon-192.png", sizes: "192x192" }] },
-      { name: "رزروهای من", short_name: "رزروها", url: "/?tab=reservations", icons: [{ src: "/icons/icon-192.png", sizes: "192x192" }] }
+      { name: "کشف جعبه‌ها", short_name: "کشف", url: "/customer/offers", icons: [{ src: "/icons/icon-192.png", sizes: "192x192" }] },
+      { name: "رزروهای من", short_name: "رزروها", url: "/customer/orders", icons: [{ src: "/icons/icon-192.png", sizes: "192x192" }] },
+      { name: "پنل کسب‌وکار", short_name: "کسب‌وکار", url: "/business", icons: [{ src: "/icons/icon-192.png", sizes: "192x192" }] }
     ]
   };
 }

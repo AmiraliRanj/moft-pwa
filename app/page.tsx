@@ -1,5 +1,5 @@
-import MoftPreview from "@/components/MoftPreview";
+import RoleSelector from "@/components/RoleSelector";
 
 export default function Page() {
-  return <MoftPreview />;
+  return <RoleSelector />;
 }

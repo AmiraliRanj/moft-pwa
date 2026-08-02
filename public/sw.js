@@ -1,6 +1,6 @@
-const CACHE_NAME = "moft-shell-v3";
+const CACHE_NAME = "moft-shell-v4";
 const OFFER_IMAGES = Array.from({ length: 16 }, (_, index) => `/images/offers/offer-${String(index + 1).padStart(2, "0")}.webp`);
-const APP_SHELL = ["/", "/offline", "/manifest.webmanifest", "/icons/icon-192.png", "/icons/icon-512.png", "/icons/apple-touch-icon.png", "/logo-mark.svg", ...OFFER_IMAGES];
+const APP_SHELL = ["/", "/customer", "/business", "/offline", "/manifest.webmanifest", "/icons/icon-192.png", "/icons/icon-512.png", "/icons/apple-touch-icon.png", "/logo-mark.svg", ...OFFER_IMAGES];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL)).then(() => self.skipWaiting()));
@@ -26,7 +26,7 @@ self.addEventListener("fetch", (event) => {
           caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
           return response;
         })
-        .catch(async () => (await caches.match(request)) || (await caches.match("/")) || caches.match("/offline"))
+        .catch(async () => (await caches.match(request)) || caches.match("/offline"))
     );
     return;
   }
