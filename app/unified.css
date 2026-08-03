@@ -899,33 +899,36 @@
 }
 
 [data-theme="dark"] .business-app {
-  --business-accent: #6d3040;
-  --business-accent-hover: #874459;
-  --business-accent-soft: #39232b;
-  --business-accent-border: #754052;
-  --business-page-background: #160f12;
-  --business-surface: #21171b;
-  --business-surface-elevated: #2b1e23;
-  --business-interactive-surface: #332229;
-  --business-text: #fbf6f7;
-  --business-muted-text: #c8b8bd;
-  --business-border: #4a343b;
+  --business-accent: #8a3d55;
+  --business-accent-hover: #a14a65;
+  --business-accent-active: #713046;
+  --business-accent-soft: rgba(138, 61, 85, .16);
+  --business-accent-border: rgba(161, 74, 101, .42);
+  --business-page-background: #0d0b0c;
+  --business-page-background-secondary: #110e10;
+  --business-surface: #171315;
+  --business-surface-elevated: #1d171a;
+  --business-interactive-surface: #241b1f;
+  --business-text: #f8f6f7;
+  --business-text-secondary: #d6cfd2;
+  --business-muted-text: #aaa1a5;
+  --business-border: rgba(255, 255, 255, .11);
   --canvas: var(--business-page-background);
-  --canvas-soft: #1d1418;
+  --canvas-soft: var(--business-page-background-secondary);
   --surface: var(--business-surface);
   --surface-solid: var(--business-surface);
   --surface-raised: var(--business-surface-elevated);
   --ink: var(--business-text);
-  --ink-soft: #e5d8dc;
+  --ink-soft: var(--business-text-secondary);
   --muted: var(--business-muted-text);
   --line: var(--business-border);
-  --line-strong: #654751;
-  --brand-2: #f0c8d3;
-  --brand-3: #c7758b;
+  --line-strong: rgba(255, 255, 255, .18);
+  --brand-2: var(--business-text);
+  --brand-3: var(--business-accent-hover);
   --brand-soft: var(--business-accent-soft);
-  --accent: #c7758b;
+  --accent: var(--business-accent-hover);
   --accent-soft: var(--business-accent-soft);
-  --focus: rgba(224, 138, 163, .46);
+  --focus: rgba(161, 74, 101, .58);
   --shadow-sm: 0 8px 22px rgba(0, 0, 0, .2);
   --shadow: 0 18px 42px rgba(0, 0, 0, .25);
   --shadow-float: 0 24px 70px rgba(0, 0, 0, .38);
@@ -1095,11 +1098,134 @@
 }
 [data-theme="dark"] .business-offer-body > small,
 [data-theme="dark"] .template-card > div > small,
-[data-theme="dark"] .offer-price strong { color: #f0c8d3; }
+[data-theme="dark"] .offer-price strong { color: var(--business-text-secondary); }
 [data-theme="dark"] .notification-button,
 [data-theme="dark"] .mobile-menu-button {
-  color: #f0c8d3;
+  color: var(--business-text);
   background: var(--business-surface-elevated);
+}
+
+/* Dark Business is a neutral charcoal workspace with maroon reserved for emphasis. */
+[data-theme="dark"] .business-app .business-nav a,
+[data-theme="dark"] .business-app .business-sidebar-foot > a,
+[data-theme="dark"] .business-app .business-sidebar-foot > button,
+[data-theme="dark"] .business-app .business-mobile-nav a,
+[data-theme="dark"] .business-app .business-mobile-nav button {
+  color: var(--business-text-secondary);
+}
+[data-theme="dark"] .business-app .business-nav a:hover,
+[data-theme="dark"] .business-app .business-sidebar-foot > a:hover,
+[data-theme="dark"] .business-app .business-sidebar-foot > button:hover,
+[data-theme="dark"] .business-app .business-mobile-nav a:hover,
+[data-theme="dark"] .business-app .business-mobile-nav button:hover {
+  color: #fff;
+  background: var(--business-surface-elevated);
+}
+[data-theme="dark"] .business-app .business-nav a.active,
+[data-theme="dark"] .business-app .business-mobile-nav a.active {
+  position: relative;
+  color: #fff;
+  background: var(--business-accent-soft);
+  border-color: var(--business-accent-border);
+}
+[data-theme="dark"] .business-app .business-nav a.active::before {
+  content: "";
+  width: 3px;
+  position: absolute;
+  inset-block: 10px;
+  inset-inline-start: 5px;
+  background: var(--business-accent-hover);
+  border-radius: 99px;
+}
+[data-theme="dark"] .business-app .business-nav a svg,
+[data-theme="dark"] .business-app .business-mobile-nav a.active svg,
+[data-theme="dark"] .business-app .business-mobile-nav button:hover svg {
+  color: currentColor;
+}
+
+[data-theme="dark"] .business-app .business-secondary,
+[data-theme="dark"] .business-app .business-panel-head > a,
+[data-theme="dark"] .business-app .table-action,
+[data-theme="dark"] .business-app .today-offer-actions button,
+[data-theme="dark"] .business-app .today-offer-actions a,
+[data-theme="dark"] .business-app .order-detail-actions button,
+[data-theme="dark"] .business-app .complaint-actions button,
+[data-theme="dark"] .business-app .verified-actions button,
+[data-theme="dark"] .business-app .simulate-scan,
+[data-theme="dark"] .business-app .camera-panel button,
+[data-theme="dark"] .business-app .support-page-header > button {
+  color: var(--business-text-secondary);
+  background: var(--business-surface-elevated);
+  border-color: var(--business-accent-border);
+}
+[data-theme="dark"] .business-app .business-secondary:hover,
+[data-theme="dark"] .business-app .business-panel-head > a:hover,
+[data-theme="dark"] .business-app .table-action:hover,
+[data-theme="dark"] .business-app .today-offer-actions button:hover,
+[data-theme="dark"] .business-app .today-offer-actions a:hover,
+[data-theme="dark"] .business-app .order-detail-actions button:hover,
+[data-theme="dark"] .business-app .complaint-actions button:hover,
+[data-theme="dark"] .business-app .verified-actions button:hover,
+[data-theme="dark"] .business-app .simulate-scan:hover,
+[data-theme="dark"] .business-app .camera-panel button:hover,
+[data-theme="dark"] .business-app .support-page-header > button:hover {
+  color: #fff;
+  background: var(--business-interactive-surface);
+  border-color: var(--business-accent-hover);
+}
+[data-theme="dark"] .business-app .business-panel-head > a {
+  background: transparent;
+  border: 1px solid transparent;
+}
+[data-theme="dark"] .business-app .business-panel-head > a svg {
+  color: var(--business-accent-hover);
+}
+[data-theme="dark"] .business-app .business-primary,
+[data-theme="dark"] .business-app .business-tabs button.active,
+[data-theme="dark"] .business-app .order-detail-actions .business-primary,
+[data-theme="dark"] .business-app .verified-actions .business-primary,
+[data-theme="dark"] .business-app .complaint-actions .business-primary {
+  color: #fff;
+  background: var(--business-accent);
+  border-color: var(--business-accent);
+}
+[data-theme="dark"] .business-app .business-tabs button:not(.active),
+[data-theme="dark"] .business-app .business-segments button,
+[data-theme="dark"] .business-app .chart-controls button {
+  color: var(--business-text-secondary);
+  background: var(--business-surface-elevated);
+  border-color: var(--business-border);
+}
+[data-theme="dark"] .business-app .business-segments button.active {
+  color: #fff;
+  background: var(--business-interactive-surface);
+}
+[data-theme="dark"] .business-app .branch-selector > svg,
+[data-theme="dark"] .business-app .custom-select-popover button svg,
+[data-theme="dark"] .business-app .chart-tooltip span,
+[data-theme="dark"] .business-app .camera-panel > svg {
+  color: var(--business-text-secondary);
+}
+
+[data-theme="dark"] .business-app .business-metric.brand {
+  color: #fff;
+  background: linear-gradient(145deg, #8a3d55, #552636);
+  border-color: rgba(255, 255, 255, .08);
+}
+[data-theme="dark"] .business-app .business-metric.brand > span,
+[data-theme="dark"] .business-app .business-metric.brand small { color: rgba(255, 255, 255, .76); }
+[data-theme="dark"] .business-app .business-metric.accent {
+  background: rgba(166, 109, 47, .12);
+  border-color: rgba(196, 137, 69, .34);
+}
+[data-theme="dark"] .business-app .business-metric.accent > span,
+[data-theme="dark"] .business-app .business-metric.accent small { color: #d9c7a8; }
+
+.business-panel-head > a { font-size: .75rem; }
+.today-offer-actions button,
+.today-offer-actions a {
+  min-height: 40px;
+  font-size: .75rem;
 }
 
 .business-status.completed,
@@ -1145,6 +1271,9 @@
   .business-tabs button,
   .business-offer-actions button,
   .template-actions button { font-size: clamp(.95rem, .2vw + .9rem, 1.0625rem); }
+  .business-panel-head > a,
+  .today-offer-actions button,
+  .today-offer-actions a { font-size: clamp(.9rem, .15vw + .85rem, 1rem); }
   .business-offer-body h2,
   .template-card h2 { font-size: clamp(1.25rem, .45vw + 1rem, 1.5rem); }
   .business-offer-body > p,
