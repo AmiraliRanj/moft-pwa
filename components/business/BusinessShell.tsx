@@ -79,7 +79,7 @@ export function BusinessShell({ children }: { children: ReactNode }) {
         {navOpen && <button className="business-nav-backdrop" type="button" onClick={() => setNavOpen(false)} aria-label="بستن منو" />}
         <aside className={`business-sidebar ${navOpen ? "open" : ""}`} aria-label="ناوبری پنل کسب‌وکار">
           <div className="business-sidebar-head">
-            <BrandMark subtitle="پنل کسب‌وکار" />
+            <BrandMark subtitle="پنل کسب‌وکار" variant="business" />
             <button className="mobile-close" type="button" onClick={() => setNavOpen(false)} aria-label="بستن منو"><Icon name="close" /></button>
           </div>
           <nav className="business-nav">
@@ -99,16 +99,18 @@ export function BusinessShell({ children }: { children: ReactNode }) {
         </aside>
 
         <section className="business-stage">
-          <header className={`business-topbar ${scrolled ? "scrolled" : ""}`}>
-            <div className="business-topbar-main">
+          <header className="business-topbar-shell">
+            <div className={`business-topbar ${scrolled ? "scrolled" : ""}`}>
+              <div className="business-topbar-main">
               <button className="mobile-menu-button" type="button" onClick={() => setNavOpen(true)} aria-label="باز کردن منوی پنل"><Icon name="list" /></button>
               <BranchSelector value={activeBranch?.id ?? ""} onChange={setBranchId} options={state.branches.map((branch) => ({ value: branch.id, label: branch.name, description: branch.area }))} />
               <span className="business-top-spacer" />
               <ThemeToggle compact />
               <button className="notification-button" type="button" onClick={() => setNotificationsOpen(!notificationsOpen)} aria-label={`اعلان‌ها؛ ${unreadCount} خوانده‌نشده`} aria-expanded={notificationsOpen}><Icon name="bell" />{unreadCount > 0 && <b>{unreadCount.toLocaleString("fa-IR")}</b>}</button>
-              <button className="business-profile-button" type="button" onClick={() => setProfileOpen(!profileOpen)} aria-expanded={profileOpen}><span>ا</span><span><strong>{state.business.ownerName}</strong><small>{activeStaff ? staffRoleLabel[activeStaff.role] : "کاربر"}</small></span><Icon name="chevron" /></button>
+              <button className="business-profile-button" type="button" onClick={() => setProfileOpen(!profileOpen)} aria-label={`نمایه ${state.business.ownerName}`} aria-expanded={profileOpen}><span>ا</span><span><strong>{state.business.ownerName}</strong><small>{activeStaff ? staffRoleLabel[activeStaff.role] : "کاربر"}</small></span><Icon name="chevron" /></button>
+              </div>
+              <button className={`acceptance-toggle ${activeBranch?.acceptsOrders ? "online" : ""}`} type="button" onClick={toggleOrders} aria-pressed={activeBranch?.acceptsOrders}><span>{activeBranch?.acceptsOrders ? "سفارش‌گیری فعال" : "سفارش‌گیری غیرفعال"}</span><i /></button>
             </div>
-            <button className={`acceptance-toggle ${activeBranch?.acceptsOrders ? "online" : ""}`} type="button" onClick={toggleOrders} aria-pressed={activeBranch?.acceptsOrders}><span>{activeBranch?.acceptsOrders ? "سفارش‌گیری فعال" : "سفارش‌گیری غیرفعال"}</span><i /></button>
           </header>
 
           {notificationsOpen && (
@@ -124,10 +126,12 @@ export function BusinessShell({ children }: { children: ReactNode }) {
           <div id="business-content" className="business-content" tabIndex={-1}>{children}</div>
         </section>
 
-        <nav className="business-mobile-nav" aria-label="ناوبری سریع پنل">
-          {mobileNavItems.map((item) => { const active = item.href === "/business" ? pathname === item.href : pathname.startsWith(item.href); return <Link key={item.href} href={item.href} className={active ? "active" : ""} aria-current={active ? "page" : undefined}><Icon name={item.icon} /><span>{item.label}</span></Link>; })}
-          <button type="button" onClick={() => setNavOpen(true)} aria-label="نمایش بخش‌های بیشتر"><Icon name="list" /><span>بیشتر</span></button>
-        </nav>
+        <div className="business-bottom-nav-shell">
+          <nav className="business-mobile-nav" aria-label="ناوبری سریع پنل">
+            {mobileNavItems.map((item) => { const active = item.href === "/business" ? pathname === item.href : pathname.startsWith(item.href); return <Link key={item.href} href={item.href} className={active ? "active" : ""} aria-current={active ? "page" : undefined}><Icon name={item.icon} /><span>{item.label}</span></Link>; })}
+            <button type="button" onClick={() => setNavOpen(true)} aria-label="نمایش بخش‌های بیشتر"><Icon name="list" /><span>بیشتر</span></button>
+          </nav>
+        </div>
         {toast && <div className={`business-toast ${toast.kind}`} role="status"><Icon name={toast.kind === "success" ? "check" : "info"} />{toast.text}</div>}
       </main>
     </BusinessUiProvider>
