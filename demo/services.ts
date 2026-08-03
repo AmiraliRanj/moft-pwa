@@ -159,7 +159,7 @@ export const orderService = {
       status: "paid",
       createdAt,
       updatedAt: createdAt,
-      history: [{ status: "paid", at: createdAt, note: "پرداخت با موفقیت شبیه‌سازی شد." }],
+      history: [{ status: "paid", at: createdAt, note: "پرداخت ثبت شد." }],
     };
     const soldQuantity = offer.soldQuantity + quantity;
     const status: OfferStatus = offer.totalQuantity - soldQuantity - offer.reservedQuantity <= 0 ? "sold_out" : offer.status;
@@ -174,7 +174,7 @@ export const orderService = {
         orders: [order, ...state.orders],
         finance: [{ id: entityId("transaction"), orderId, gross: order.total, commission, refund: 0, net: order.total - commission, type: "sale", status: "pending", createdAt }, ...state.finance],
         notifications: [{ id: entityId("notification"), kind: "new_order", title: "سفارش تازه", text: `${state.customer.name} یک ${offer.title} رزرو کرد.`, href: "/business/orders", read: false, createdAt }, ...state.notifications],
-        auditLog: [{ id: entityId("audit"), actor: "customer", action: "order_created", entityType: "order", entityId: orderId, at: createdAt, detail: "سفارش و پرداخت نمایشی ثبت شد." }, ...state.auditLog],
+        auditLog: [{ id: entityId("audit"), actor: "customer", action: "order_created", entityType: "order", entityId: orderId, at: createdAt, detail: "سفارش و پرداخت ثبت شد." }, ...state.auditLog],
       },
     };
   },
@@ -221,10 +221,11 @@ export const orderService = {
 };
 
 export const pickupService = {
-  verify(state: DemoState, code: string): { kind: "valid" | "invalid" | "used" | "wrong_status"; order?: Order } {
+  verify(state: DemoState, code: string): { kind: "valid" | "invalid" | "used" | "wrong_status" | "expired"; order?: Order } {
     const order = state.orders.find((item) => item.pickupCode.value === code.trim());
     if (!order) return { kind: "invalid" };
     if (order.pickupCode.status === "used") return { kind: "used", order };
+    if (order.pickupCode.status === "invalidated") return { kind: "expired", order };
     if (order.pickupCode.status !== "active" || order.status !== "ready_for_pickup") return { kind: "wrong_status", order };
     return { kind: "valid", order };
   },

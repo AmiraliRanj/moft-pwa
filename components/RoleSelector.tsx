@@ -10,14 +10,14 @@ export default function RoleSelector() {
       <div className="role-orb role-orb-one" aria-hidden="true" />
       <div className="role-orb role-orb-two" aria-hidden="true" />
       <header className="role-header">
-        <BrandMark subtitle="دموی یکپارچه نجات غذا" />
+        <BrandMark subtitle="نجات غذای خوب، نزدیک شما" />
         <ThemeToggle compact />
       </header>
 
       <section className="role-hero" aria-labelledby="role-title">
-        <p className="eyebrow">یک محصول، دو تجربه</p>
+        <p className="eyebrow">یک مقصد، دو تجربه</p>
         <h1 id="role-title">دوست داری از کدام سمت وارد «مفت» شوی؟</h1>
-        <p>نسخه مشتری و پنل کسب‌وکار به یک دادهٔ نمایشی مشترک وصل‌اند؛ هر تغییری در یک سمت، در سمت دیگر دیده می‌شود.</p>
+        <p>پیشنهادهای نزدیک را پیدا کنید یا عملیات روزانهٔ مجموعه‌تان را از یک پنل یکپارچه مدیریت کنید.</p>
       </section>
 
       <section id="role-options" className="role-grid" aria-label="انتخاب نوع ورود">
@@ -46,7 +46,7 @@ export default function RoleSelector() {
         </Link>
       </section>
 
-      <footer className="role-footer"><Icon name="info" /> این یک دموی عمومی دانشگاهی است؛ ورود، پرداخت و عملیات مالی واقعی نیست.</footer>
+      <footer className="role-footer"><Icon name="leaf" /> غذای خوب، قبل از دورریز.</footer>
     </main>
   );
 }

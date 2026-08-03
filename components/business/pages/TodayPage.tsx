@@ -13,6 +13,7 @@ export function TodayPage() {
   const { state, adjustStock, setOfferStatus, duplicateOffer } = useDemo();
   const { branchId, can, notify } = useBusinessUi();
   const [range, setRange] = useState<1 | 7 | 30>(7);
+  const [chartMetric, setChartMetric] = useState<"revenue" | "orders">("revenue");
   const branch = state.branches.find((item) => item.id === branchId);
   const offers = state.offers.filter((item) => item.businessId === state.business.id && item.branchId === branchId);
   const activeOffers = offers.filter((item) => ["active", "paused", "sold_out"].includes(item.status));
@@ -45,10 +46,10 @@ export function TodayPage() {
 
   return (
     <div className="business-page">
-      <BusinessPageHeader eyebrow={formatDate(new Date())} title={`صبح بخیر، ${state.business.ownerName}`} description={`${branch?.name ?? "شعبه"} · وضعیت سفارش‌گیری ${branch?.acceptsOrders ? "روشن" : "خاموش"}`} action={<Link className="business-primary" href="/business/offers">ساخت پیشنهاد <Icon name="plus" /></Link>} />
+      <BusinessPageHeader eyebrow={formatDate(new Date())} title={`صبح بخیر، ${state.business.ownerName}`} description={`${branch?.name ?? "شعبه"} · وضعیت سفارش‌گیری ${branch?.acceptsOrders ? "روشن" : "خاموش"}`} action={<><Link className="business-secondary" href="/business/pickup"><Icon name="check" /> تحویل سریع</Link><Link className="business-primary" href="/business/offers"><Icon name="plus" /> ساخت پیشنهاد</Link></>} />
 
       <section className="business-metrics" aria-label="شاخص‌های امروز">
-        <MetricCard label="فروش امروز" value={formatMoney(revenue)} hint="مبالغ کاملاً نمایشی" tone="brand" />
+        <MetricCard label="فروش امروز" value={formatMoney(revenue)} hint="مجموع سفارش‌های ثبت‌شده" tone="brand" />
         <MetricCard label="سفارش‌های امروز" value={formatNumber(orders.length)} hint={`${formatNumber(orders.filter((item) => item.status === "ready_for_pickup").length)} آماده تحویل`} />
         <MetricCard label="بسته‌های نجات‌یافته" value={formatNumber(sold)} hint="برآورد از فروش ثبت‌شده" />
         <MetricCard label="موجودی باقی‌مانده" value={formatNumber(remaining)} hint={`${formatNumber(offers.filter((item) => remainingQuantity(item) <= 2).length)} هشدار کمبود`} tone="accent" />
@@ -77,8 +78,8 @@ export function TodayPage() {
 
       <div className="business-two-column">
         <section className="business-panel revenue-panel">
-          <div className="business-panel-head"><div><p className="eyebrow">روند درآمد</p><h2>فروش بسته‌ها</h2></div><div className="business-segments" role="group" aria-label="بازه نمودار">{([1, 7, 30] as const).map((item) => <button key={item} type="button" className={range === item ? "active" : ""} onClick={() => setRange(item)}>{item === 1 ? "امروز" : `${formatNumber(item)} روز`}</button>)}</div></div>
-          <MiniBarChart money values={chartValues.map((item) => item.revenue)} labels={chartValues.map((item) => item.date.slice(8))} />
+          <div className="business-panel-head"><div><p className="eyebrow">روند روزانه</p><h2>{chartMetric === "revenue" ? "فروش بسته‌ها" : "تعداد سفارش‌ها"}</h2></div><div className="chart-controls"><div className="business-segments" role="group" aria-label="شاخص نمودار"><button type="button" className={chartMetric === "revenue" ? "active" : ""} onClick={() => setChartMetric("revenue")}>فروش</button><button type="button" className={chartMetric === "orders" ? "active" : ""} onClick={() => setChartMetric("orders")}>سفارش</button></div><div className="business-segments" role="group" aria-label="بازه نمودار">{([1, 7, 30] as const).map((item) => <button key={item} type="button" className={range === item ? "active" : ""} onClick={() => setRange(item)}>{item === 1 ? "امروز" : `${formatNumber(item)} روز`}</button>)}</div></div></div>
+          <MiniBarChart title={chartMetric === "revenue" ? "فروش روزانه" : "سفارش‌های روزانه"} money={chartMetric === "revenue"} values={chartValues.map((item) => chartMetric === "revenue" ? item.revenue : item.orders)} labels={chartValues.map((item) => item.date.slice(8))} />
         </section>
         <section className="business-panel">
           <div className="business-panel-head"><div><p className="eyebrow">سفارش‌ها</p><h2>آخرین فعالیت‌ها</h2></div><Link href="/business/orders">دیدن همه</Link></div>

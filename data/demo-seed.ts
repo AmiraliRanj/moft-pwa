@@ -142,7 +142,7 @@ const orders: Order[] = Array.from({ length: 25 }, (_, index) => {
     createdAt,
     updatedAt: completed ? iso(-(index % 10), 20) : createdAt,
     history: [
-      { status: "paid", at: createdAt, note: "پرداخت در دمو شبیه‌سازی شد." },
+      { status: "paid", at: createdAt, note: "پرداخت ثبت شد." },
       ...(status !== "paid" ? [{ status, at: completed ? iso(-(index % 10), 20) : createdAt, note: "وضعیت توسط پنل کسب‌وکار به‌روزرسانی شد." }] : []),
     ],
   };
@@ -176,7 +176,7 @@ const complaints: Complaint[] = Array.from({ length: 6 }, (_, index) => ({
   branchId: orders[index + 5].branchId,
   customerName: orders[index + 5].customerName,
   category: complaintCategories[index],
-  description: ["بخشی از بسته مطابق انتظار نبود.", "حجم بسته کمتر از تصورم بود.", "محتوا با توضیح کلی تفاوت داشت.", "برای تحویل کمی معطل شدم.", "در زمان تحویل راهنمایی کافی نبود.", "بازپرداخت نمایشی نیاز به بررسی دارد."][index],
+  description: ["بخشی از بسته مطابق انتظار نبود.", "حجم بسته کمتر از تصورم بود.", "محتوا با توضیح کلی تفاوت داشت.", "برای تحویل کمی معطل شدم.", "در زمان تحویل راهنمایی کافی نبود.", "بازپرداخت نیاز به بررسی دارد."][index],
   response: index === 2 ? "موضوع بررسی و برای بهبود فرایند ثبت شد." : "",
   status: complaintStatuses[index],
   createdAt: iso(-(index + 2), 13),
@@ -190,7 +190,7 @@ const notificationSeeds: Array<[DemoNotification["kind"], string, string, string
   ["pickup", "تحویل نزدیک است", "بازه دریافت سفارش MF-3100 تا کمتر از یک ساعت دیگر شروع می‌شود.", "/business/pickup"],
   ["review", "نظر تازه", "یک امتیاز ۵ ستاره برای شعبه جردن ثبت شد.", "/business/quality"],
   ["complaint", "پیگیری کیفیت", "یک مورد جدید برای بررسی ثبت شده است.", "/business/quality"],
-  ["settlement", "تسویه انجام شد", "تسویه دوره قبل با موفقیت شبیه‌سازی شد.", "/business/finance"],
+  ["settlement", "تسویه انجام شد", "تسویه دوره قبل با موفقیت ثبت شد.", "/business/finance"],
   ["offer_expired", "پیشنهاد منقضی شد", "زمان انتشار بسته دیروز پایان یافته است.", "/business/offers"],
   ["new_order", "دو سفارش تازه", "سفارش‌های امروز به پنل اضافه شدند.", "/business/orders"],
   ["low_stock", "نیاز به افزایش موجودی", "موجودی باکس برانچ کمتر از سه عدد است.", "/business/offers"],
@@ -244,7 +244,7 @@ export function createDemoSeed(): DemoState {
     customer: { id: DEMO_CUSTOMER_ID, name: "سارا احمدی", mobile: "09120000000", joinedAt: iso(-120) },
     business: {
       id: DEMO_BUSINESS_ID, name: "کافه ویونا", ownerName: "امیر رضایی", category: "کافه و نانوایی", rating: 4.6,
-      logo: "/logo-mark.svg", cover: "/images/offers/offer-01.webp", demoBankIban: "IR00 0000 0000 0000 0000 0000 00 (نمایشی)",
+      logo: "/logo-mark.svg", cover: "/images/offers/offer-01.webp", demoBankIban: "IR00 •••• •••• •••• •••• 0000 00",
     },
     branches: [
       { id: "branch-jordan", businessId: DEMO_BUSINESS_ID, name: "شعبه جردن", area: "جردن", address: "تهران، جردن، خیابان ناهید غربی", phone: "021-00000000", acceptsOrders: true, openingHours: "۸:۰۰ تا ۲۲:۰۰", pickupWindows: ["۱۹:۳۰ تا ۲۰:۳۰", "۲۰:۳۰ تا ۲۱:۳۰"] },
@@ -268,6 +268,6 @@ export function createDemoSeed(): DemoState {
       { id: "settlement-2", amount: 3184000, period: "۱۶ تا ۳۱ تیر", status: "scheduled", dueAt: iso(4) },
     ],
     analytics,
-    auditLog: [{ id: "audit-seed", actor: "system", action: "seed_created", entityType: "settings", entityId: DEMO_BUSINESS_ID, at: iso(-30), detail: "اطلاعات اولیه دمو ایجاد شد." }],
+    auditLog: [{ id: "audit-seed", actor: "system", action: "seed_created", entityType: "settings", entityId: DEMO_BUSINESS_ID, at: iso(-30), detail: "اطلاعات اولیه ایجاد شد." }],
   };
 }

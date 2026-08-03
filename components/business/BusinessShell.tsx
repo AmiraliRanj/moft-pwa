@@ -2,15 +2,15 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useCallback, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { BrandMark } from "@/components/shared/BrandMark";
 import { ThemeToggle } from "@/components/shared/ThemeToggle";
-import { DialogShell } from "@/components/moft/DialogShell";
 import { Icon, type IconName } from "@/components/moft/Icon";
 import { useDemo } from "@/demo/DemoProvider";
 import { staffRoleLabel } from "@/lib/demo-format";
 import type { Permission } from "@/types/demo";
 import { BusinessUiProvider } from "@/components/business/BusinessUiContext";
+import { BranchSelector, SelectField } from "@/components/shared/FormControls";
 
 const navItems: Array<{ href: string; label: string; icon: IconName }> = [
   { href: "/business", label: "امروز", icon: "grid" },
@@ -21,23 +21,42 @@ const navItems: Array<{ href: string; label: string; icon: IconName }> = [
   { href: "/business/analytics", label: "گزارش‌ها", icon: "sliders" },
   { href: "/business/quality", label: "نظرات و کیفیت", icon: "star" },
   { href: "/business/finance", label: "امور مالی", icon: "cart" },
+  { href: "/business/support", label: "راهنما و پشتیبانی", icon: "info" },
   { href: "/business/settings", label: "مدیریت مجموعه", icon: "user" },
+];
+
+const mobileNavItems: Array<{ href: string; label: string; icon: IconName }> = [
+  { href: "/business", label: "امروز", icon: "grid" },
+  { href: "/business/orders", label: "سفارش‌ها", icon: "bag" },
+  { href: "/business/pickup", label: "تحویل", icon: "check" },
+  { href: "/business/offers", label: "پیشنهادها", icon: "store" },
 ];
 
 export function BusinessShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
-  const { state, updateBranch, markNotificationRead, markAllNotificationsRead, setActiveStaff, resetDemo } = useDemo();
+  const { state, updateBranch, markNotificationRead, markAllNotificationsRead, setActiveStaff } = useDemo();
   const [branchId, setBranchId] = useState(state.branches[0]?.id ?? "");
   const [navOpen, setNavOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
-  const [resetOpen, setResetOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const [toast, setToast] = useState<{ text: string; kind: "success" | "error" } | null>(null);
   const [unreadOnly, setUnreadOnly] = useState(false);
   const activeBranch = state.branches.find((branch) => branch.id === branchId) ?? state.branches[0];
   const activeStaff = state.staff.find((member) => member.id === state.activeStaffId) ?? state.staff[0];
   const unreadCount = state.notifications.filter((item) => !item.read).length;
   const notifications = unreadOnly ? state.notifications.filter((item) => !item.read) : state.notifications;
+
+  useEffect(() => {
+    let frame = 0;
+    const onScroll = () => {
+      if (frame) return;
+      frame = window.requestAnimationFrame(() => { setScrolled(window.scrollY > 8); frame = 0; });
+    };
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => { window.removeEventListener("scroll", onScroll); if (frame) window.cancelAnimationFrame(frame); };
+  }, []);
 
   const notify = useCallback((message: string, kind: "success" | "error" = "success") => {
     setToast({ text: message, kind });
@@ -70,22 +89,26 @@ export function BusinessShell({ children }: { children: ReactNode }) {
             })}
           </nav>
           <div className="business-sidebar-foot">
-            <label className="staff-preview"><span>نقش فعال دمو</span><select value={activeStaff?.id} onChange={(event) => setActiveStaff(event.target.value)}>{state.staff.map((member) => <option key={member.id} value={member.id}>{member.name} · {staffRoleLabel[member.role]}</option>)}</select></label>
+            <div className="business-sidebar-theme">
+              <ThemeToggle />
+            </div>
+            <SelectField className="staff-preview" label="نقش فعال" value={activeStaff?.id ?? ""} onChange={setActiveStaff} options={state.staff.map((member) => ({ value: member.id, label: member.name, description: staffRoleLabel[member.role] }))} />
             <Link href="/customer"><Icon name="user" /> رفتن به نسخه مشتری</Link>
             <Link href="/"><Icon name="home" /> انتخاب نوع ورود</Link>
-            <button type="button" onClick={() => setResetOpen(true)}><Icon name="trash" /> بازنشانی داده‌های نمایشی</button>
           </div>
         </aside>
 
         <section className="business-stage">
-          <header className="business-topbar glass-medium">
-            <button className="mobile-menu-button" type="button" onClick={() => setNavOpen(true)} aria-label="باز کردن منوی پنل"><Icon name="list" /></button>
-            <label className="branch-select"><span className="sr-only">انتخاب شعبه</span><Icon name="pin" /><select value={activeBranch?.id} onChange={(event) => setBranchId(event.target.value)}>{state.branches.map((branch) => <option key={branch.id} value={branch.id}>{branch.name}</option>)}</select></label>
-            <button className={`acceptance-toggle ${activeBranch?.acceptsOrders ? "online" : ""}`} type="button" onClick={toggleOrders} aria-pressed={activeBranch?.acceptsOrders}><i /><span>{activeBranch?.acceptsOrders ? "سفارش‌گیری روشن" : "سفارش‌گیری خاموش"}</span></button>
-            <span className="business-top-spacer" />
-            <ThemeToggle compact />
-            <button className="notification-button" type="button" onClick={() => setNotificationsOpen(!notificationsOpen)} aria-label={`اعلان‌ها؛ ${unreadCount} خوانده‌نشده`} aria-expanded={notificationsOpen}><Icon name="bell" />{unreadCount > 0 && <b>{unreadCount.toLocaleString("fa-IR")}</b>}</button>
-            <button className="business-profile-button" type="button" onClick={() => setProfileOpen(!profileOpen)} aria-expanded={profileOpen}><span>ا</span><span><strong>{state.business.ownerName}</strong><small>{activeStaff ? staffRoleLabel[activeStaff.role] : "دمو"}</small></span><Icon name="chevron" /></button>
+          <header className={`business-topbar ${scrolled ? "scrolled" : ""}`}>
+            <div className="business-topbar-main">
+              <button className="mobile-menu-button" type="button" onClick={() => setNavOpen(true)} aria-label="باز کردن منوی پنل"><Icon name="list" /></button>
+              <BranchSelector value={activeBranch?.id ?? ""} onChange={setBranchId} options={state.branches.map((branch) => ({ value: branch.id, label: branch.name, description: branch.area }))} />
+              <span className="business-top-spacer" />
+              <ThemeToggle compact />
+              <button className="notification-button" type="button" onClick={() => setNotificationsOpen(!notificationsOpen)} aria-label={`اعلان‌ها؛ ${unreadCount} خوانده‌نشده`} aria-expanded={notificationsOpen}><Icon name="bell" />{unreadCount > 0 && <b>{unreadCount.toLocaleString("fa-IR")}</b>}</button>
+              <button className="business-profile-button" type="button" onClick={() => setProfileOpen(!profileOpen)} aria-expanded={profileOpen}><span>ا</span><span><strong>{state.business.ownerName}</strong><small>{activeStaff ? staffRoleLabel[activeStaff.role] : "کاربر"}</small></span><Icon name="chevron" /></button>
+            </div>
+            <button className={`acceptance-toggle ${activeBranch?.acceptsOrders ? "online" : ""}`} type="button" onClick={toggleOrders} aria-pressed={activeBranch?.acceptsOrders}><span>{activeBranch?.acceptsOrders ? "سفارش‌گیری فعال" : "سفارش‌گیری غیرفعال"}</span><i /></button>
           </header>
 
           {notificationsOpen && (
@@ -96,13 +119,16 @@ export function BusinessShell({ children }: { children: ReactNode }) {
             </aside>
           )}
 
-          {profileOpen && <div className="business-profile-menu glass-strong"><strong>{state.business.name}</strong><small>{activeBranch?.name} · نسخه نمایشی</small><Link href="/business/settings" onClick={() => setProfileOpen(false)}>تنظیمات مجموعه</Link><Link href="/customer">نسخه مشتری</Link><Link href="/">انتخاب نوع ورود</Link><button type="button" onClick={() => { setProfileOpen(false); setResetOpen(true); }}>بازنشانی دمو</button></div>}
+          {profileOpen && <div className="business-profile-menu glass-strong"><strong>{state.business.name}</strong><small>{activeBranch?.name}</small><Link href="/business/settings" onClick={() => setProfileOpen(false)}>تنظیمات مجموعه</Link><Link href="/business/support" onClick={() => setProfileOpen(false)}>راهنما و پشتیبانی</Link><Link href="/customer">نسخه مشتری</Link><Link href="/">انتخاب نوع ورود</Link></div>}
 
           <div id="business-content" className="business-content" tabIndex={-1}>{children}</div>
         </section>
 
+        <nav className="business-mobile-nav" aria-label="ناوبری سریع پنل">
+          {mobileNavItems.map((item) => { const active = item.href === "/business" ? pathname === item.href : pathname.startsWith(item.href); return <Link key={item.href} href={item.href} className={active ? "active" : ""} aria-current={active ? "page" : undefined}><Icon name={item.icon} /><span>{item.label}</span></Link>; })}
+          <button type="button" onClick={() => setNavOpen(true)} aria-label="نمایش بخش‌های بیشتر"><Icon name="list" /><span>بیشتر</span></button>
+        </nav>
         {toast && <div className={`business-toast ${toast.kind}`} role="status"><Icon name={toast.kind === "success" ? "check" : "info"} />{toast.text}</div>}
-        {resetOpen && <DialogShell label="تأیید بازنشانی اطلاعات نمایشی" onClose={() => setResetOpen(false)} size="center"><div className="cancel-dialog"><span className="danger-icon"><Icon name="trash" /></span><h2>داده‌های دمو بازنشانی شود؟</h2><p>پیشنهادها، سفارش‌ها، نظرها، اعلان‌ها و امور مالی به حالت اولیه برمی‌گردند. پوسته انتخاب‌شده حفظ می‌شود.</p><div><button className="secondary-button" type="button" onClick={() => setResetOpen(false)}>انصراف</button><button className="danger-button" type="button" onClick={() => { resetDemo(); setBranchId("branch-jordan"); setResetOpen(false); notify("اطلاعات نمایشی به حالت اولیه برگشت."); }}>بازنشانی</button></div></div></DialogShell>}
       </main>
     </BusinessUiProvider>
   );

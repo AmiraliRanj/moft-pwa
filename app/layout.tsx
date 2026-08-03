@@ -11,7 +11,7 @@ export const metadata: Metadata = {
     default: "مفت | غذای خوب، قبل از دورریز",
     template: "%s | مفت"
   },
-  description: "جعبه‌های غافلگیرکنندهٔ غذای سالمِ فروش‌نرفته با قیمت کمتر و دریافت حضوری؛ نسخهٔ نمایشی دانشگاهی.",
+  description: "جعبه‌های غافلگیرکنندهٔ غذای سالمِ فروش‌نرفته با قیمت کمتر و دریافت حضوری.",
   applicationName: "مفت",
   category: "food",
   keywords: ["کاهش دورریز غذا", "جعبه سورپرایزی", "دریافت حضوری", "مفت"],
@@ -40,10 +40,8 @@ const themeBootScript = `
 (() => {
   const root = document.documentElement;
   try {
-    const preference = localStorage.getItem("moft-theme-v2") || "system";
-    const hour = new Date().getHours();
-    const automatic = hour >= 7 && hour < 19 ? "light" : "dark";
-    const resolved = preference === "system" ? automatic : preference;
+    const saved = localStorage.getItem("moft-theme-v2");
+    const resolved = saved === "dark" ? "dark" : "light";
     root.dataset.theme = resolved;
     root.style.colorScheme = resolved;
     const themeMeta = document.getElementById("theme-color");
@@ -51,7 +49,7 @@ const themeBootScript = `
     if (themeMeta) themeMeta.setAttribute("content", resolved === "dark" ? "#151816" : "#F4F8F3");
     if (statusMeta) statusMeta.setAttribute("content", resolved === "dark" ? "black-translucent" : "default");
   } catch {
-    const resolved = new Date().getHours() >= 7 && new Date().getHours() < 19 ? "light" : "dark";
+    const resolved = "light";
     root.dataset.theme = resolved;
     root.style.colorScheme = resolved;
   }

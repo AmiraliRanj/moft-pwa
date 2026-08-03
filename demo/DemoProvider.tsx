@@ -249,7 +249,7 @@ export function DemoProvider({ children }: { children: ReactNode }) {
     if (stateRef.current.branches.length <= 1) return { ok: false, message: "حداقل یک شعبه باید باقی بماند." };
     if (stateRef.current.offers.some((offer) => offer.branchId === id && offer.status === "active")) return { ok: false, message: "شعبه دارای پیشنهاد فعال است." };
     commit({ ...stateRef.current, branches: stateRef.current.branches.filter((branch) => branch.id !== id) });
-    return { ok: true, message: "شعبه نمایشی حذف شد." };
+    return { ok: true, message: "شعبه حذف شد." };
   }, [commit]);
 
   const updateStaff = useCallback((id: string, patch: Partial<StaffMember>): Feedback => {

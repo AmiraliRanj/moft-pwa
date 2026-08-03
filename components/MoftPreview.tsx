@@ -11,24 +11,24 @@ import { Icon } from "@/components/moft/Icon";
 import { LoadingSkeleton } from "@/components/moft/LoadingSkeleton";
 import { OfferCard, OfferList } from "@/components/moft/OfferCard";
 import { SearchBar } from "@/components/moft/SearchBar";
+import { useMoftTheme } from "@/components/shared/ThemeToggle";
 import { useDemo } from "@/demo/DemoProvider";
 import { orderStatusLabel, remainingQuantity } from "@/lib/demo-format";
 import { decimalFa, discountPercent, distanceFa, money, numberFa } from "@/lib/moft-format";
 import type { MarketplaceOffer, Order } from "@/types/demo";
-import type { AppTab, CategoryId, Offer, PickupPeriod, Reservation, ThemePreference } from "@/types/moft";
+import type { AppTab, CategoryId, Offer, PickupPeriod, Reservation } from "@/types/moft";
 
 type InstallPromptEvent = Event & {
   prompt: () => Promise<void>;
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 };
 
-type Layer = "detail" | "reserve" | "filters" | "location" | "about" | "cancel" | "review" | "reset" | null;
+type Layer = "detail" | "reserve" | "filters" | "location" | "about" | "cancel" | "review" | null;
 type SortMode = "nearest" | "popular" | "discount";
 type ReservationView = "active" | "history";
 
 const storageKeys = {
-  favorites: "moft-favorites-v2",
-  theme: "moft-theme-v2"
+  favorites: "moft-favorites-v2"
 };
 
 const faDigits = (value: string) => value.replace(/\d/g, (digit) => "۰۱۲۳۴۵۶۷۸۹"[Number(digit)]);
@@ -64,7 +64,7 @@ type MoftPreviewProps = {
 };
 
 export default function MoftPreview({ initialTab = "home", initialFavoritesOnly = false, initialOfferId }: MoftPreviewProps) {
-  const { state, placeOrder, transitionOrder, submitReview, resetDemo } = useDemo();
+  const { state, placeOrder, transitionOrder, submitReview } = useDemo();
   const [tab, setTab] = useState<AppTab>(initialTab);
   const [category, setCategory] = useState<CategoryId>("all");
   const [query, setQuery] = useState("");
@@ -84,8 +84,6 @@ export default function MoftPreview({ initialTab = "home", initialFavoritesOnly 
   const [pageLoading, setPageLoading] = useState(false);
   const [storageWarning, setStorageWarning] = useState(false);
   const [online, setOnline] = useState(true);
-  const [theme, setTheme] = useState<ThemePreference>("system");
-  const [themeReady, setThemeReady] = useState(false);
   const [notifications, setNotifications] = useState(true);
   const [installPrompt, setInstallPrompt] = useState<InstallPromptEvent | null>(null);
   const [installed, setInstalled] = useState(false);
@@ -106,11 +104,9 @@ export default function MoftPreview({ initialTab = "home", initialFavoritesOnly 
 
   useEffect(() => {
     let savedFavorites: string[] | null = null;
-    let savedTheme: ThemePreference | null = null;
     let invalidStorage = false;
     try {
       const favoritesJson = localStorage.getItem(storageKeys.favorites);
-      savedTheme = localStorage.getItem(storageKeys.theme) as ThemePreference | null;
       if (favoritesJson) savedFavorites = JSON.parse(favoritesJson) as string[];
     } catch {
       invalidStorage = true;
@@ -119,8 +115,6 @@ export default function MoftPreview({ initialTab = "home", initialFavoritesOnly 
     const shortcut = new URLSearchParams(window.location.search).get("tab");
     const hydrateTimer = window.setTimeout(() => {
       if (savedFavorites) setFavorites(new Set(savedFavorites));
-      if (savedTheme && ["light", "dark", "system"].includes(savedTheme)) setTheme(savedTheme);
-      setThemeReady(true);
       if (invalidStorage) setStorageWarning(true);
       if (shortcut === "discover" || shortcut === "reservations") setTab(shortcut);
       setOnline(navigator.onLine);
@@ -153,32 +147,6 @@ export default function MoftPreview({ initialTab = "home", initialFavoritesOnly 
     const timer = window.setTimeout(() => { setSelected(offer); setLayer("detail"); }, 0);
     return () => window.clearTimeout(timer);
   }, [initialOfferId, offers]);
-
-  useEffect(() => {
-    if (!themeReady) return;
-    const applyTheme = () => {
-      const hour = new Date().getHours();
-      const resolved = theme === "system" ? (hour >= 7 && hour < 19 ? "light" : "dark") : theme;
-      const root = document.documentElement;
-      root.dataset.theme = resolved;
-      root.style.colorScheme = resolved;
-      const themeMeta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
-      const statusMeta = document.querySelector<HTMLMetaElement>('meta[name="apple-mobile-web-app-status-bar-style"]');
-      if (themeMeta) themeMeta.content = resolved === "dark" ? "#151816" : "#F4F8F3";
-      if (statusMeta) statusMeta.content = resolved === "dark" ? "black-translucent" : "default";
-    };
-    applyTheme();
-    localStorage.setItem(storageKeys.theme, theme);
-    const onVisibility = () => { if (document.visibilityState === "visible") applyTheme(); };
-    const hourTimer = window.setInterval(applyTheme, 60_000);
-    document.addEventListener("visibilitychange", onVisibility);
-    const readyFrame = window.requestAnimationFrame(() => { document.documentElement.dataset.themeReady = "true"; });
-    return () => {
-      window.clearInterval(hourTimer);
-      window.cancelAnimationFrame(readyFrame);
-      document.removeEventListener("visibilitychange", onVisibility);
-    };
-  }, [theme, themeReady]);
 
   const activeReservations = reservations.filter((item) => item.status === "active");
   const historyReservations = reservations.filter((item) => item.status !== "active");
@@ -242,7 +210,7 @@ export default function MoftPreview({ initialTab = "home", initialFavoritesOnly 
 
   const openReservation = () => {
     if (!selected || selected.quantityLeft < 1) return;
-    if (!online) { showToast("برای ثبت رزرو نمایشی دوباره آنلاین شو."); return; }
+    if (!online) { showToast("برای ثبت رزرو دوباره آنلاین شو."); return; }
     setQuantity(1);
     setReservationStep(1);
     setSuccessReservation(null);
@@ -280,7 +248,7 @@ export default function MoftPreview({ initialTab = "home", initialFavoritesOnly 
     if (!result.ok) { showToast(result.error); setLayer(null); setCancelId(null); return; }
     setLayer(null);
     setCancelId(null);
-    showToast("رزرو نمایشی لغو و موجودی مجاز بازگردانده شد.");
+    showToast("رزرو لغو و موجودی مجاز بازگردانده شد.");
   };
 
   const install = async () => {
@@ -313,7 +281,7 @@ export default function MoftPreview({ initialTab = "home", initialFavoritesOnly 
       <div className="ambient ambient-two" aria-hidden="true" />
 
       {!online && <div className="offline-banner" role="status"><Icon name="wifi" /> آفلاینی؛ پیشنهادهای ذخیره‌شده را می‌بینی، اما رزرو تازه ثبت نمی‌شود.</div>}
-      {storageWarning && <div className="storage-warning" role="alert"><span>اطلاعات محلی قبلی خوانده نشد و دمو تازه‌سازی شد.</span><button type="button" onClick={() => setStorageWarning(false)} aria-label="بستن هشدار"><Icon name="close" /></button></div>}
+      {storageWarning && <div className="storage-warning" role="alert"><span>اطلاعات محلی قبلی خوانده نشد و برنامه تازه‌سازی شد.</span><button type="button" onClick={() => setStorageWarning(false)} aria-label="بستن هشدار"><Icon name="close" /></button></div>}
       {islandVisible && successReservation && <div className="island-notice" role="status"><span className="island-check"><Icon name="check" /></span><span><strong>رزرو آماده شد</strong><small>کد دریافت {successReservation.code}</small></span></div>}
 
       <section className="app-canvas">
@@ -331,8 +299,8 @@ export default function MoftPreview({ initialTab = "home", initialFavoritesOnly 
             <>
               {tab === "home" && <HomePage query={query} setQuery={setQuery} category={category} setCategory={setCategory} offers={baseFilteredOffers} allOffers={offers} favorites={favorites} onFavorite={toggleFavorite} onSelect={openOffer} onDiscover={() => switchTab("discover")} installPrompt={installPrompt} installed={installed} onInstall={install} savedMeals={savedMeals} />}
               {tab === "discover" && <DiscoverPage query={query} setQuery={setQuery} category={category} setCategory={setCategory} offers={discoverOffers} favorites={favorites} onFavorite={toggleFavorite} onSelect={openOffer} viewMode={viewMode} setViewMode={setViewMode} sort={sort} setSort={setSort} onFilters={() => setLayer("filters")} favoritesOnly={favoritesOnly} setFavoritesOnly={setFavoritesOnly} />}
-              {tab === "reservations" && <ReservationsPage active={activeReservations} history={historyReservations} view={reservationView} setView={setReservationView} onCancel={requestCancel} onReview={requestReview} onDiscover={() => switchTab("discover")} onDirections={() => showToast("مسیر فروشگاه در نسخهٔ نمایشی روی نقشه باز نمی‌شود.")} />}
-              {tab === "profile" && <ProfilePage savedMeals={savedMeals} favoriteOffers={offers.filter((offer) => favorites.has(offer.id))} reservations={reservations} theme={theme} setTheme={setTheme} notifications={notifications} setNotifications={setNotifications} installed={installed} onInstall={install} onOpenOffer={openOffer} onAbout={() => setLayer("about")} onReset={() => setLayer("reset")} showToast={showToast} customerName={state.customer.name} />}
+              {tab === "reservations" && <ReservationsPage active={activeReservations} history={historyReservations} view={reservationView} setView={setReservationView} onCancel={requestCancel} onReview={requestReview} onDiscover={() => switchTab("discover")} onDirections={() => showToast("مسیریابی این فروشگاه اکنون در دسترس نیست.")} />}
+              {tab === "profile" && <ProfilePage savedMeals={savedMeals} favoriteOffers={offers.filter((offer) => favorites.has(offer.id))} reservations={reservations} notifications={notifications} setNotifications={setNotifications} installed={installed} onInstall={install} onOpenOffer={openOffer} onAbout={() => setLayer("about")} showToast={showToast} customerName={state.customer.name} />}
             </>
           )}
         </div>
@@ -341,13 +309,12 @@ export default function MoftPreview({ initialTab = "home", initialFavoritesOnly 
       </section>
 
       {layer === "detail" && selected && <OfferDetails offer={selected} favorite={favorites.has(selected.id)} onFavorite={toggleFavorite} onClose={closeOffer} onReserve={openReservation} related={offers.filter((offer) => offer.category === selected.category && offer.id !== selected.id).slice(0, 2)} onSelect={openOffer} favorites={favorites} />}
-      {layer === "reserve" && selected && <ReservationFlow offer={selected} step={reservationStep} setStep={setReservationStep} quantity={quantity} setQuantity={setQuantity} confirming={confirming} onConfirm={completeReservation} success={successReservation} onClose={() => setLayer(null)} onDone={() => { setLayer(null); switchTab("reservations"); }} onDirections={() => showToast("مسیریابی در این نمونه شبیه‌سازی شده است.")} onCalendar={() => addToCalendar(successReservation, showToast)} />}
+      {layer === "reserve" && selected && <ReservationFlow offer={selected} step={reservationStep} setStep={setReservationStep} quantity={quantity} setQuantity={setQuantity} confirming={confirming} onConfirm={completeReservation} success={successReservation} onClose={() => setLayer(null)} onDone={() => { setLayer(null); switchTab("reservations"); }} onDirections={() => showToast("مسیریابی این فروشگاه اکنون در دسترس نیست.")} onCalendar={() => addToCalendar(successReservation, showToast)} />}
       {layer === "filters" && <FilterSheet maxDistance={maxDistance} setMaxDistance={setMaxDistance} maxPrice={maxPrice} setMaxPrice={setMaxPrice} pickup={pickupFilter} setPickup={setPickupFilter} onReset={() => { setMaxDistance(10); setMaxPrice(300000); setPickupFilter("all"); }} onClose={() => setLayer(null)} resultCount={discoverOffers.length} />}
-      {layer === "location" && <LocationSheet value={location} onChange={(value) => { setLocation(value); setLayer(null); showToast("موقعیت نمونه تغییر کرد."); }} onClose={() => setLayer(null)} />}
+      {layer === "location" && <LocationSheet value={location} onChange={(value) => { setLocation(value); setLayer(null); showToast("موقعیت تغییر کرد."); }} onClose={() => setLayer(null)} />}
       {layer === "about" && <AboutSheet onClose={() => setLayer(null)} />}
       {layer === "cancel" && <CancelDialog onClose={() => setLayer(null)} onConfirm={confirmCancel} />}
       {layer === "review" && reviewOrderId && <ReviewDialog orderId={reviewOrderId} onClose={() => { setLayer(null); setReviewOrderId(null); }} onSubmit={(rating, comment) => { const result = submitReview(reviewOrderId, rating, comment); if (!result.ok) { showToast(result.error); return false; } showToast("نظرت ثبت شد و در پنل کیفیت کسب‌وکار دیده می‌شود."); setLayer(null); setReviewOrderId(null); return true; }} />}
-      {layer === "reset" && <ResetDialog onClose={() => setLayer(null)} onConfirm={() => { resetDemo(); setFavorites(new Set()); setLayer(null); showToast("اطلاعات دمو به حالت اولیه برگشت؛ پوسته حفظ شد."); }} />}
       {toast && <div className="toast" role="status"><Icon name="check" /> {toast}</div>}
     </main>
   );
@@ -401,7 +368,7 @@ function HomePage({ query, setQuery, category, setCategory, offers, allOffers, f
           </section>
 
           <section className="impact-home-card glass-subtle">
-            <div><span className="impact-leaf"><Icon name="leaf" /></span><p className="eyebrow">اثر کوچک، حال خوب بزرگ</p><h2>تا امروز {numberFa(savedMeals || 1)} وعده از دورریز دور شده.</h2><p>{savedMeals ? "این عدد با رزروهای نمایشی تو به‌روز می‌شود." : "اولین جعبه‌ات می‌تواند شروع این مسیر باشد."}</p></div>
+            <div><span className="impact-leaf"><Icon name="leaf" /></span><p className="eyebrow">اثر کوچک، حال خوب بزرگ</p><h2>تا امروز {numberFa(savedMeals || 1)} وعده از دورریز دور شده.</h2><p>{savedMeals ? "این عدد با رزروهای تو به‌روز می‌شود." : "اولین جعبه‌ات می‌تواند شروع این مسیر باشد."}</p></div>
             <div className="impact-ring"><strong>{numberFa((savedMeals || 1) * 11)}</strong><small>لیتر آب<br />تخمینی</small></div>
           </section>
         </>
@@ -431,11 +398,11 @@ function DiscoverPage({ query, setQuery, category, setCategory, offers, favorite
 
 function MapPreview({ offers, onSelect }: { offers: Offer[]; onSelect: (offer: Offer) => void }) {
   return (
-    <div className="map-preview" aria-label="پیش‌نمایش نمایشی موقعیت فروشگاه‌ها">
+    <div className="map-preview" aria-label="موقعیت تقریبی فروشگاه‌ها">
       <div className="map-streets" aria-hidden="true"><i /><i /><i /><i /></div>
       <div className="map-user"><span /><small>شما</small></div>
       {offers.slice(0, 8).map((offer, index) => <button key={offer.id} type="button" className="map-pin" style={{ insetInlineStart: `${14 + (index * 23) % 72}%`, top: `${17 + (index * 31) % 62}%` }} onClick={() => onSelect(offer)} aria-label={`نمایش ${offer.merchantName}`}><span><FoodImage src={offer.image} sizes="44px" /></span><small>{money(offer.price)}</small></button>)}
-      <div className="map-note"><Icon name="info" /> این نقشه برای ارائه، نمایشی است.</div>
+      <div className="map-note"><Icon name="info" /> موقعیت فروشگاه‌ها تقریبی است.</div>
     </div>
   );
 }
@@ -460,36 +427,36 @@ function ReservationCard({ reservation, onCancel, onReview, onDirections }: { re
       <h2>{reservation.merchantName}</h2><p>{reservation.title} · {numberFa(reservation.quantity)} جعبه</p>
       <div className="reservation-details"><span><Icon name="clock" /> {reservation.pickup}</span><span><Icon name="pin" /> {reservation.address}</span></div>
       {reservation.status === "active" && <div className="countdown"><span>زمان باقی‌مانده تا شروع دریافت</span><strong>۲ ساعت و ۱۲ دقیقه</strong></div>}
-      <div className="pickup-code"><span><small>کد دریافت نمایشی</small><strong>{reservation.code}</strong></span><MiniQr code={reservation.code} /></div>
+      <div className="pickup-code"><span><small>کد دریافت</small><strong>{reservation.code}</strong></span><MiniQr code={reservation.code} /></div>
       {reservation.reviewResponse && <blockquote className="customer-review-response"><strong>پاسخ فروشگاه</strong>{reservation.reviewResponse}</blockquote>}
       <div className="reservation-actions">{reservation.status === "active" && <button type="button" onClick={onDirections}><Icon name="route" /> مسیریابی</button>}{cancellable && <button className="danger" type="button" onClick={() => onCancel(reservation.id)}>لغو رزرو</button>}{reservation.status === "collected" && !reservation.hasReview && <button type="button" onClick={() => onReview(reservation.id)}><Icon name="star" /> ثبت نظر</button>}{reservation.status === "collected" && reservation.hasReview && <span className="review-submitted"><Icon name="check" /> نظر ثبت شده</span>}</div>
     </article>
   );
 }
 
-function ProfilePage({ savedMeals, favoriteOffers, reservations, theme, setTheme, notifications, setNotifications, installed, onInstall, onOpenOffer, onAbout, onReset, showToast, customerName }: { savedMeals: number; favoriteOffers: Offer[]; reservations: Reservation[]; theme: ThemePreference; setTheme: (theme: ThemePreference) => void; notifications: boolean; setNotifications: (value: boolean) => void; installed: boolean; onInstall: () => void; onOpenOffer: (offer: Offer) => void; onAbout: () => void; onReset: () => void; showToast: (message: string) => void; customerName: string }) {
+function ProfilePage({ savedMeals, favoriteOffers, reservations, notifications, setNotifications, installed, onInstall, onOpenOffer, onAbout, showToast, customerName }: { savedMeals: number; favoriteOffers: Offer[]; reservations: Reservation[]; notifications: boolean; setNotifications: (value: boolean) => void; installed: boolean; onInstall: () => void; onOpenOffer: (offer: Offer) => void; onAbout: () => void; showToast: (message: string) => void; customerName: string }) {
+  const { theme, setTheme } = useMoftTheme();
   const preventedWaste = savedMeals * 0.78;
   const co2 = savedMeals * 2.4;
   return (
     <div className="page-content secondary-page profile-page">
-      <div className="profile-head"><div className="avatar">{customerName[0]}</div><div><p>همراه سبز مفت</p><h1>{customerName}</h1></div><span>نسخهٔ نمایشی</span></div>
-      <section className="impact-card glass-subtle"><div className="impact-card-head"><span><Icon name="leaf" /></span><div><p>اثر تو تا امروز</p><h2>{numberFa(savedMeals)} وعده نجات‌یافته</h2></div></div><div className="impact-grid"><span><strong>{decimalFa(preventedWaste)}</strong><small>کیلو غذای برآوردی</small></span><span><strong>{decimalFa(co2)}</strong><small>کیلو CO₂ برآوردی</small></span><span><strong>{numberFa(savedMeals * 11)}</strong><small>لیتر آب برآوردی</small></span></div><p className="estimate-note">این اعداد برای ارائه، تقریبی‌اند و ادعای زیست‌محیطی قطعی نیستند.</p></section>
+      <div className="profile-head"><div className="avatar">{customerName[0]}</div><div><p>همراه سبز مفت</p><h1>{customerName}</h1></div></div>
+      <section className="impact-card glass-subtle"><div className="impact-card-head"><span><Icon name="leaf" /></span><div><p>اثر تو تا امروز</p><h2>{numberFa(savedMeals)} وعده نجات‌یافته</h2></div></div><div className="impact-grid"><span><strong>{decimalFa(preventedWaste)}</strong><small>کیلو غذای برآوردی</small></span><span><strong>{decimalFa(co2)}</strong><small>کیلو CO₂ برآوردی</small></span><span><strong>{numberFa(savedMeals * 11)}</strong><small>لیتر آب برآوردی</small></span></div><p className="estimate-note">این برآوردها تقریبی‌اند و ادعای زیست‌محیطی قطعی نیستند.</p></section>
 
       <section className="profile-section glass-subtle"><SectionHeading eyebrow="ذخیره‌شده‌ها" title="فروشگاه‌های محبوب" />{favoriteOffers.length ? <div className="favorite-stores">{favoriteOffers.slice(0, 5).map((offer) => <button type="button" onClick={() => onOpenOffer(offer)} key={offer.id}><span className="store-logo"><FoodImage src={offer.image} sizes="60px" /></span><small>{offer.merchantName}</small></button>)}</div> : <div className="inline-empty"><Icon name="heart" /><span>هنوز فروشگاهی را ذخیره نکردی.</span></div>}</section>
 
-      <section className="profile-section glass-subtle"><p className="eyebrow">ظاهر برنامه</p><h2>حال‌وهوای دلخواهت</h2><div className="theme-picker" role="radiogroup" aria-label="انتخاب پوسته"><button type="button" role="radio" aria-checked={theme === "light"} className={theme === "light" ? "active" : ""} onClick={() => setTheme("light")}><Icon name="sun" /> روشن</button><button type="button" role="radio" aria-checked={theme === "dark"} className={theme === "dark" ? "active" : ""} onClick={() => setTheme("dark")}><Icon name="moon" /> تاریک</button><button type="button" role="radio" aria-checked={theme === "system"} className={theme === "system" ? "active" : ""} onClick={() => setTheme("system")}>خودکار</button></div><p className="theme-note">حالت خودکار از ساعت ۷ تا ۱۹ روشن و پس از آن تاریک است.</p></section>
+      <section className="profile-section glass-subtle"><p className="eyebrow">ظاهر برنامه</p><h2>حال‌وهوای دلخواهت</h2><div className="theme-picker" role="radiogroup" aria-label="انتخاب پوسته"><button type="button" role="radio" aria-checked={theme === "light"} className={theme === "light" ? "active" : ""} onClick={() => setTheme("light")}><Icon name="sun" /> روشن</button><button type="button" role="radio" aria-checked={theme === "dark"} className={theme === "dark" ? "active" : ""} onClick={() => setTheme("dark")}><Icon name="moon" /> تاریک</button></div><p className="theme-note">انتخاب پوسته در همهٔ بخش‌های مفت حفظ می‌شود.</p></section>
 
       <div className="settings-card glass-subtle">
-        <button type="button" onClick={() => setNotifications(!notifications)}><span className="setting-icon"><Icon name="bell" /></span><div><strong>یادآوری زمان دریافت</strong><small>اعلان‌ها در این دمو شبیه‌سازی می‌شوند</small></div><span className={`switch ${notifications ? "on" : ""}`} aria-label={notifications ? "روشن" : "خاموش"}><i /></span></button>
+        <button type="button" onClick={() => setNotifications(!notifications)}><span className="setting-icon"><Icon name="bell" /></span><div><strong>یادآوری زمان دریافت</strong><small>{notifications ? "یادآوری فعال است" : "یادآوری غیرفعال است"}</small></div><span className={`switch ${notifications ? "on" : ""}`} aria-label={notifications ? "روشن" : "خاموش"}><i /></span></button>
         <button type="button" onClick={onInstall}><span className="setting-icon"><Icon name="share" /></span><div><strong>{installed ? "مفت روی دستگاه نصب است" : "نصب برنامه"}</strong><small>{installed ? "اجرای مستقل فعال است" : "افزودن به صفحهٔ اصلی"}</small></div><Icon name="chevron" /></button>
-        <button type="button" onClick={() => showToast("تنظیمات آلرژی در نسخهٔ بعدی دمو اضافه می‌شود؛ فعلاً هشدار هر جعبه را بخوان.")}><span className="setting-icon">⚠️</span><div><strong>آلرژی‌ها و ترجیحات</strong><small>هشدارهای هر جعبه را بررسی کن</small></div><Icon name="chevron" /></button>
+        <button type="button" onClick={() => showToast("هشدار آلرژی هر جعبه را پیش از رزرو بررسی کن.")}><span className="setting-icon">⚠️</span><div><strong>آلرژی‌ها و ترجیحات</strong><small>هشدارهای هر جعبه را بررسی کن</small></div><Icon name="chevron" /></button>
         <button type="button" onClick={onAbout}><span className="setting-icon"><Icon name="info" /></span><div><strong>دربارهٔ مفت</strong><small>ماموریت، ایمنی و نحوهٔ کار</small></div><Icon name="chevron" /></button>
-        <button type="button" onClick={() => showToast("پیام نمونه برای پشتیبانی ثبت شد؛ این دمو سرویس واقعی ارسال پیام ندارد.")}><span className="setting-icon">؟</span><div><strong>راهنما و پشتیبانی</strong><small>پاسخ پرسش‌های رایج</small></div><Icon name="chevron" /></button>
+        <Link href="/customer/support"><span className="setting-icon">؟</span><div><strong>راهنما و پشتیبانی</strong><small>پرسش‌های رایج و پیگیری درخواست‌ها</small></div><Icon name="chevron" /></Link>
         <Link href="/business"><span className="setting-icon"><Icon name="store" /></span><div><strong>رفتن به پنل کسب‌وکار</strong><small>مدیریت پیشنهادها و سفارش‌ها</small></div><Icon name="chevron" /></Link>
         <Link href="/"><span className="setting-icon"><Icon name="home" /></span><div><strong>انتخاب نوع ورود</strong><small>بازگشت به صفحه آغاز</small></div><Icon name="chevron" /></Link>
-        <button type="button" onClick={onReset}><span className="setting-icon"><Icon name="trash" /></span><div><strong>بازنشانی اطلاعات نمایشی</strong><small>برگرداندن داده‌های اولیه دمو</small></div><Icon name="chevron" /></button>
       </div>
-      <p className="profile-footnote">{numberFa(reservations.length)} رزرو در حافظهٔ محلی این دستگاه · بدون حساب کاربری و پرداخت واقعی</p>
+      <p className="profile-footnote">{numberFa(reservations.length)} رزرو در این دستگاه</p>
     </div>
   );
 }
@@ -508,7 +475,7 @@ function OfferDetails({ offer, favorite, onFavorite, onClose, onReserve, related
     <DialogShell titleId="offer-title" onClose={onClose} size="detail">
       <button className={`dialog-favorite ${favorite ? "active" : ""}`} type="button" onClick={() => onFavorite(offer.id)} aria-label={favorite ? "حذف از علاقه‌مندی‌ها" : "افزودن به علاقه‌مندی‌ها"}><Icon name="heart" filled={favorite} /></button>
       <div ref={detailScrollRef} className="detail-scroll">
-        <div className="detail-visual"><FoodImage src={offer.image} alt={`تصویر نمونهٔ ${offer.title}`} sizes="(max-width: 700px) 100vw, 540px" priority /><div><small>{offer.categoryLabel}</small><strong>{offer.title}</strong></div><em>{discountPercent(offer.originalPrice, offer.price)}٪ کمتر</em></div>
+        <div className="detail-visual"><FoodImage src={offer.image} alt={`تصویر ${offer.title}`} sizes="(max-width: 700px) 100vw, 540px" priority /><div><small>{offer.categoryLabel}</small><strong>{offer.title}</strong></div><em>{discountPercent(offer.originalPrice, offer.price)}٪ کمتر</em></div>
         <div className="detail-content">
           <div className="detail-rating"><span><Icon name="star" filled /> {decimalFa(offer.rating)} از {numberFa(offer.reviewCount)} نظر</span><span><Icon name="pin" /> {distanceFa(offer.distanceKm)}</span></div>
           <h2 id="offer-title">{offer.merchantName}</h2><p className="detail-description">{offer.description}</p>
@@ -528,16 +495,16 @@ function ReservationFlow({ offer, step, setStep, quantity, setQuantity, confirmi
   const total = offer.price * quantity;
   return (
     <DialogShell titleId="reservation-title" onClose={onClose}>
-      <div className="flow-header"><span>رزرو نمایشی</span><strong>{step < 5 ? `${numberFa(step)} از ۴` : "انجام شد"}</strong></div>
+      <div className="flow-header"><span>رزرو جعبه</span><strong>{step < 5 ? `${numberFa(step)} از ۴` : "انجام شد"}</strong></div>
       {step < 5 && <div className="flow-progress" aria-label={`مرحله ${numberFa(step)} از ۴`}>{[1, 2, 3, 4].map((item) => <i className={item <= step ? "active" : ""} key={item} />)}</div>}
       <div className="flow-content">
-        {step === 1 && <><p className="eyebrow">مرور جعبه</p><h2 id="reservation-title">همین را می‌خواهی؟</h2><div className="review-box glass-subtle"><span className="store-logo large"><FoodImage src={offer.image} sizes="72px" /></span><div><strong>{offer.merchantName}</strong><p>{offer.title}</p><small>{offer.pickup}</small></div></div><div className="simulation-note"><Icon name="info" /><p><strong>برای ارائهٔ دانشگاهی</strong> این رزرو شبیه‌سازی می‌شود؛ هیچ پرداخت یا انتقال پولی انجام نمی‌شود.</p></div></>}
-        {step === 2 && <><p className="eyebrow">تعداد جعبه</p><h2 id="reservation-title">چند تا نجات می‌دی؟</h2><p className="flow-subtitle">حداکثر {numberFa(Math.min(3, offer.quantityLeft))} جعبه در این رزرو نمایشی.</p><div className="quantity-picker"><button type="button" onClick={() => setQuantity(Math.max(1, quantity - 1))} disabled={quantity <= 1} aria-label="کم کردن تعداد"><Icon name="minus" /></button><strong>{numberFa(quantity)}</strong><button type="button" onClick={() => setQuantity(Math.min(Math.min(3, offer.quantityLeft), quantity + 1))} disabled={quantity >= Math.min(3, offer.quantityLeft)} aria-label="زیاد کردن تعداد"><Icon name="plus" /></button></div><div className="flow-price"><span>جمع رزرو نمایشی</span><strong>{money(total)}</strong></div></>}
-        {step === 3 && <><p className="eyebrow">زمان دریافت</p><h2 id="reservation-title">سر وقت می‌رسی؟</h2><button className="pickup-choice selected" type="button" aria-pressed="true"><span><Icon name="clock" /></span><div><strong>{offer.pickup}</strong><small>دریافت حضوری از {offer.neighborhood}</small></div><Icon name="check" /></button><div className="pickup-reminder"><Icon name="bell" /><p>یادآوری نمایشی ۳۰ دقیقه قبل از شروع بازه برایت روشن می‌شود.</p></div></>}
-        {step === 4 && <><p className="eyebrow">تأیید نهایی</p><h2 id="reservation-title">همه‌چیز آماده‌ست</h2><div className="confirmation-list"><span><small>فروشگاه</small><strong>{offer.merchantName}</strong></span><span><small>تعداد</small><strong>{numberFa(quantity)} جعبه</strong></span><span><small>دریافت</small><strong>{offer.pickup}</strong></span><span><small>مبلغ نمایشی</small><strong>{money(total)}</strong></span></div><label className="confirm-check"><input type="checkbox" defaultChecked /><span><Icon name="check" /></span><p>می‌دانم محتویات دقیق جعبه متغیر است و باید هشدار آلرژی را بررسی کنم.</p></label></>}
+        {step === 1 && <><p className="eyebrow">مرور جعبه</p><h2 id="reservation-title">همین را می‌خواهی؟</h2><div className="review-box glass-subtle"><span className="store-logo large"><FoodImage src={offer.image} sizes="72px" /></span><div><strong>{offer.merchantName}</strong><p>{offer.title}</p><small>{offer.pickup}</small></div></div><div className="simulation-note"><Icon name="info" /><p><strong>جعبه غافلگیرکننده است.</strong> ترکیب دقیق بر اساس موجودی سالم پایان روز مشخص می‌شود.</p></div></>}
+        {step === 2 && <><p className="eyebrow">تعداد جعبه</p><h2 id="reservation-title">چند تا نجات می‌دی؟</h2><p className="flow-subtitle">حداکثر {numberFa(Math.min(3, offer.quantityLeft))} جعبه در هر رزرو.</p><div className="quantity-picker"><button type="button" onClick={() => setQuantity(Math.max(1, quantity - 1))} disabled={quantity <= 1} aria-label="کم کردن تعداد"><Icon name="minus" /></button><strong>{numberFa(quantity)}</strong><button type="button" onClick={() => setQuantity(Math.min(Math.min(3, offer.quantityLeft), quantity + 1))} disabled={quantity >= Math.min(3, offer.quantityLeft)} aria-label="زیاد کردن تعداد"><Icon name="plus" /></button></div><div className="flow-price"><span>جمع رزرو</span><strong>{money(total)}</strong></div></>}
+        {step === 3 && <><p className="eyebrow">زمان دریافت</p><h2 id="reservation-title">سر وقت می‌رسی؟</h2><button className="pickup-choice selected" type="button" aria-pressed="true"><span><Icon name="clock" /></span><div><strong>{offer.pickup}</strong><small>دریافت حضوری از {offer.neighborhood}</small></div><Icon name="check" /></button><div className="pickup-reminder"><Icon name="bell" /><p>یادآوری ۳۰ دقیقه قبل از شروع بازه برایت روشن می‌شود.</p></div></>}
+        {step === 4 && <><p className="eyebrow">تأیید نهایی</p><h2 id="reservation-title">همه‌چیز آماده‌ست</h2><div className="confirmation-list"><span><small>فروشگاه</small><strong>{offer.merchantName}</strong></span><span><small>تعداد</small><strong>{numberFa(quantity)} جعبه</strong></span><span><small>دریافت</small><strong>{offer.pickup}</strong></span><span><small>مبلغ</small><strong>{money(total)}</strong></span></div><label className="confirm-check"><input type="checkbox" defaultChecked /><span><Icon name="check" /></span><p>می‌دانم محتویات دقیق جعبه متغیر است و باید هشدار آلرژی را بررسی کنم.</p></label></>}
         {step === 5 && success && <SuccessState reservation={success} onDirections={onDirections} onCalendar={onCalendar} onDone={onDone} />}
       </div>
-      {step < 5 && <div className="flow-footer">{step > 1 && <button className="secondary-button" type="button" onClick={() => setStep(step - 1)}>برگشت</button>}<button className="primary-button" type="button" onClick={() => step === 4 ? onConfirm() : setStep(step + 1)} disabled={confirming}>{confirming ? <><span className="spinner" /> در حال ثبت...</> : step === 4 ? "تأیید رزرو نمایشی" : "ادامه"}</button></div>}
+      {step < 5 && <div className="flow-footer">{step > 1 && <button className="secondary-button" type="button" onClick={() => setStep(step - 1)}>برگشت</button>}<button className="primary-button" type="button" onClick={() => step === 4 ? onConfirm() : setStep(step + 1)} disabled={confirming}>{confirming ? <><span className="spinner" /> در حال ثبت...</> : step === 4 ? "تأیید رزرو" : "ادامه"}</button></div>}
     </DialogShell>
   );
 }
@@ -546,7 +513,7 @@ function SuccessState({ reservation, onDirections, onCalendar, onDone }: { reser
   return (
     <div className="success-state">
       <div className="success-burst"><span><Icon name="check" /></span><i /><i /><i /></div>
-      <p className="eyebrow">رزرو با موفقیت انجام شد</p><h2 id="reservation-title">جعبه‌ات کنار گذاشته شد!</h2><p>این رزرو برای دموی دانشگاهی است و پرداخت واقعی ندارد.</p>
+      <p className="eyebrow">رزرو با موفقیت انجام شد</p><h2 id="reservation-title">جعبه‌ات کنار گذاشته شد!</h2><p>در بازهٔ تعیین‌شده به فروشگاه برو و کد دریافت را نشان بده.</p>
       <div className="pickup-pass"><div className="pass-brand"><span>م</span><small>برگهٔ دریافت مفت</small></div><div className="pass-store"><strong>{reservation.merchantName}</strong><small>{reservation.pickup}</small></div><div className="pass-code"><MiniQr code={reservation.code} /><span><small>کد دریافت</small><strong>{reservation.code}</strong></span></div><div className="pass-cut" /><p>{reservation.address}</p></div>
       <div className="success-countdown"><small>تا شروع زمان دریافت</small><strong>۲ ساعت و ۱۲ دقیقه</strong></div>
       <div className="success-actions"><button type="button" onClick={onDirections}><Icon name="route" /> مسیریابی</button><button type="button" onClick={onCalendar}><Icon name="calendar" /> افزودن به تقویم</button></div>
@@ -565,25 +532,21 @@ function FilterSheet({ maxDistance, setMaxDistance, maxPrice, setMaxPrice, picku
 
 function LocationSheet({ value, onChange, onClose }: { value: string; onChange: (value: string) => void; onClose: () => void }) {
   const locations = ["تهران، ونک", "تهران، میدان ولیعصر", "تهران، یوسف‌آباد"];
-  return <DialogShell titleId="location-title" onClose={onClose}><div className="simple-sheet"><p className="eyebrow">موقعیت نمایشی</p><h2 id="location-title">کجای تهران هستی؟</h2><p>برای ارائه، یکی از محدوده‌های نمونه را انتخاب کن.</p><div className="choice-list">{locations.map((item) => <button type="button" key={item} onClick={() => onChange(item)} className={value === item ? "active" : ""}><span><Icon name="pin" /></span><strong>{item}</strong>{value === item && <Icon name="check" />}</button>)}</div></div></DialogShell>;
+  return <DialogShell titleId="location-title" onClose={onClose}><div className="simple-sheet"><p className="eyebrow">موقعیت فعلی</p><h2 id="location-title">کجای تهران هستی؟</h2><p>محدودهٔ نزدیک خودت را انتخاب کن.</p><div className="choice-list">{locations.map((item) => <button type="button" key={item} onClick={() => onChange(item)} className={value === item ? "active" : ""}><span><Icon name="pin" /></span><strong>{item}</strong>{value === item && <Icon name="check" />}</button>)}</div></div></DialogShell>;
 }
 
 function AboutSheet({ onClose }: { onClose: () => void }) {
-  return <DialogShell titleId="about-title" onClose={onClose}><div className="simple-sheet about-sheet"><div className="about-mark"><span>م</span><Icon name="leaf" /></div><p className="eyebrow">داستان مفت</p><h2 id="about-title">غذای خوب، قبل از دورریز</h2><p>«مفت» یک نمونهٔ دانشگاهی برای وصل‌کردن کاربران به غذای سالمِ فروش‌نرفته و کالاهای نزدیک به پایان مهلت فروش است.</p><ul><li><Icon name="spark" /><span><strong>جعبهٔ غافلگیرکننده</strong>محتوا دقیقاً از قبل معلوم نیست، اما ایمنی نامعلوم نیست.</span></li><li><Icon name="clock" /><span><strong>دریافت حضوری</strong>هر رزرو بازهٔ مشخص دارد و ارسال در این نسخه نداریم.</span></li><li><Icon name="info" /><span><strong>نسخهٔ نمایشی</strong>حساب کاربری، پرداخت و موجودی زنده در این ارائه شبیه‌سازی شده‌اند.</span></li></ul><button className="primary-button full" type="button" onClick={onClose}>متوجه شدم</button></div></DialogShell>;
+  return <DialogShell titleId="about-title" onClose={onClose}><div className="simple-sheet about-sheet"><div className="about-mark"><span>م</span><Icon name="leaf" /></div><p className="eyebrow">داستان مفت</p><h2 id="about-title">غذای خوب، قبل از دورریز</h2><p>«مفت» کاربران را به غذای سالمِ فروش‌نرفته و کالاهای نزدیک به پایان مهلت فروش وصل می‌کند.</p><ul><li><Icon name="spark" /><span><strong>جعبهٔ غافلگیرکننده</strong>محتوا دقیقاً از قبل معلوم نیست، اما ایمنی نامعلوم نیست.</span></li><li><Icon name="clock" /><span><strong>دریافت حضوری</strong>هر رزرو بازهٔ مشخص دارد و ارسال نداریم.</span></li><li><Icon name="info" /><span><strong>شفافیت و ایمنی</strong>محصول تاریخ‌گذشته یا نامناسب برای مصرف در مفت عرضه نمی‌شود.</span></li></ul><button className="primary-button full" type="button" onClick={onClose}>متوجه شدم</button></div></DialogShell>;
 }
 
 function CancelDialog({ onClose, onConfirm }: { onClose: () => void; onConfirm: () => void }) {
-  return <DialogShell label="تأیید لغو رزرو" onClose={onClose} size="center"><div className="cancel-dialog"><span className="danger-icon"><Icon name="trash" /></span><h2>رزرو لغو شود؟</h2><p>این کار فقط وضعیت رزرو نمایشی را تغییر می‌دهد و مبلغی جابه‌جا نشده است.</p><div><button className="secondary-button" type="button" onClick={onClose}>نه، نگهش دار</button><button className="danger-button" type="button" onClick={onConfirm}>بله، لغو کن</button></div></div></DialogShell>;
+  return <DialogShell label="تأیید لغو رزرو" onClose={onClose} size="center"><div className="cancel-dialog"><span className="danger-icon"><Icon name="trash" /></span><h2>رزرو لغو شود؟</h2><p>پس از لغو، کد دریافت غیرفعال و موجودی مجاز به فروشگاه بازگردانده می‌شود.</p><div><button className="secondary-button" type="button" onClick={onClose}>نه، نگهش دار</button><button className="danger-button" type="button" onClick={onConfirm}>بله، لغو کن</button></div></div></DialogShell>;
 }
 
 function ReviewDialog({ orderId, onClose, onSubmit }: { orderId: string; onClose: () => void; onSubmit: (rating: number, comment: string) => boolean }) {
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
-  return <DialogShell titleId="customer-review-title" onClose={onClose}><form className="customer-review-dialog" onSubmit={(event) => { event.preventDefault(); onSubmit(rating, comment); }}><p className="eyebrow">تجربه دریافت</p><h2 id="customer-review-title">نظرت درباره این سفارش چیست؟</h2><p>پاسخ شما در پنل کیفیت کسب‌وکار دیده می‌شود. سفارش: <b>{orderId}</b></p><div className="customer-rating" role="radiogroup" aria-label="امتیاز از پنج">{[1, 2, 3, 4, 5].map((value) => <button type="button" role="radio" aria-checked={rating === value} className={rating >= value ? "active" : ""} onClick={() => setRating(value)} key={value} aria-label={`${value} ستاره`}>★</button>)}</div><label><span>توضیح اختیاری</span><textarea rows={4} value={comment} onChange={(event) => setComment(event.target.value)} placeholder="چه چیزی خوب بود یا بهتر می‌شد؟" /></label><button className="primary-button full" type="submit">ثبت نظر نمایشی</button></form></DialogShell>;
-}
-
-function ResetDialog({ onClose, onConfirm }: { onClose: () => void; onConfirm: () => void }) {
-  return <DialogShell label="تأیید بازنشانی دمو" onClose={onClose} size="center"><div className="cancel-dialog"><span className="danger-icon"><Icon name="trash" /></span><h2>اطلاعات دمو بازنشانی شود؟</h2><p>پیشنهادها، موجودی، سفارش‌ها، نظرها، پیگیری‌ها، اعلان‌ها و امور مالی به seed اولیه برمی‌گردند. پوسته حفظ می‌شود.</p><div><button className="secondary-button" type="button" onClick={onClose}>انصراف</button><button className="danger-button" type="button" onClick={onConfirm}>بازنشانی</button></div></div></DialogShell>;
+  return <DialogShell titleId="customer-review-title" onClose={onClose}><form className="customer-review-dialog" onSubmit={(event) => { event.preventDefault(); onSubmit(rating, comment); }}><p className="eyebrow">تجربه دریافت</p><h2 id="customer-review-title">نظرت درباره این سفارش چیست؟</h2><p>پاسخ شما در پنل کیفیت کسب‌وکار دیده می‌شود. سفارش: <b>{orderId}</b></p><div className="customer-rating" role="radiogroup" aria-label="امتیاز از پنج">{[1, 2, 3, 4, 5].map((value) => <button type="button" role="radio" aria-checked={rating === value} className={rating >= value ? "active" : ""} onClick={() => setRating(value)} key={value} aria-label={`${value} ستاره`}>★</button>)}</div><label><span>توضیح اختیاری</span><textarea rows={4} value={comment} onChange={(event) => setComment(event.target.value)} placeholder="چه چیزی خوب بود یا بهتر می‌شد؟" /></label><button className="primary-button full" type="submit">ثبت نظر</button></form></DialogShell>;
 }
 
 function SectionHeading({ eyebrow, title, id, action, onAction }: { eyebrow: string; title: string; id?: string; action?: string; onAction?: () => void }) {
@@ -596,12 +559,12 @@ function PageTitle({ eyebrow, title, text }: { eyebrow: string; title: string; t
 
 function MiniQr({ code }: { code: string }) {
   const seed = [...code].reduce((sum, char) => sum + char.charCodeAt(0), 0);
-  return <span className="mini-qr" aria-label={`کد دیداری نمایشی ${code}`}>{Array.from({ length: 81 }, (_, index) => <i className={(index * 7 + seed + index * index) % 5 < 2 ? "on" : ""} key={index} />)}</span>;
+  return <span className="mini-qr" aria-label={`کد دیداری دریافت ${code}`}>{Array.from({ length: 81 }, (_, index) => <i className={(index * 7 + seed + index * index) % 5 < 2 ? "on" : ""} key={index} />)}</span>;
 }
 
 function addToCalendar(reservation: Reservation | null, showToast: (message: string) => void) {
   if (!reservation) return;
-  const content = ["BEGIN:VCALENDAR", "VERSION:2.0", "BEGIN:VEVENT", `SUMMARY:دریافت جعبه از ${reservation.merchantName}`, `LOCATION:${reservation.address}`, "DTSTART:20260722T170000Z", "DTEND:20260722T180000Z", `DESCRIPTION:کد دریافت نمایشی ${reservation.code}`, "END:VEVENT", "END:VCALENDAR"].join("\r\n");
+  const content = ["BEGIN:VCALENDAR", "VERSION:2.0", "BEGIN:VEVENT", `SUMMARY:دریافت جعبه از ${reservation.merchantName}`, `LOCATION:${reservation.address}`, "DTSTART:20260722T170000Z", "DTEND:20260722T180000Z", `DESCRIPTION:کد دریافت ${reservation.code}`, "END:VEVENT", "END:VCALENDAR"].join("\r\n");
   const url = URL.createObjectURL(new Blob([content], { type: "text/calendar;charset=utf-8" }));
   const link = document.createElement("a");
   link.href = url;

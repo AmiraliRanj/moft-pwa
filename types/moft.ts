@@ -54,5 +54,5 @@ export type Reservation = {
   createdAt: string;
 };
 
-export type ThemePreference = "light" | "dark" | "system";
+export type ThemePreference = "light" | "dark";
 export type AppTab = "home" | "discover" | "reservations" | "profile";

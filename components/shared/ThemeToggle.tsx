@@ -7,28 +7,27 @@ import type { ThemePreference } from "@/types/moft";
 export const THEME_STORAGE_KEY = "moft-theme-v2";
 
 function applyTheme(preference: ThemePreference) {
-  const hour = new Date().getHours();
-  const resolved = preference === "system" ? (hour >= 7 && hour < 19 ? "light" : "dark") : preference;
   const root = document.documentElement;
-  root.dataset.theme = resolved;
-  root.style.colorScheme = resolved;
+  root.dataset.theme = preference;
+  root.style.colorScheme = preference;
   root.dataset.themeReady = "true";
-  document.querySelector<HTMLMetaElement>('meta[name="theme-color"]')?.setAttribute("content", resolved === "dark" ? "#151816" : "#F4F8F3");
-  document.querySelector<HTMLMetaElement>('meta[name="apple-mobile-web-app-status-bar-style"]')?.setAttribute("content", resolved === "dark" ? "black-translucent" : "default");
+  document.querySelector<HTMLMetaElement>('meta[name="theme-color"]')?.setAttribute("content", preference === "dark" ? "#151816" : "#F4F8F3");
+  document.querySelector<HTMLMetaElement>('meta[name="apple-mobile-web-app-status-bar-style"]')?.setAttribute("content", preference === "dark" ? "black-translucent" : "default");
 }
 
 export function useMoftTheme() {
-  const [theme, setThemeState] = useState<ThemePreference>("system");
+  const [theme, setThemeState] = useState<ThemePreference>("light");
 
   useEffect(() => {
     const saved = localStorage.getItem(THEME_STORAGE_KEY);
-    const initial = saved === "light" || saved === "dark" || saved === "system" ? saved : "system";
+    const initial = saved === "dark" ? "dark" : "light";
     const hydrateTimer = window.setTimeout(() => { setThemeState(initial); applyTheme(initial); }, 0);
-    const hourTimer = window.setInterval(() => {
-      const current = localStorage.getItem(THEME_STORAGE_KEY);
-      applyTheme(current === "light" || current === "dark" || current === "system" ? current : "system");
-    }, 60_000);
-    return () => { window.clearTimeout(hydrateTimer); window.clearInterval(hourTimer); };
+    const onThemeChange = (event: Event) => {
+      const next = (event as CustomEvent<ThemePreference>).detail;
+      if (next === "light" || next === "dark") setThemeState(next);
+    };
+    window.addEventListener("moft-theme-change", onThemeChange);
+    return () => { window.clearTimeout(hydrateTimer); window.removeEventListener("moft-theme-change", onThemeChange); };
   }, []);
 
   const setTheme = useCallback((next: ThemePreference) => {
@@ -43,12 +42,12 @@ export function useMoftTheme() {
 
 export function ThemeToggle({ compact = false }: { compact?: boolean }) {
   const { theme, setTheme } = useMoftTheme();
-  const next: ThemePreference = theme === "light" ? "dark" : theme === "dark" ? "system" : "light";
-  const label = theme === "light" ? "پوسته روشن؛ تغییر به تاریک" : theme === "dark" ? "پوسته تاریک؛ تغییر به خودکار" : "پوسته خودکار؛ تغییر به روشن";
+  const next: ThemePreference = theme === "light" ? "dark" : "light";
+  const label = theme === "light" ? "تغییر به حالت تاریک" : "تغییر به حالت روشن";
   return (
     <button className={`shared-theme-toggle ${compact ? "compact" : ""}`} type="button" onClick={() => setTheme(next)} aria-label={label} title={label}>
-      <Icon name={theme === "dark" ? "moon" : theme === "light" ? "sun" : "spark"} />
-      {!compact && <span>{theme === "light" ? "روشن" : theme === "dark" ? "تاریک" : "خودکار"}</span>}
+      <Icon name={theme === "dark" ? "moon" : "sun"} />
+      {!compact && <span>{theme === "light" ? "روشن" : "تاریک"}</span>}
     </button>
   );
 }

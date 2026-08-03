@@ -3,7 +3,7 @@ import BusinessApp from "@/components/business/BusinessApp";
 
 export const metadata: Metadata = {
   title: "پنل کسب‌وکار",
-  description: "پنل نمایشی مدیریت پیشنهاد، سفارش، تحویل، کیفیت و امور مالی مفت.",
+  description: "پنل مدیریت پیشنهاد، سفارش، تحویل، کیفیت و امور مالی مفت.",
 };
 
 export default function BusinessPage() {

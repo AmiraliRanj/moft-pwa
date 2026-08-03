@@ -11,6 +11,7 @@ import { AnalyticsPage } from "@/components/business/pages/AnalyticsPage";
 import { QualityPage } from "@/components/business/pages/QualityPage";
 import { FinancePage } from "@/components/business/pages/FinancePage";
 import { SettingsPage } from "@/components/business/pages/SettingsPage";
+import { BusinessSupportPage } from "@/components/support/SupportPages";
 import { EmptyBusinessState } from "@/components/business/BusinessPrimitives";
 
 export default function BusinessApp() {
@@ -23,6 +24,7 @@ export default function BusinessApp() {
     : pathname.startsWith("/business/analytics") ? <AnalyticsPage />
     : pathname.startsWith("/business/quality") ? <QualityPage />
     : pathname.startsWith("/business/finance") ? <FinancePage />
+    : pathname.startsWith("/business/support") ? <BusinessSupportPage />
     : pathname.startsWith("/business/settings") ? <SettingsPage />
     : <EmptyBusinessState title="این بخش پیدا نشد" text="از منوی پنل یکی از بخش‌های موجود را انتخاب کنید." />;
   return <BusinessShell>{page}</BusinessShell>;

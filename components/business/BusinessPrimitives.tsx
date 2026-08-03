@@ -1,4 +1,6 @@
-import type { ReactNode } from "react";
+"use client";
+
+import { useState, type ReactNode } from "react";
 import { formatMoney, formatNumber } from "@/lib/demo-format";
 
 export function BusinessPageHeader({ eyebrow, title, description, action }: { eyebrow: string; title: string; description: string; action?: ReactNode }) {
@@ -9,11 +11,17 @@ export function MetricCard({ label, value, hint, tone = "default" }: { label: st
   return <article className={`business-metric ${tone}`}><span>{label}</span><strong>{value}</strong><small>{hint}</small></article>;
 }
 
-export function MiniBarChart({ values, labels, money = false }: { values: number[]; labels: string[]; money?: boolean }) {
+export function MiniBarChart({ values, labels, money = false, title = "روند داده‌ها" }: { values: number[]; labels: string[]; money?: boolean; title?: string }) {
   const max = Math.max(...values, 1);
+  const [selected, setSelected] = useState(Math.max(0, values.length - 1));
+  const renderValue = (value: number) => money ? formatMoney(value) : formatNumber(value);
   return (
-    <div className="mini-bar-chart" role="img" aria-label={`نمودار ${values.map((value, index) => `${labels[index]}: ${money ? formatMoney(value) : formatNumber(value)}`).join("، ")}`}>
-      {values.map((value, index) => <span key={`${labels[index]}-${index}`}><i style={{ height: `${Math.max(8, value / max * 100)}%` }} title={`${labels[index]}: ${money ? formatMoney(value) : formatNumber(value)}`} /><small>{labels[index]}</small></span>)}
+    <div className="chart-wrapper">
+      <p className="chart-tooltip" role="status"><strong>{labels[selected]}</strong><span>{renderValue(values[selected] ?? 0)}</span></p>
+      <div className="mini-bar-chart" aria-label={title}>
+        {values.map((value, index) => <button type="button" className={selected === index ? "selected" : ""} onClick={() => setSelected(index)} key={`${labels[index]}-${index}`} aria-label={`${labels[index]}، ${renderValue(value)}`} aria-pressed={selected === index}><span>{renderValue(value)}</span><i style={{ height: `${Math.max(8, value / max * 100)}%` }} /><small>{labels[index]}</small></button>)}
+      </div>
+      <table className="sr-only"><caption>{title}</caption><thead><tr><th>بازه</th><th>مقدار</th></tr></thead><tbody>{values.map((value, index) => <tr key={`${labels[index]}-row`}><th>{labels[index]}</th><td>{renderValue(value)}</td></tr>)}</tbody></table>
     </div>
   );
 }
