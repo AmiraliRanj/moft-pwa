@@ -1,7 +1,7 @@
 /* Shared identity and unified role selector */
 .brand-mark { min-width: 0; display: inline-flex; align-items: center; gap: 10px; color: var(--ink); text-decoration: none; }
 .brand-mark-logo { width: 46px; height: 46px; display: grid; place-items: center; overflow: hidden; background: var(--brand-soft); border: 1px solid var(--line); border-radius: 15px; }
-.brand-mark-logo img { width: 31px; height: 31px; }
+.brand-mark-logo img { width: 100%; height: 100%; object-fit: cover; }
 .brand-mark strong, .brand-mark small { display: block; }
 .brand-mark strong { font-size: 1.28rem; font-weight: 900; line-height: 1.1; }
 .brand-mark small { margin-top: 4px; color: var(--muted); font-size: .64rem; white-space: nowrap; }

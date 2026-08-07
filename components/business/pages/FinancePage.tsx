@@ -28,7 +28,7 @@ export function FinancePage() {
   const downloadCsv = () => {
     const csv = `\uFEFF${financeService.toCsv(state, transactions.map((item) => item.id))}`;
     const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
-    const link = document.createElement("a"); link.href = url; link.download = "moft-transactions.csv"; link.click(); URL.revokeObjectURL(url);
+    const link = document.createElement("a"); link.href = url; link.download = "dibz-transactions.csv"; link.click(); URL.revokeObjectURL(url);
     notify("فایل CSV تراکنش‌های فیلترشده آماده شد.");
   };
 

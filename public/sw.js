@@ -1,6 +1,6 @@
-const CACHE_NAME = "moft-shell-v4";
+const CACHE_NAME = "dibz-shell-v1";
 const OFFER_IMAGES = Array.from({ length: 16 }, (_, index) => `/images/offers/offer-${String(index + 1).padStart(2, "0")}.webp`);
-const APP_SHELL = ["/", "/customer", "/business", "/offline", "/manifest.webmanifest", "/icons/icon-192.png", "/icons/icon-512.png", "/icons/apple-touch-icon.png", "/logo-mark.svg", ...OFFER_IMAGES];
+const APP_SHELL = ["/", "/customer", "/business", "/offline", "/manifest.webmanifest", "/dibz-logo.png", ...OFFER_IMAGES];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL)).then(() => self.skipWaiting()));

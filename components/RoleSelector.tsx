@@ -16,7 +16,7 @@ export default function RoleSelector() {
 
       <section className="role-hero" aria-labelledby="role-title">
         <p className="eyebrow">یک مقصد، دو تجربه</p>
-        <h1 id="role-title">دوست داری از کدام سمت وارد «مفت» شوی؟</h1>
+        <h1 id="role-title">دوست داری از کدام سمت وارد Dibz شوی؟</h1>
         <p>پیشنهادهای نزدیک را پیدا کنید یا عملیات روزانهٔ مجموعه‌تان را از یک پنل یکپارچه مدیریت کنید.</p>
       </section>
 

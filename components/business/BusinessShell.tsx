@@ -79,7 +79,7 @@ export function BusinessShell({ children }: { children: ReactNode }) {
         {navOpen && <button className="business-nav-backdrop" type="button" onClick={() => setNavOpen(false)} aria-label="بستن منو" />}
         <aside className={`business-sidebar ${navOpen ? "open" : ""}`} aria-label="ناوبری پنل کسب‌وکار">
           <div className="business-sidebar-head">
-            <BrandMark subtitle="پنل کسب‌وکار" variant="business" />
+            <BrandMark subtitle="پنل کسب‌وکار" />
             <button className="mobile-close" type="button" onClick={() => setNavOpen(false)} aria-label="بستن منو"><Icon name="close" /></button>
           </div>
           <nav className="business-nav">

@@ -8,25 +8,24 @@ import "./unified.css";
 
 export const metadata: Metadata = {
   title: {
-    default: "مفت | غذای خوب، قبل از دورریز",
-    template: "%s | مفت"
+    default: "Dibz | غذای خوب، قبل از دورریز",
+    template: "%s | Dibz"
   },
   description: "جعبه‌های غافلگیرکنندهٔ غذای سالمِ فروش‌نرفته با قیمت کمتر و دریافت حضوری.",
-  applicationName: "مفت",
+  applicationName: "Dibz",
   category: "food",
-  keywords: ["کاهش دورریز غذا", "جعبه سورپرایزی", "دریافت حضوری", "مفت"],
+  keywords: ["کاهش دورریز غذا", "جعبه سورپرایزی", "دریافت حضوری", "Dibz"],
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
-    title: "مفت"
+    title: "Dibz"
   },
   formatDetection: { telephone: false },
   icons: {
     icon: [
-      { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
-      { url: "/icons/icon-512.png", sizes: "512x512", type: "image/png" }
+      { url: "/dibz-logo.png", sizes: "1024x1024", type: "image/png" }
     ],
-    apple: [{ url: "/icons/apple-touch-icon.png", sizes: "180x180", type: "image/png" }]
+    apple: [{ url: "/dibz-logo.png", sizes: "1024x1024", type: "image/png" }]
   }
 };
 

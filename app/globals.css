@@ -161,7 +161,8 @@ body.dialog-open { overflow: hidden; overscroll-behavior: none; }
 .food-photo { object-fit: cover; }
 
 .install-banner { width: 100%; min-height: 70px; display: grid; grid-template-columns: 46px 1fr 24px; align-items: center; gap: 11px; margin-top: 14px; padding: 10px 13px; color: var(--ink); text-align: start; background: var(--surface); border: 1px solid var(--line); border-radius: 21px; box-shadow: var(--shadow-sm); cursor: pointer; }
-.install-icon { width: 46px; height: 46px; display: grid; place-items: center; color: white; background: var(--brand); border-radius: 15px; font-size: 1.35rem; font-weight: 900; }
+.install-icon { width: 46px; height: 46px; display: grid; place-items: center; overflow: hidden; background: var(--brand); border-radius: 15px; }
+.install-icon img { width: 100%; height: 100%; object-fit: cover; }
 .install-banner strong, .install-banner small { display: block; }
 .install-banner small { color: var(--muted); margin-top: 4px; font-size: .71rem; }
 .install-banner > svg { width: 18px; color: var(--muted); }
@@ -478,7 +479,8 @@ body.dialog-open { overflow: hidden; overscroll-behavior: none; }
 .pickup-pass { position: relative; overflow: hidden; margin-top: 13px; padding: 16px; color: white; text-align: start; background: linear-gradient(145deg, #1e5946, #102f28); border-radius: 25px; box-shadow: 0 20px 45px rgba(20,60,48,.22); }
 .pickup-pass::before { content: ""; position: absolute; width: 170px; height: 170px; left: -60px; top: -85px; background: rgba(255,255,255,.05); border-radius: 50%; }
 .pass-brand { display: flex; align-items: center; gap: 7px; }
-.pass-brand span { width: 32px; height: 32px; display: grid; place-items: center; color: #174d3d; background: #dff1e3; border-radius: 10px; font-weight: 900; }
+.pass-brand span { width: 32px; height: 32px; display: grid; place-items: center; overflow: hidden; background: #dff1e3; border-radius: 10px; }
+.pass-brand span img { width: 100%; height: 100%; object-fit: cover; }
 .pass-brand small { color: rgba(255,255,255,.62); }
 .pass-store { margin-top: 15px; }
 .pass-store strong, .pass-store small { display: block; }
@@ -516,8 +518,8 @@ body.dialog-open { overflow: hidden; overscroll-behavior: none; }
 .choice-list button > svg { color: var(--brand-2); }
 .about-sheet { text-align: center; }
 .about-mark { width: 88px; height: 88px; position: relative; display: grid; place-items: center; margin: 0 auto 18px; color: white; background: linear-gradient(145deg, #286550, #143d32); border-radius: 29px; box-shadow: 0 18px 38px rgba(23,63,53,.23); }
-.about-mark span { font-size: 2.8rem; font-weight: 900; }
-.about-mark svg { position: absolute; top: -6px; right: -5px; width: 31px; height: 31px; padding: 6px; color: #174d3d; background: #bce1c5; border-radius: 11px; transform: rotate(-14deg); }
+.about-mark span { width: 100%; height: 100%; overflow: hidden; border-radius: inherit; }
+.about-mark span img { width: 100%; height: 100%; object-fit: cover; }
 .about-sheet ul { display: grid; gap: 8px; margin: 20px 0; padding: 0; text-align: start; list-style: none; }
 .about-sheet li { display: flex; gap: 10px; padding: 12px; background: var(--surface-raised); border: 1px solid var(--line); border-radius: 16px; }
 .about-sheet li > svg { width: 19px; color: var(--brand-2); }
