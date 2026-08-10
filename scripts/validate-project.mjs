@@ -12,8 +12,8 @@ const required = [
   "components/MoftPreview.tsx",
   "components/ServiceWorkerRegister.tsx",
   "public/sw.js",
-  "public/icons/icon-192.png",
-  "public/icons/icon-512.png",
+  "public/icons/dibz-icon-192.png",
+  "public/icons/dibz-icon-512.png",
   ".codex/hooks.json",
   ".agents/skills/moft-product-builder/SKILL.md"
 ];
@@ -38,4 +38,4 @@ if (errors.length) {
   process.exit(1);
 }
 
-console.log(`Moft validation passed (${required.length} required files checked).`);
+console.log(`Dibz validation passed (${required.length} required files checked).`);

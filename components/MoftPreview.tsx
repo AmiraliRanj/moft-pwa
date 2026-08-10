@@ -256,7 +256,7 @@ export default function MoftPreview({ initialTab = "home", initialFavoritesOnly 
     if (!installPrompt) { showToast("برای نصب، گزینهٔ «افزودن به صفحهٔ اصلی» مرورگر را بزن."); return; }
     await installPrompt.prompt();
     const choice = await installPrompt.userChoice;
-    if (choice.outcome === "accepted") { setInstalled(true); showToast("Dibz به دستگاهت اضافه شد."); }
+    if (choice.outcome === "accepted") { setInstalled(true); showToast("دیبز به دستگاهت اضافه شد."); }
     setInstallPrompt(null);
   };
 
@@ -341,7 +341,7 @@ function HomePage({ query, setQuery, category, setCategory, offers, allOffers, f
         </div>
       </section>
 
-      {!installed && installPrompt && <button className="install-banner glass-subtle" type="button" onClick={onInstall}><span className="install-icon"><Image src="/dibz-logo.png" alt="" width={46} height={46} /></span><span><strong>Dibz را نصب کن</strong><small>سریع‌تر بازش کن و آفلاین هم ببین</small></span><Icon name="arrow" /></button>}
+      {!installed && installPrompt && <button className="install-banner glass-subtle" type="button" onClick={onInstall}><span className="install-icon"><Image src="/brand/dibz-mascot-transparent.png" alt="" width={46} height={46} /></span><span><strong>دیبز را نصب کن</strong><small>سریع‌تر بازش کن و آفلاین هم ببین</small></span><Icon name="arrow" /></button>}
 
       <SearchBar value={query} onChange={setQuery} placeholder="کافه، رستوران یا محله..." />
       <CategorySelector value={category} onChange={setCategory} />
@@ -441,18 +441,18 @@ function ProfilePage({ savedMeals, favoriteOffers, reservations, notifications, 
   const co2 = savedMeals * 2.4;
   return (
     <div className="page-content secondary-page profile-page">
-      <div className="profile-head"><div className="avatar">{customerName[0]}</div><div><p>همراه سبز Dibz</p><h1>{customerName}</h1></div></div>
+      <div className="profile-head"><div className="avatar">{customerName[0]}</div><div><p>همراه سبز دیبز</p><h1>{customerName}</h1></div></div>
       <section className="impact-card glass-subtle"><div className="impact-card-head"><span><Icon name="leaf" /></span><div><p>اثر تو تا امروز</p><h2>{numberFa(savedMeals)} وعده نجات‌یافته</h2></div></div><div className="impact-grid"><span><strong>{decimalFa(preventedWaste)}</strong><small>کیلو غذای برآوردی</small></span><span><strong>{decimalFa(co2)}</strong><small>کیلو CO₂ برآوردی</small></span><span><strong>{numberFa(savedMeals * 11)}</strong><small>لیتر آب برآوردی</small></span></div><p className="estimate-note">این برآوردها تقریبی‌اند و ادعای زیست‌محیطی قطعی نیستند.</p></section>
 
       <section className="profile-section glass-subtle"><SectionHeading eyebrow="ذخیره‌شده‌ها" title="فروشگاه‌های محبوب" />{favoriteOffers.length ? <div className="favorite-stores">{favoriteOffers.slice(0, 5).map((offer) => <button type="button" onClick={() => onOpenOffer(offer)} key={offer.id}><span className="store-logo"><FoodImage src={offer.image} sizes="60px" /></span><small>{offer.merchantName}</small></button>)}</div> : <div className="inline-empty"><Icon name="heart" /><span>هنوز فروشگاهی را ذخیره نکردی.</span></div>}</section>
 
-      <section className="profile-section glass-subtle"><p className="eyebrow">ظاهر برنامه</p><h2>حال‌وهوای دلخواهت</h2><div className="theme-picker" role="radiogroup" aria-label="انتخاب پوسته"><button type="button" role="radio" aria-checked={theme === "light"} className={theme === "light" ? "active" : ""} onClick={() => setTheme("light")}><Icon name="sun" /> روشن</button><button type="button" role="radio" aria-checked={theme === "dark"} className={theme === "dark" ? "active" : ""} onClick={() => setTheme("dark")}><Icon name="moon" /> تاریک</button></div><p className="theme-note">انتخاب پوسته در همهٔ بخش‌های Dibz حفظ می‌شود.</p></section>
+      <section className="profile-section glass-subtle"><p className="eyebrow">ظاهر برنامه</p><h2>حال‌وهوای دلخواهت</h2><div className="theme-picker" role="radiogroup" aria-label="انتخاب پوسته"><button type="button" role="radio" aria-checked={theme === "light"} className={theme === "light" ? "active" : ""} onClick={() => setTheme("light")}><Icon name="sun" /> روشن</button><button type="button" role="radio" aria-checked={theme === "dark"} className={theme === "dark" ? "active" : ""} onClick={() => setTheme("dark")}><Icon name="moon" /> تاریک</button></div><p className="theme-note">انتخاب پوسته در همهٔ بخش‌های دیبز حفظ می‌شود.</p></section>
 
       <div className="settings-card glass-subtle">
         <button type="button" onClick={() => setNotifications(!notifications)}><span className="setting-icon"><Icon name="bell" /></span><div><strong>یادآوری زمان دریافت</strong><small>{notifications ? "یادآوری فعال است" : "یادآوری غیرفعال است"}</small></div><span className={`switch ${notifications ? "on" : ""}`} aria-label={notifications ? "روشن" : "خاموش"}><i /></span></button>
-        <button type="button" onClick={onInstall}><span className="setting-icon"><Icon name="share" /></span><div><strong>{installed ? "Dibz روی دستگاه نصب است" : "نصب برنامه"}</strong><small>{installed ? "اجرای مستقل فعال است" : "افزودن به صفحهٔ اصلی"}</small></div><Icon name="chevron" /></button>
+        <button type="button" onClick={onInstall}><span className="setting-icon"><Icon name="share" /></span><div><strong>{installed ? "دیبز روی دستگاه نصب است" : "نصب برنامه"}</strong><small>{installed ? "اجرای مستقل فعال است" : "افزودن به صفحهٔ اصلی"}</small></div><Icon name="chevron" /></button>
         <button type="button" onClick={() => showToast("هشدار آلرژی هر جعبه را پیش از رزرو بررسی کن.")}><span className="setting-icon">⚠️</span><div><strong>آلرژی‌ها و ترجیحات</strong><small>هشدارهای هر جعبه را بررسی کن</small></div><Icon name="chevron" /></button>
-        <button type="button" onClick={onAbout}><span className="setting-icon"><Icon name="info" /></span><div><strong>دربارهٔ Dibz</strong><small>ماموریت، ایمنی و نحوهٔ کار</small></div><Icon name="chevron" /></button>
+        <button type="button" onClick={onAbout}><span className="setting-icon"><Icon name="info" /></span><div><strong>دربارهٔ دیبز</strong><small>ماموریت، ایمنی و نحوهٔ کار</small></div><Icon name="chevron" /></button>
         <Link href="/customer/support"><span className="setting-icon">؟</span><div><strong>راهنما و پشتیبانی</strong><small>پرسش‌های رایج و پیگیری درخواست‌ها</small></div><Icon name="chevron" /></Link>
         <Link href="/business"><span className="setting-icon"><Icon name="store" /></span><div><strong>رفتن به پنل کسب‌وکار</strong><small>مدیریت پیشنهادها و سفارش‌ها</small></div><Icon name="chevron" /></Link>
         <Link href="/"><span className="setting-icon"><Icon name="home" /></span><div><strong>انتخاب نوع ورود</strong><small>بازگشت به صفحه آغاز</small></div><Icon name="chevron" /></Link>
@@ -515,7 +515,7 @@ function SuccessState({ reservation, onDirections, onCalendar, onDone }: { reser
     <div className="success-state">
       <div className="success-burst"><span><Icon name="check" /></span><i /><i /><i /></div>
       <p className="eyebrow">رزرو با موفقیت انجام شد</p><h2 id="reservation-title">جعبه‌ات کنار گذاشته شد!</h2><p>در بازهٔ تعیین‌شده به فروشگاه برو و کد دریافت را نشان بده.</p>
-      <div className="pickup-pass"><div className="pass-brand"><span><Image src="/dibz-logo.png" alt="" width={32} height={32} /></span><small>برگهٔ دریافت Dibz</small></div><div className="pass-store"><strong>{reservation.merchantName}</strong><small>{reservation.pickup}</small></div><div className="pass-code"><MiniQr code={reservation.code} /><span><small>کد دریافت</small><strong>{reservation.code}</strong></span></div><div className="pass-cut" /><p>{reservation.address}</p></div>
+      <div className="pickup-pass"><div className="pass-brand"><span><Image src="/brand/dibz-mascot-transparent.png" alt="" width={32} height={32} /></span><small>برگهٔ دریافت دیبز</small></div><div className="pass-store"><strong>{reservation.merchantName}</strong><small>{reservation.pickup}</small></div><div className="pass-code"><MiniQr code={reservation.code} /><span><small>کد دریافت</small><strong>{reservation.code}</strong></span></div><div className="pass-cut" /><p>{reservation.address}</p></div>
       <div className="success-countdown"><small>تا شروع زمان دریافت</small><strong>۲ ساعت و ۱۲ دقیقه</strong></div>
       <div className="success-actions"><button type="button" onClick={onDirections}><Icon name="route" /> مسیریابی</button><button type="button" onClick={onCalendar}><Icon name="calendar" /> افزودن به تقویم</button></div>
       <button className="primary-button full" type="button" onClick={onDone}>دیدن در رزروهای من</button>
@@ -537,7 +537,7 @@ function LocationSheet({ value, onChange, onClose }: { value: string; onChange: 
 }
 
 function AboutSheet({ onClose }: { onClose: () => void }) {
-  return <DialogShell titleId="about-title" onClose={onClose}><div className="simple-sheet about-sheet"><div className="about-mark"><span><Image src="/dibz-logo.png" alt="" width={88} height={88} /></span></div><p className="eyebrow">داستان Dibz</p><h2 id="about-title">غذای خوب، قبل از دورریز</h2><p>Dibz کاربران را به غذای سالمِ فروش‌نرفته و کالاهای نزدیک به پایان مهلت فروش وصل می‌کند.</p><ul><li><Icon name="spark" /><span><strong>جعبهٔ غافلگیرکننده</strong>محتوا دقیقاً از قبل معلوم نیست، اما ایمنی نامعلوم نیست.</span></li><li><Icon name="clock" /><span><strong>دریافت حضوری</strong>هر رزرو بازهٔ مشخص دارد و ارسال نداریم.</span></li><li><Icon name="info" /><span><strong>شفافیت و ایمنی</strong>محصول تاریخ‌گذشته یا نامناسب برای مصرف در Dibz عرضه نمی‌شود.</span></li></ul><button className="primary-button full" type="button" onClick={onClose}>متوجه شدم</button></div></DialogShell>;
+  return <DialogShell titleId="about-title" onClose={onClose}><div className="simple-sheet about-sheet"><div className="about-mark"><span><Image src="/brand/dibz-mascot-transparent.png" alt="" width={88} height={88} /></span></div><p className="eyebrow">داستان دیبز</p><h2 id="about-title">غذای خوب، قبل از دورریز</h2><p>دیبز کاربران را به غذای سالمِ فروش‌نرفته و کالاهای نزدیک به پایان مهلت فروش وصل می‌کند.</p><ul><li><Icon name="spark" /><span><strong>جعبهٔ غافلگیرکننده</strong>محتوا دقیقاً از قبل معلوم نیست، اما ایمنی نامعلوم نیست.</span></li><li><Icon name="clock" /><span><strong>دریافت حضوری</strong>هر رزرو بازهٔ مشخص دارد و ارسال نداریم.</span></li><li><Icon name="info" /><span><strong>شفافیت و ایمنی</strong>محصول تاریخ‌گذشته یا نامناسب برای مصرف در دیبز عرضه نمی‌شود.</span></li></ul><button className="primary-button full" type="button" onClick={onClose}>متوجه شدم</button></div></DialogShell>;
 }
 
 function CancelDialog({ onClose, onConfirm }: { onClose: () => void; onConfirm: () => void }) {

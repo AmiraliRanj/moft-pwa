@@ -8,7 +8,7 @@
 - `public/sw.js`
 - `components/ServiceWorkerRegister.tsx`
 - `app/offline/page.tsx`
-- آیکن‌ها در `public/icons/`
+- آیکن‌های Home Screen در `public/icons/dibz-icon-180.png`، `public/icons/dibz-icon-192.png` و `public/icons/dibz-icon-512.png`
 
 سرویس‌ورکر Preview فقط App Shell و پاسخ‌های موفق same-origin را cache می‌کند. داده حساس، API خصوصی یا پرداخت نباید با همین سیاست cache شود.
 

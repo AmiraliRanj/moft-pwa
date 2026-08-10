@@ -1,6 +1,6 @@
-const CACHE_NAME = "dibz-shell-v1";
+const CACHE_NAME = "dibz-shell-v2";
 const OFFER_IMAGES = Array.from({ length: 16 }, (_, index) => `/images/offers/offer-${String(index + 1).padStart(2, "0")}.webp`);
-const APP_SHELL = ["/", "/customer", "/business", "/offline", "/manifest.webmanifest", "/dibz-logo.png", ...OFFER_IMAGES];
+const APP_SHELL = ["/", "/customer", "/business", "/offline", "/manifest.webmanifest", "/icons/dibz-icon-180.png", "/icons/dibz-icon-192.png", "/icons/dibz-icon-512.png", "/brand/dibz-mascot-transparent.png", ...OFFER_IMAGES];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL)).then(() => self.skipWaiting()));

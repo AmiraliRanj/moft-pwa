@@ -8,24 +8,21 @@ import "./unified.css";
 
 export const metadata: Metadata = {
   title: {
-    default: "Dibz | غذای خوب، قبل از دورریز",
-    template: "%s | Dibz"
+    default: "Dibz! | دیبز!",
+    template: "%s | Dibz! | دیبز!"
   },
   description: "جعبه‌های غافلگیرکنندهٔ غذای سالمِ فروش‌نرفته با قیمت کمتر و دریافت حضوری.",
-  applicationName: "Dibz",
+  applicationName: "Dibz! | دیبز!",
   category: "food",
-  keywords: ["کاهش دورریز غذا", "جعبه سورپرایزی", "دریافت حضوری", "Dibz"],
+  keywords: ["کاهش دورریز غذا", "جعبه سورپرایزی", "دریافت حضوری", "دیبز"],
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
-    title: "Dibz"
+    title: "Dibz! | دیبز!"
   },
   formatDetection: { telephone: false },
   icons: {
-    icon: [
-      { url: "/dibz-logo.png", sizes: "1024x1024", type: "image/png" }
-    ],
-    apple: [{ url: "/dibz-logo.png", sizes: "1024x1024", type: "image/png" }]
+    icon: [{ url: "/icons/dibz-icon-512.png", sizes: "512x512", type: "image/png" }]
   }
 };
 
@@ -45,7 +42,7 @@ const themeBootScript = `
     root.style.colorScheme = resolved;
     const themeMeta = document.getElementById("theme-color");
     const statusMeta = document.getElementById("apple-status-bar-style");
-    if (themeMeta) themeMeta.setAttribute("content", resolved === "dark" ? "#151816" : "#F4F8F3");
+    if (themeMeta) themeMeta.setAttribute("content", resolved === "dark" ? "#151816" : "#14532D");
     if (statusMeta) statusMeta.setAttribute("content", resolved === "dark" ? "black-translucent" : "default");
   } catch {
     const resolved = "light";
@@ -59,7 +56,7 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
   return (
     <html lang="fa" dir="rtl" suppressHydrationWarning>
       <head>
-        <meta id="theme-color" name="theme-color" content="#F4F8F3" />
+        <meta id="theme-color" name="theme-color" content="#14532D" />
         <meta id="apple-status-bar-style" name="apple-mobile-web-app-status-bar-style" content="default" />
         <script dangerouslySetInnerHTML={{ __html: themeBootScript }} />
       </head>
