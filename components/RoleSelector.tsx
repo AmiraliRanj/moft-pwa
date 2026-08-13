@@ -10,14 +10,14 @@ export default function RoleSelector() {
       <div className="role-orb role-orb-one" aria-hidden="true" />
       <div className="role-orb role-orb-two" aria-hidden="true" />
       <header className="role-header">
-        <BrandMark subtitle="نجات غذای خوب، نزدیک شما" />
+        <BrandMark subtitle="غذای خوب، نزدیک تو" />
         <ThemeToggle compact />
       </header>
 
       <section className="role-hero" aria-labelledby="role-title">
-        <p className="eyebrow">یک مقصد، دو تجربه</p>
-        <h1 id="role-title">دوست داری از کدام سمت وارد دیبز شوی؟</h1>
-        <p>پیشنهادهای نزدیک را پیدا کنید یا عملیات روزانهٔ مجموعه‌تان را از یک پنل یکپارچه مدیریت کنید.</p>
+        <p className="eyebrow">برای خودت یا کسب‌وکارت</p>
+        <h1 id="role-title">دوست داری از کدوم سمت وارد دیبز بشی؟</h1>
+        <p>دنبال یه پیشنهاد خوب می‌گردی یا می‌خوای کسب‌وکارت رو مدیریت کنی؟</p>
       </section>
 
       <section id="role-options" className="role-grid" aria-label="انتخاب نوع ورود">
@@ -27,10 +27,10 @@ export default function RoleSelector() {
           </span>
           <span className="role-card-copy">
             <small>برای نجات یک وعده خوب</small>
-            <strong>ورود به نسخه مشتری</strong>
-            <span>پیشنهادهای نزدیک شما را ببینید، بسته‌های مازاد را رزرو کنید و سفارش خود را حضوری دریافت کنید.</span>
+            <strong>برای خودم</strong>
+            <span>پیشنهادهای نزدیکت رو ببین، رزرو کن و حضوری تحویل بگیر.</span>
           </span>
-          <span className="role-card-action">مشاهده نسخه مشتری <Icon name="arrow" /></span>
+          <span className="role-card-action">پیشنهادها رو ببین <Icon name="arrow" /></span>
         </Link>
 
         <Link className="role-card business-role" href="/business">
@@ -38,11 +38,11 @@ export default function RoleSelector() {
             <span><Icon name="store" /></span><i /><i /><i />
           </span>
           <span className="role-card-copy">
-            <small>برای مدیریت عملیات روزانه</small>
-            <strong>ورود به پنل کسب‌وکار</strong>
-            <span>پیشنهادها، موجودی، سفارش‌ها، تحویل، گزارش‌ها و امور مالی مجموعه را مدیریت کنید.</span>
+            <small>همه‌چی کسب‌وکارت، یه‌جا</small>
+            <strong>برای کسب‌وکارم</strong>
+            <span>پیشنهادها، سفارش‌ها و کارهای روزمره‌ات رو یه‌جا مدیریت کن.</span>
           </span>
-          <span className="role-card-action">مشاهده پنل کسب‌وکار <Icon name="arrow" /></span>
+          <span className="role-card-action">برو به پنل <Icon name="arrow" /></span>
         </Link>
       </section>
 

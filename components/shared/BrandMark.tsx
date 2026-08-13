@@ -4,7 +4,7 @@ import Link from "next/link";
 export function BrandMark({ href = "/", subtitle }: { href?: string; subtitle?: string }) {
   return (
     <Link className="brand-mark" href={href} aria-label="دیبز؛ بازگشت به انتخاب نوع ورود">
-      <span className="brand-mark-logo"><Image src="/brand/dibz-mascot-transparent.png" alt="" width={42} height={42} /></span>
+      <span className="brand-mark-logo"><Image src="/icons/dibz-home-icon-180-v3.png" alt="" width={42} height={42} /></span>
       <span><strong>دیبز</strong>{subtitle && <small>{subtitle}</small>}</span>
     </Link>
   );
