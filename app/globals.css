@@ -161,8 +161,8 @@ body.dialog-open { overflow: hidden; overscroll-behavior: none; }
 .food-photo { object-fit: cover; }
 
 .install-banner { width: 100%; min-height: 70px; display: grid; grid-template-columns: 46px 1fr 24px; align-items: center; gap: 11px; margin-top: 14px; padding: 10px 13px; color: var(--ink); text-align: start; background: var(--surface); border: 1px solid var(--line); border-radius: 21px; box-shadow: var(--shadow-sm); cursor: pointer; }
-.install-icon { width: 46px; height: 46px; display: grid; place-items: center; overflow: hidden; background: var(--brand); border-radius: 15px; }
-.install-icon img { width: 100%; height: 100%; object-fit: cover; }
+.install-icon { width: 46px; height: 46px; display: grid; place-items: center; }
+.install-icon img { width: 100%; height: 100%; object-fit: contain; }
 .install-banner strong, .install-banner small { display: block; }
 .install-banner small { color: var(--muted); margin-top: 4px; font-size: .71rem; }
 .install-banner > svg { width: 18px; color: var(--muted); }
@@ -479,8 +479,8 @@ body.dialog-open { overflow: hidden; overscroll-behavior: none; }
 .pickup-pass { position: relative; overflow: hidden; margin-top: 13px; padding: 16px; color: white; text-align: start; background: linear-gradient(145deg, #1e5946, #102f28); border-radius: 25px; box-shadow: 0 20px 45px rgba(20,60,48,.22); }
 .pickup-pass::before { content: ""; position: absolute; width: 170px; height: 170px; left: -60px; top: -85px; background: rgba(255,255,255,.05); border-radius: 50%; }
 .pass-brand { display: flex; align-items: center; gap: 7px; }
-.pass-brand span { width: 32px; height: 32px; display: grid; place-items: center; overflow: hidden; background: #dff1e3; border-radius: 10px; }
-.pass-brand span img { width: 100%; height: 100%; object-fit: cover; }
+.pass-brand span { width: 32px; height: 32px; display: grid; place-items: center; }
+.pass-brand span img { width: 100%; height: 100%; object-fit: contain; }
 .pass-brand small { color: rgba(255,255,255,.62); }
 .pass-store { margin-top: 15px; }
 .pass-store strong, .pass-store small { display: block; }
