@@ -9,6 +9,7 @@ import { DialogShell } from "@/components/moft/DialogShell";
 import { EmptyState } from "@/components/moft/EmptyState";
 import { FoodImage } from "@/components/moft/FoodImage";
 import { HomeHeroCarousel } from "@/components/moft/HomeHeroCarousel";
+import { AnimatedNumber } from "@/components/moft/AnimatedNumber";
 import { Icon } from "@/components/moft/Icon";
 import { LoadingSkeleton } from "@/components/moft/LoadingSkeleton";
 import { OfferCard, OfferList } from "@/components/moft/OfferCard";
@@ -29,6 +30,16 @@ type Layer = "detail" | "reserve" | "filters" | "location" | "about" | "cancel" 
 type SortMode = "nearest" | "popular" | "discount";
 type ReservationView = "active" | "history";
 
+const productCutoutByCategory: Partial<Record<Offer["category"], string>> = {
+  cafe: "/images/products/dibz-bakery-cutout.png",
+  bakery: "/images/products/dibz-bakery-cutout.png",
+  confectionery: "/images/products/dibz-bakery-cutout.png",
+  "fast-food": "/images/products/dibz-pizza-cutout.png",
+  restaurant: "/images/products/dibz-sandwich-cutout.png",
+  fruit: "/images/products/dibz-sandwich-cutout.png",
+  grocery: "/images/products/dibz-sandwich-cutout.png",
+};
+
 const storageKeys = {
   favorites: "moft-favorites-v2"
 };
@@ -43,7 +54,7 @@ function customerOffer(offer: MarketplaceOffer): Offer {
     coordinates: offer.coordinates, distanceKm: offer.distanceKm, rating: offer.rating, reviewCount: offer.reviewCount,
     pickup: `${dateLabel}، ${faDigits(offer.pickupStart)} تا ${faDigits(offer.pickupEnd)}`, pickupPeriod: offer.pickupPeriod,
     quantityLeft: remainingQuantity(offer), originalPrice: offer.originalValue, price: offer.salePrice, allergens: offer.allergens,
-    image: offer.image, endingSoon: offer.endingSoon, popular: offer.popular,
+    image: productCutoutByCategory[offer.category] ?? offer.image, endingSoon: offer.endingSoon, popular: offer.popular,
   };
 }
 
@@ -361,8 +372,8 @@ function HomePage({ query, setQuery, category, setCategory, offers, allOffers, f
           </section>
 
           <section className="impact-home-card glass-subtle">
-            <div><span className="impact-leaf"><Icon name="leaf" /></span><p className="eyebrow">اثر کوچک، حال خوب بزرگ</p><h2>تا امروز {numberFa(savedMeals || 1)} وعده با یک انتخاب خوب همراه شده.</h2><p>{savedMeals ? "این عدد با رزروهای تو به‌روز می‌شود." : "اولین جعبه‌ات می‌تواند شروع این مسیر باشد."}</p></div>
-            <div className="impact-ring"><strong>{numberFa((savedMeals || 1) * 11)}</strong><small>لیتر آب<br />تخمینی</small></div>
+            <div><span className="impact-leaf"><Icon name="leaf" /></span><p className="eyebrow">اثر کوچک، حال خوب بزرگ</p><h2>تا امروز <AnimatedNumber value={savedMeals || 1} /> وعده با یک انتخاب خوب همراه شده.</h2><p>{savedMeals ? "این عدد با رزروهای تو به‌روز می‌شود." : "اولین جعبه‌ات می‌تواند شروع این مسیر باشد."}</p></div>
+            <div className="impact-ring"><strong><AnimatedNumber value={(savedMeals || 1) * 11} /></strong><small>لیتر آب<br />تخمینی</small></div>
           </section>
         </>
       )}
@@ -434,7 +445,7 @@ function ProfilePage({ savedMeals, favoriteOffers, reservations, notifications, 
   return (
     <div className="page-content secondary-page profile-page">
       <div className="profile-head"><div className="avatar">{customerName[0]}</div><div><p>همراه سبز دیبز</p><h1>{customerName}</h1></div></div>
-      <section className="impact-card glass-subtle"><div className="impact-card-head"><span><Icon name="leaf" /></span><div><p>اثر تو تا امروز</p><h2>{numberFa(savedMeals)} وعده نجات‌یافته</h2></div></div><div className="impact-grid"><span><strong>{decimalFa(preventedWaste)}</strong><small>کیلو غذای برآوردی</small></span><span><strong>{decimalFa(co2)}</strong><small>کیلو CO₂ برآوردی</small></span><span><strong>{numberFa(savedMeals * 11)}</strong><small>لیتر آب برآوردی</small></span></div><p className="estimate-note">این برآوردها تقریبی‌اند و ادعای زیست‌محیطی قطعی نیستند.</p></section>
+      <section className="impact-card glass-subtle"><div className="impact-card-head"><span><Icon name="leaf" /></span><div><p>اثر تو تا امروز</p><h2><AnimatedNumber value={savedMeals} /> وعده نجات‌یافته</h2></div></div><div className="impact-grid"><span><strong>{decimalFa(preventedWaste)}</strong><small>کیلو غذای برآوردی</small></span><span><strong>{decimalFa(co2)}</strong><small>کیلو CO₂ برآوردی</small></span><span><strong><AnimatedNumber value={savedMeals * 11} /></strong><small>لیتر آب برآوردی</small></span></div><p className="estimate-note">این برآوردها تقریبی‌اند و ادعای زیست‌محیطی قطعی نیستند.</p></section>
 
       <section className="profile-section glass-subtle"><SectionHeading eyebrow="ذخیره‌شده‌ها" title="فروشگاه‌های محبوب" />{favoriteOffers.length ? <div className="favorite-stores">{favoriteOffers.slice(0, 5).map((offer) => <button type="button" onClick={() => onOpenOffer(offer)} key={offer.id}><span className="store-logo"><FoodImage src={offer.image} sizes="60px" /></span><small>{offer.merchantName}</small></button>)}</div> : <div className="inline-empty"><Icon name="heart" /><span>هنوز فروشگاهی را ذخیره نکردی.</span></div>}</section>
 
@@ -491,7 +502,7 @@ function ReservationFlow({ offer, step, setStep, quantity, setQuantity, confirmi
       <div className="flow-header"><span>رزرو جعبه</span><strong>{step < 4 ? `${numberFa(step)} از ۳` : "انجام شد"}</strong></div>
       {step < 4 && <div className="flow-progress" aria-label={`مرحله ${numberFa(step)} از ۳`}>{[1, 2, 3].map((item) => <i className={item <= step ? "active" : ""} key={item} />)}</div>}
       <div className="flow-content">
-        {step === 1 && <><p className="eyebrow">مرور و تعداد</p><h2 id="reservation-title">همین را می‌خواهی؟</h2><div className="review-box glass-subtle"><span className="store-logo large"><FoodImage src={offer.image} sizes="72px" /></span><div><strong>{offer.merchantName}</strong><p>{offer.title}</p><small>{offer.pickup}</small></div></div><div className="compact-quantity"><span>تعداد جعبه</span><div className="quantity-picker"><button type="button" onClick={() => setQuantity(Math.max(1, quantity - 1))} disabled={quantity <= 1} aria-label="کم کردن تعداد"><Icon name="minus" /></button><strong>{numberFa(quantity)}</strong><button type="button" onClick={() => setQuantity(Math.min(Math.min(3, offer.quantityLeft), quantity + 1))} disabled={quantity >= Math.min(3, offer.quantityLeft)} aria-label="زیاد کردن تعداد"><Icon name="plus" /></button></div></div><div className="simulation-note"><Icon name="info" /><p><strong>جعبه غافلگیرکننده است.</strong> ترکیب دقیق با مواد سالم همان روز آماده می‌شود.</p></div></>}
+        {step === 1 && <><p className="eyebrow">مرور و تعداد</p><h2 id="reservation-title">همین را می‌خواهی؟</h2><div className="review-box glass-subtle"><span className="store-logo large"><FoodImage src={offer.image} sizes="72px" /></span><div><strong>{offer.merchantName}</strong><p>{offer.title}</p><small>{offer.pickup}</small></div></div><div className="compact-quantity"><span>تعداد جعبه</span><div className="quantity-picker"><button type="button" onClick={() => setQuantity(Math.max(1, quantity - 1))} disabled={quantity <= 1} aria-label="کم کردن تعداد"><Icon name="minus" /></button><strong><AnimatedNumber value={quantity} /></strong><button type="button" onClick={() => setQuantity(Math.min(Math.min(3, offer.quantityLeft), quantity + 1))} disabled={quantity >= Math.min(3, offer.quantityLeft)} aria-label="زیاد کردن تعداد"><Icon name="plus" /></button></div></div><div className="simulation-note"><Icon name="info" /><p><strong>جعبه غافلگیرکننده است.</strong> ترکیب دقیق با مواد سالم همان روز آماده می‌شود.</p></div></>}
         {step === 2 && <><p className="eyebrow">زمان دریافت</p><h2 id="reservation-title">زمان مناسب توست؟</h2><button className="pickup-choice selected" type="button" aria-pressed="true"><span><Icon name="clock" /></span><div><strong>{offer.pickup}</strong><small>دریافت حضوری از {offer.neighborhood}</small></div><Icon name="check" /></button><div className="pickup-reminder"><Icon name="bell" /><p>یادآوری ۳۰ دقیقه قبل از شروع بازه برایت روشن می‌شود.</p></div></>}
         {step === 3 && <><p className="eyebrow">تأیید نهایی</p><h2 id="reservation-title">همه‌چیز آماده‌ست</h2><div className="confirmation-list"><span><small>فروشگاه</small><strong>{offer.merchantName}</strong></span><span><small>تعداد</small><strong>{numberFa(quantity)} جعبه</strong></span><span><small>دریافت</small><strong>{offer.pickup}</strong></span><span><small>مبلغ</small><strong>{money(total)}</strong></span></div><label className="confirm-check"><input type="checkbox" defaultChecked /><span><Icon name="check" /></span><p>می‌دانم محتویات دقیق جعبه متغیر است و هشدار آلرژی را بررسی کرده‌ام.</p></label></>}
         {step === 4 && success && <SuccessState reservation={success} onDirections={onDirections} onCalendar={onCalendar} onDone={onDone} />}

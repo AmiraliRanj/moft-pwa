@@ -6,9 +6,9 @@ import { FoodImage } from "@/components/moft/FoodImage";
 import { Icon } from "@/components/moft/Icon";
 
 const slides = [
-  { title: "امشب خوش‌طعم‌تر انتخاب کن", text: "جعبه‌های تازهٔ نزدیکت را با قیمت بهتر رزرو کن و در زمان مشخص تحویل بگیر.", image: "/images/offers/offer-16.webp", action: "دیدن گزینه‌های نزدیک" },
-  { title: "یک قرار خوش‌مزه نزدیک تو", text: "کافه‌ها و فروشگاه‌های محله، جعبه‌های روزشان را برای دریافت حضوری آماده کرده‌اند.", image: "/images/offers/offer-03.webp", action: "کشف فروشگاه‌ها" },
-  { title: "جعبهٔ غافلگیرکننده، انتخاب آسان", text: "قیمت، بازهٔ دریافت و اطلاعات آلرژی را شفاف ببین؛ باقی‌اش را به یک سورپرایز خوش‌طعم بسپار.", image: "/images/offers/offer-09.webp", action: "شروع کن" },
+  { title: "امشب خوش‌طعم‌تر انتخاب کن", text: "جعبه‌های تازهٔ نزدیکت را با قیمت بهتر رزرو کن و در زمان مشخص تحویل بگیر.", image: "/images/products/dibz-bakery-cutout.png", action: "دیدن گزینه‌های نزدیک" },
+  { title: "یک قرار خوش‌مزه نزدیک تو", text: "کافه‌ها و فروشگاه‌های محله، جعبه‌های روزشان را برای دریافت حضوری آماده کرده‌اند.", image: "/images/products/dibz-sandwich-cutout.png", action: "کشف فروشگاه‌ها" },
+  { title: "جعبهٔ غافلگیرکننده، انتخاب آسان", text: "قیمت، بازهٔ دریافت و اطلاعات آلرژی را شفاف ببین؛ باقی‌اش را به یک سورپرایز خوش‌طعم بسپار.", image: "/images/products/dibz-pizza-cutout.png", action: "شروع کن" },
 ];
 
 export function HomeHeroCarousel({ onDiscover }: { onDiscover: () => void }) {

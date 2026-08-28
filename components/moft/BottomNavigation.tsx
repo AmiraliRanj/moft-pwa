@@ -1,7 +1,7 @@
 import { Icon, type IconName } from "@/components/moft/Icon";
-import { numberFa } from "@/lib/moft-format";
 import type { AppTab } from "@/types/moft";
 import { LiquidGlassLens } from "@/components/moft/LiquidGlassLens";
+import { AnimatedNumber } from "@/components/moft/AnimatedNumber";
 
 const items: Array<{ id: AppTab; label: string; icon: IconName }> = [
   { id: "home", label: "خانه", icon: "home" },
@@ -17,7 +17,7 @@ export function BottomNavigation({ value, onChange, reservationCount }: { value:
       {items.map((item) => (
         <button key={item.id} className={value === item.id ? "active" : ""} type="button" onClick={() => onChange(item.id)} aria-current={value === item.id ? "page" : undefined}>
           {value === item.id && <LiquidGlassLens />}
-          <span className="nav-icon"><Icon name={item.icon} />{item.id === "reservations" && reservationCount > 0 && <b>{numberFa(reservationCount)}</b>}</span>
+          <span className="nav-icon"><Icon name={item.icon} />{item.id === "reservations" && reservationCount > 0 && <b><AnimatedNumber value={reservationCount} /></b>}</span>
           <small>{item.label}</small>
         </button>
       ))}
