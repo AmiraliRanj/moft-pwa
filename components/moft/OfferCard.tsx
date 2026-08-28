@@ -9,7 +9,7 @@ export function OfferCard({ offer, favorite, onFavorite, onSelect, compact = fal
       <button className="offer-card-main" type="button" onClick={() => onSelect(offer)} aria-label={`مشاهده ${offer.title} از ${offer.merchantName}`}>
         <div className="offer-visual">
           <FoodImage src={offer.image} sizes={compact ? "320px" : "(max-width: 700px) 100vw, 340px"} priority={priority} />
-          <span className={`availability-badge ${offer.quantityLeft <= 2 ? "low" : ""}`}>{numberFa(offer.quantityLeft)} جعبه مانده</span>
+          <span className={`availability-badge ${offer.quantityLeft <= 2 ? "low" : ""}`}>{numberFa(offer.quantityLeft)} جعبه موجود</span>
         </div>
         <div className="offer-body">
           <div className="offer-topline">

@@ -30,7 +30,7 @@ const businessOffers: MarketplaceOffer[] = [
   {
     id: BUSINESS_OFFER_IDS[0], businessId: DEMO_BUSINESS_ID, branchId: "branch-jordan", merchantName: "کافه ویونا",
     category: "cafe", categoryLabel: "کافه و نانوایی", offerType: "surprise_box", title: "بسته شگفت‌انگیز پایان روز",
-    description: "ترکیبی از کروسان، کیک روز یا ساندویچ‌های سالم باقی‌مانده در ویترین؛ محتویات دقیق هنگام دریافت مشخص می‌شود.",
+    description: "ترکیبی از کروسان، کیک روز یا ساندویچ‌های سالم؛ محتویات دقیق هنگام دریافت مشخص می‌شود.",
     image: "/images/offers/offer-01.webp", originalValue: 390000, salePrice: 125000, totalQuantity: 18, soldQuantity: 11, reservedQuantity: 0,
     pickupDate: seedDate, pickupStart: "20:00", pickupEnd: "21:00", pickupPeriod: "evening", address: "تهران، جردن، خیابان ناهید غربی",
     neighborhood: "جردن", coordinates: { lat: 35.775, lng: 51.421 }, distanceKm: 0.8, rating: 4.6, reviewCount: 184,
@@ -60,7 +60,7 @@ const businessOffers: MarketplaceOffer[] = [
   {
     id: BUSINESS_OFFER_IDS[3], businessId: DEMO_BUSINESS_ID, branchId: "branch-jordan", merchantName: "کافه ویونا",
     category: "confectionery", categoryLabel: "شیرینی‌فروشی", offerType: "surprise_box", title: "جعبه کیک و دسر روز",
-    description: "برش‌های سالم کیک و دسر باقی‌مانده از سرو روز؛ نوع دقیق بر اساس موجودی پایان شیفت است.", image: "/images/offers/offer-05.webp",
+    description: "برش‌های سالم کیک و دسر روز؛ نوع دقیق بر اساس انتخاب همان روز است.", image: "/images/offers/offer-05.webp",
     originalValue: 440000, salePrice: 139000, totalQuantity: 10, soldQuantity: 10, reservedQuantity: 0, pickupDate: seedDate,
     pickupStart: "20:30", pickupEnd: "21:30", pickupPeriod: "late", address: "تهران، جردن، خیابان ناهید غربی", neighborhood: "جردن",
     coordinates: { lat: 35.775, lng: 51.421 }, distanceKm: 0.8, rating: 4.7, reviewCount: 63, allergens: ["گلوتن", "لبنیات", "تخم‌مرغ", "مغزها"],

@@ -46,7 +46,7 @@ export default function RoleSelector() {
         </Link>
       </section>
 
-      <footer className="role-footer"><Icon name="leaf" /> غذای خوب، قبل از دورریز.</footer>
+      <footer className="role-footer"><Icon name="leaf" /> انتخاب خوش‌طعم برای امروز.</footer>
     </main>
   );
 }

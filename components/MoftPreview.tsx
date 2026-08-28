@@ -8,6 +8,7 @@ import { CategorySelector } from "@/components/moft/CategorySelector";
 import { DialogShell } from "@/components/moft/DialogShell";
 import { EmptyState } from "@/components/moft/EmptyState";
 import { FoodImage } from "@/components/moft/FoodImage";
+import { HomeHeroCarousel } from "@/components/moft/HomeHeroCarousel";
 import { Icon } from "@/components/moft/Icon";
 import { LoadingSkeleton } from "@/components/moft/LoadingSkeleton";
 import { OfferCard, OfferList } from "@/components/moft/OfferCard";
@@ -231,7 +232,7 @@ export default function MoftPreview({ initialTab = "home", initialFavoritesOnly 
       const reservation = customerReservation(result.value, result.state.offers, result.state.reviews);
       setSelected((current) => current ? { ...current, quantityLeft: Math.max(0, current.quantityLeft - quantity) } : current);
       setSuccessReservation(reservation);
-      setReservationStep(5);
+      setReservationStep(4);
       setConfirming(false);
       setIslandVisible(true);
       window.setTimeout(() => setIslandVisible(false), 4200);
@@ -330,16 +331,7 @@ function HomePage({ query, setQuery, category, setCategory, offers, allOffers, f
   return (
     <div className="page-content home-page">
       <p className="greeting">سلام سارا، عصر بخیر 👋</p>
-      <section className="hero-card">
-        <div className="hero-copy">
-          <h1>غذای خوب، قبل از دورریز</h1>
-          <p>جعبه‌های فروش‌نرفته را با قیمت کمتر رزرو کن و همان روز تحویل بگیر.</p>
-          <button type="button" onClick={onDiscover}>دیدن فرصت‌های نزدیک <Icon name="arrow" /></button>
-        </div>
-        <div className="hero-image" aria-hidden="true">
-          <FoodImage src="/images/offers/offer-16.webp" sizes="(max-width: 700px) 92vw, 440px" priority />
-        </div>
-      </section>
+      <HomeHeroCarousel onDiscover={onDiscover} />
 
       {!installed && installPrompt && <button className="install-banner glass-subtle" type="button" onClick={onInstall}><span className="install-icon"><Image src="/icons/dibz-liquid-glass-180-v1.png" alt="" width={46} height={46} /></span><span><strong>دیبز را نصب کن</strong><small>سریع‌تر بازش کن و آفلاین هم ببین</small></span><Icon name="arrow" /></button>}
 
@@ -354,7 +346,7 @@ function HomePage({ query, setQuery, category, setCategory, offers, allOffers, f
       ) : (
         <>
           <section className="content-section" aria-labelledby="near-title">
-            <SectionHeading eyebrow="نزدیک شما" title="همین امروز نجاتش بده" id="near-title" action="دیدن همه" onAction={onDiscover} />
+            <SectionHeading eyebrow="نزدیک شما" title="انتخاب‌های تازهٔ امروز" id="near-title" action="دیدن همه" onAction={onDiscover} />
             <OfferList offers={allOffers.slice(0, 4)} favorites={favorites} onFavorite={onFavorite} onSelect={onSelect} />
           </section>
 
@@ -369,7 +361,7 @@ function HomePage({ query, setQuery, category, setCategory, offers, allOffers, f
           </section>
 
           <section className="impact-home-card glass-subtle">
-            <div><span className="impact-leaf"><Icon name="leaf" /></span><p className="eyebrow">اثر کوچک، حال خوب بزرگ</p><h2>تا امروز {numberFa(savedMeals || 1)} وعده از دورریز دور شده.</h2><p>{savedMeals ? "این عدد با رزروهای تو به‌روز می‌شود." : "اولین جعبه‌ات می‌تواند شروع این مسیر باشد."}</p></div>
+            <div><span className="impact-leaf"><Icon name="leaf" /></span><p className="eyebrow">اثر کوچک، حال خوب بزرگ</p><h2>تا امروز {numberFa(savedMeals || 1)} وعده با یک انتخاب خوب همراه شده.</h2><p>{savedMeals ? "این عدد با رزروهای تو به‌روز می‌شود." : "اولین جعبه‌ات می‌تواند شروع این مسیر باشد."}</p></div>
             <div className="impact-ring"><strong>{numberFa((savedMeals || 1) * 11)}</strong><small>لیتر آب<br />تخمینی</small></div>
           </section>
         </>
@@ -481,7 +473,7 @@ function OfferDetails({ offer, favorite, onFavorite, onClose, onReserve, related
           <div className="detail-rating"><span><Icon name="star" filled /> {decimalFa(offer.rating)} از {numberFa(offer.reviewCount)} نظر</span><span><Icon name="pin" /> {distanceFa(offer.distanceKm)}</span></div>
           <h2 id="offer-title">{offer.merchantName}</h2><p className="detail-description">{offer.description}</p>
           <div className="detail-stats"><div><Icon name="clock" /><span><small>زمان دریافت حضوری</small><strong>{offer.pickup}</strong></span></div><div><Icon name="bag" /><span><small>موجودی این لحظه</small><strong>{numberFa(offer.quantityLeft)} جعبه</strong></span></div></div>
-          <section className="unknown-note"><span><Icon name="spark" /></span><div><strong>داخل جعبه غافلگیر می‌شوی</strong><p>فروشگاه تا پایان روز دقیقاً نمی‌داند چه چیزهایی باقی می‌ماند؛ تصویر فقط حال‌وهوای بسته را نشان می‌دهد.</p></div></section>
+          <section className="unknown-note"><span><Icon name="spark" /></span><div><strong>داخل جعبه غافلگیر می‌شوی</strong><p>ترکیب جعبه در همان روز آماده می‌شود؛ تصویر فقط حال‌وهوای بسته را نشان می‌دهد.</p></div></section>
           <section className="allergy-note"><span>!</span><div><strong>هشدار آلرژی و ایمنی</strong><p>فقط غذای سالم عرضه می‌شود، اما ترکیب متغیر است. اگر آلرژی جدی داری، پیش از دریافت با فروشگاه هماهنگ کن.</p><div>{offer.allergens.map((item) => <em key={item}>{item}</em>)}</div></div></section>
           <section className="location-preview"><div><p className="eyebrow">محل دریافت</p><h3>{offer.address}</h3><small>دریافت فقط حضوری و در بازهٔ مشخص‌شده است.</small></div><div className="mini-map" aria-hidden="true"><i /><span><Icon name="pin" /></span></div></section>
           {related.length > 0 && <section className="related-section"><SectionHeading eyebrow="همین اطراف" title="شاید این‌ها را هم دوست داشته باشی" />{related.map((item) => <OfferCard compact key={item.id} offer={item} favorite={favorites.has(item.id)} onFavorite={onFavorite} onSelect={onSelect} />)}</section>}
@@ -496,16 +488,15 @@ function ReservationFlow({ offer, step, setStep, quantity, setQuantity, confirmi
   const total = offer.price * quantity;
   return (
     <DialogShell titleId="reservation-title" onClose={onClose}>
-      <div className="flow-header"><span>رزرو جعبه</span><strong>{step < 5 ? `${numberFa(step)} از ۴` : "انجام شد"}</strong></div>
-      {step < 5 && <div className="flow-progress" aria-label={`مرحله ${numberFa(step)} از ۴`}>{[1, 2, 3, 4].map((item) => <i className={item <= step ? "active" : ""} key={item} />)}</div>}
+      <div className="flow-header"><span>رزرو جعبه</span><strong>{step < 4 ? `${numberFa(step)} از ۳` : "انجام شد"}</strong></div>
+      {step < 4 && <div className="flow-progress" aria-label={`مرحله ${numberFa(step)} از ۳`}>{[1, 2, 3].map((item) => <i className={item <= step ? "active" : ""} key={item} />)}</div>}
       <div className="flow-content">
-        {step === 1 && <><p className="eyebrow">مرور جعبه</p><h2 id="reservation-title">همین را می‌خواهی؟</h2><div className="review-box glass-subtle"><span className="store-logo large"><FoodImage src={offer.image} sizes="72px" /></span><div><strong>{offer.merchantName}</strong><p>{offer.title}</p><small>{offer.pickup}</small></div></div><div className="simulation-note"><Icon name="info" /><p><strong>جعبه غافلگیرکننده است.</strong> ترکیب دقیق بر اساس موجودی سالم پایان روز مشخص می‌شود.</p></div></>}
-        {step === 2 && <><p className="eyebrow">تعداد جعبه</p><h2 id="reservation-title">چند تا نجات می‌دی؟</h2><p className="flow-subtitle">حداکثر {numberFa(Math.min(3, offer.quantityLeft))} جعبه در هر رزرو.</p><div className="quantity-picker"><button type="button" onClick={() => setQuantity(Math.max(1, quantity - 1))} disabled={quantity <= 1} aria-label="کم کردن تعداد"><Icon name="minus" /></button><strong>{numberFa(quantity)}</strong><button type="button" onClick={() => setQuantity(Math.min(Math.min(3, offer.quantityLeft), quantity + 1))} disabled={quantity >= Math.min(3, offer.quantityLeft)} aria-label="زیاد کردن تعداد"><Icon name="plus" /></button></div><div className="flow-price"><span>جمع رزرو</span><strong>{money(total)}</strong></div></>}
-        {step === 3 && <><p className="eyebrow">زمان دریافت</p><h2 id="reservation-title">سر وقت می‌رسی؟</h2><button className="pickup-choice selected" type="button" aria-pressed="true"><span><Icon name="clock" /></span><div><strong>{offer.pickup}</strong><small>دریافت حضوری از {offer.neighborhood}</small></div><Icon name="check" /></button><div className="pickup-reminder"><Icon name="bell" /><p>یادآوری ۳۰ دقیقه قبل از شروع بازه برایت روشن می‌شود.</p></div></>}
-        {step === 4 && <><p className="eyebrow">تأیید نهایی</p><h2 id="reservation-title">همه‌چیز آماده‌ست</h2><div className="confirmation-list"><span><small>فروشگاه</small><strong>{offer.merchantName}</strong></span><span><small>تعداد</small><strong>{numberFa(quantity)} جعبه</strong></span><span><small>دریافت</small><strong>{offer.pickup}</strong></span><span><small>مبلغ</small><strong>{money(total)}</strong></span></div><label className="confirm-check"><input type="checkbox" defaultChecked /><span><Icon name="check" /></span><p>می‌دانم محتویات دقیق جعبه متغیر است و باید هشدار آلرژی را بررسی کنم.</p></label></>}
-        {step === 5 && success && <SuccessState reservation={success} onDirections={onDirections} onCalendar={onCalendar} onDone={onDone} />}
+        {step === 1 && <><p className="eyebrow">مرور و تعداد</p><h2 id="reservation-title">همین را می‌خواهی؟</h2><div className="review-box glass-subtle"><span className="store-logo large"><FoodImage src={offer.image} sizes="72px" /></span><div><strong>{offer.merchantName}</strong><p>{offer.title}</p><small>{offer.pickup}</small></div></div><div className="compact-quantity"><span>تعداد جعبه</span><div className="quantity-picker"><button type="button" onClick={() => setQuantity(Math.max(1, quantity - 1))} disabled={quantity <= 1} aria-label="کم کردن تعداد"><Icon name="minus" /></button><strong>{numberFa(quantity)}</strong><button type="button" onClick={() => setQuantity(Math.min(Math.min(3, offer.quantityLeft), quantity + 1))} disabled={quantity >= Math.min(3, offer.quantityLeft)} aria-label="زیاد کردن تعداد"><Icon name="plus" /></button></div></div><div className="simulation-note"><Icon name="info" /><p><strong>جعبه غافلگیرکننده است.</strong> ترکیب دقیق با مواد سالم همان روز آماده می‌شود.</p></div></>}
+        {step === 2 && <><p className="eyebrow">زمان دریافت</p><h2 id="reservation-title">زمان مناسب توست؟</h2><button className="pickup-choice selected" type="button" aria-pressed="true"><span><Icon name="clock" /></span><div><strong>{offer.pickup}</strong><small>دریافت حضوری از {offer.neighborhood}</small></div><Icon name="check" /></button><div className="pickup-reminder"><Icon name="bell" /><p>یادآوری ۳۰ دقیقه قبل از شروع بازه برایت روشن می‌شود.</p></div></>}
+        {step === 3 && <><p className="eyebrow">تأیید نهایی</p><h2 id="reservation-title">همه‌چیز آماده‌ست</h2><div className="confirmation-list"><span><small>فروشگاه</small><strong>{offer.merchantName}</strong></span><span><small>تعداد</small><strong>{numberFa(quantity)} جعبه</strong></span><span><small>دریافت</small><strong>{offer.pickup}</strong></span><span><small>مبلغ</small><strong>{money(total)}</strong></span></div><label className="confirm-check"><input type="checkbox" defaultChecked /><span><Icon name="check" /></span><p>می‌دانم محتویات دقیق جعبه متغیر است و هشدار آلرژی را بررسی کرده‌ام.</p></label></>}
+        {step === 4 && success && <SuccessState reservation={success} onDirections={onDirections} onCalendar={onCalendar} onDone={onDone} />}
       </div>
-      {step < 5 && <div className="flow-footer">{step > 1 && <button className="secondary-button" type="button" onClick={() => setStep(step - 1)}>برگشت</button>}<button className="primary-button" type="button" onClick={() => step === 4 ? onConfirm() : setStep(step + 1)} disabled={confirming}>{confirming ? <><span className="spinner" /> در حال ثبت...</> : step === 4 ? "تأیید رزرو" : "ادامه"}</button></div>}
+      {step < 4 && <div className="flow-footer">{step > 1 && <button className="secondary-button" type="button" onClick={() => setStep(step - 1)}>برگشت</button>}<button className="primary-button" type="button" onClick={() => step === 3 ? onConfirm() : setStep(step + 1)} disabled={confirming}>{confirming ? <><span className="spinner" /> در حال ثبت...</> : step === 3 ? "تأیید رزرو" : "ادامه"}</button></div>}
     </DialogShell>
   );
 }
@@ -537,7 +528,7 @@ function LocationSheet({ value, onChange, onClose }: { value: string; onChange: 
 }
 
 function AboutSheet({ onClose }: { onClose: () => void }) {
-  return <DialogShell titleId="about-title" onClose={onClose}><div className="simple-sheet about-sheet"><div className="about-mark"><span><Image src="/brand/dibz-mascot-transparent.png" alt="" width={88} height={88} /></span></div><p className="eyebrow">داستان دیبز</p><h2 id="about-title">غذای خوب، قبل از دورریز</h2><p>دیبز کاربران را به غذای سالمِ فروش‌نرفته و کالاهای نزدیک به پایان مهلت فروش وصل می‌کند.</p><ul><li><Icon name="spark" /><span><strong>جعبهٔ غافلگیرکننده</strong>محتوا دقیقاً از قبل معلوم نیست، اما ایمنی نامعلوم نیست.</span></li><li><Icon name="clock" /><span><strong>دریافت حضوری</strong>هر رزرو بازهٔ مشخص دارد و ارسال نداریم.</span></li><li><Icon name="info" /><span><strong>شفافیت و ایمنی</strong>محصول تاریخ‌گذشته یا نامناسب برای مصرف در دیبز عرضه نمی‌شود.</span></li></ul><button className="primary-button full" type="button" onClick={onClose}>متوجه شدم</button></div></DialogShell>;
+  return <DialogShell titleId="about-title" onClose={onClose}><div className="simple-sheet about-sheet"><div className="about-mark"><span><Image src="/brand/dibz-mascot-transparent.png" alt="" width={88} height={88} /></span></div><p className="eyebrow">داستان دیبز</p><h2 id="about-title">انتخاب خوش‌طعم برای امروز</h2><p>دیبز کاربران را به جعبه‌های سالم و آمادهٔ دریافت حضوری در محله‌شان وصل می‌کند.</p><ul><li><Icon name="spark" /><span><strong>جعبهٔ غافلگیرکننده</strong>محتوا دقیقاً از قبل معلوم نیست، اما ایمنی نامعلوم نیست.</span></li><li><Icon name="clock" /><span><strong>دریافت حضوری</strong>هر رزرو بازهٔ مشخص دارد و ارسال نداریم.</span></li><li><Icon name="info" /><span><strong>شفافیت و ایمنی</strong>محصول تاریخ‌گذشته یا نامناسب برای مصرف در دیبز عرضه نمی‌شود.</span></li></ul><button className="primary-button full" type="button" onClick={onClose}>متوجه شدم</button></div></DialogShell>;
 }
 
 function CancelDialog({ onClose, onConfirm }: { onClose: () => void; onConfirm: () => void }) {
