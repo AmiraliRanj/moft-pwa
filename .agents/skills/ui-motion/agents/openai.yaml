@@ -1,0 +1,3 @@
+interface:
+  display_name: "UI Motion"
+  short_description: "Purposeful UI motion without unnecessary animation"

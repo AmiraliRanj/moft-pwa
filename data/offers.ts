@@ -63,7 +63,7 @@ export const initialOffers: Offer[] = [
     category: "fast-food",
     categoryLabel: "فست‌فود",
     title: "پک غذای گرم",
-    description: "یک وعده یا ترکیبی از آیتم‌های آماده و سالم آشپزخانه که تا پایان شیفت فروش نرفته‌اند.",
+    description: "یک وعده یا ترکیبی از آیتم‌های آماده و سالم آشپزخانه برای دریافت در بازهٔ امروز.",
     address: "تهران، سعادت‌آباد، میدان کاج",
     neighborhood: "سعادت‌آباد",
     coordinates: { lat: 35.781, lng: 51.376 },

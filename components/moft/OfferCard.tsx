@@ -24,8 +24,8 @@ export function OfferCard({ offer, favorite, onFavorite, onSelect, compact = fal
           </div>
         </div>
       </button>
-      <button className={`favorite-button ${favorite ? "active" : ""}`} type="button" onClick={() => onFavorite(offer.id)} aria-label={favorite ? `حذف ${offer.merchantName} از علاقه‌مندی‌ها` : `افزودن ${offer.merchantName} به علاقه‌مندی‌ها`} aria-pressed={favorite}>
-        <Icon name="heart" filled={favorite} />
+      <button className={`favorite-button t-like ${favorite ? "active" : ""}`} data-liked={favorite} type="button" onClick={() => onFavorite(offer.id)} aria-label={favorite ? `حذف ${offer.merchantName} از علاقه‌مندی‌ها` : `افزودن ${offer.merchantName} به علاقه‌مندی‌ها`} aria-pressed={favorite}>
+        <span className="t-like-icon"><Icon name="heart" filled={favorite} /></span>
       </button>
     </article>
   );

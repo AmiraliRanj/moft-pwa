@@ -26,7 +26,7 @@ export default function RoleSelector() {
             <span><Icon name="bag" /></span><i /><i /><i />
           </span>
           <span className="role-card-copy">
-            <small>برای نجات یک وعده خوب</small>
+            <small>برای انتخاب یک وعده خوب</small>
             <strong>برای خودم</strong>
             <span>پیشنهادهای نزدیکت رو ببین، رزرو کن و حضوری تحویل بگیر.</span>
           </span>

@@ -4,7 +4,7 @@ import { CustomerSupportPage } from "@/components/support/SupportPages";
 
 export const metadata: Metadata = {
   title: "نسخه مشتری",
-  description: "پیشنهادهای غذای سالم فروش‌نرفته را پیدا و برای دریافت حضوری رزرو کنید.",
+  description: "پیشنهادهای غذای سالم امروز را پیدا و برای دریافت حضوری رزرو کنید.",
 };
 
 export default async function CustomerPage({ params }: { params: Promise<{ path?: string[] }> }) {

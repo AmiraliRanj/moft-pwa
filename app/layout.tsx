@@ -15,10 +15,10 @@ export const metadata: Metadata = {
     default: "Dibz! | دیبز!",
     template: "%s | Dibz! | دیبز!"
   },
-  description: "جعبه‌های غافلگیرکنندهٔ غذای سالمِ فروش‌نرفته با قیمت کمتر و دریافت حضوری.",
+  description: "جعبه‌های غافلگیرکنندهٔ غذای سالم برای دریافت حضوری در بازهٔ مشخص.",
   applicationName: "Dibz! | دیبز!",
   category: "food",
-  keywords: ["کاهش دورریز غذا", "جعبه سورپرایزی", "دریافت حضوری", "دیبز"],
+  keywords: ["جعبه سورپرایزی", "دریافت حضوری", "پیشنهادهای امروز", "دیبز"],
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
