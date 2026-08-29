@@ -45,9 +45,35 @@ export function GlassSegmentedControl<T extends string>({ value, options, onChan
     if (containerRect.width <= 0) return [];
     return Array.from(group.querySelectorAll<HTMLButtonElement>("button[data-glass-option]")).map((button) => {
       const rect = button.getBoundingClientRect();
-      return { x: (rect.left + rect.width / 2 - containerRect.left) / containerRect.width, width: Math.round(rect.width) - 6 };
+      return { x: (rect.left + rect.width / 2 - containerRect.left) / containerRect.width, width: Math.max(38, Math.round(rect.width) - 8) };
     });
   }, []);
+
+  const animateMaterial = useCallback((energized: boolean) => {
+    const targetStrength = optics.strength + (energized ? glassPressDelta.strength : 0);
+    const targetChroma = optics.chromaticAberration + (energized ? glassPressDelta.chromaticAberration : 0);
+    const material = materialRef.current;
+    if (!material.strength) {
+      material.strength = optics.strength;
+      material.chromaticAberration = optics.chromaticAberration;
+    }
+    window.cancelAnimationFrame(material.frame);
+    if (reducedMotion) {
+      material.strength = targetStrength;
+      material.chromaticAberration = targetChroma;
+      lensRef.current?.engine?.setOptions({ strength: targetStrength, chromaticAberration: targetChroma });
+      return;
+    }
+    const tick = () => {
+      material.strength += (targetStrength - material.strength) * 0.18;
+      material.chromaticAberration += (targetChroma - material.chromaticAberration) * 0.18;
+      lensRef.current?.engine?.setOptions({ strength: material.strength, chromaticAberration: material.chromaticAberration });
+      if (Math.abs(targetStrength - material.strength) > 0.0002 || Math.abs(targetChroma - material.chromaticAberration) > 0.002) {
+        material.frame = window.requestAnimationFrame(tick);
+      }
+    };
+    material.frame = window.requestAnimationFrame(tick);
+  }, [optics, reducedMotion]);
 
   const moveTo = useCallback((target: LensTarget, animate: boolean) => {
     const state = animationRef.current;
@@ -58,24 +84,29 @@ export function GlassSegmentedControl<T extends string>({ value, options, onChan
       state.x = target.x;
       state.velocity = 0;
       lensRef.current?.setPosition(target.x, 0.5);
+      animateMaterial(false);
       return;
     }
+
+    animateMaterial(true);
     let last = performance.now();
     const tick = (now: number) => {
-      const dt = Math.min(0.05, (now - last) / 1000);
+      const dt = Math.min(0.034, (now - last) / 1000);
       last = now;
-      state.velocity += (175 * (state.target - state.x) - 21 * state.velocity) * dt;
+      state.velocity += (132 * (state.target - state.x) - 18 * state.velocity) * dt;
       state.x += state.velocity * dt;
       lensRef.current?.setPosition(state.x, 0.5);
-      if (Math.abs(state.target - state.x) > 0.0005 || Math.abs(state.velocity) > 0.001) state.frame = window.requestAnimationFrame(tick);
-      else {
+      if (Math.abs(state.target - state.x) > 0.00045 || Math.abs(state.velocity) > 0.001) {
+        state.frame = window.requestAnimationFrame(tick);
+      } else {
         state.x = state.target;
         state.velocity = 0;
         lensRef.current?.setPosition(state.target, 0.5);
+        animateMaterial(false);
       }
     };
     state.frame = window.requestAnimationFrame(tick);
-  }, [reducedMotion]);
+  }, [animateMaterial, reducedMotion]);
 
   useEffect(() => {
     const media = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -101,14 +132,12 @@ export function GlassSegmentedControl<T extends string>({ value, options, onChan
   }, [measureTargets, moveTo, selectedIndex, options.length]);
 
   useEffect(() => {
-    const group = groupRef.current;
-    if (!group) return;
-    const observer = new ResizeObserver(() => {
+    const reposition = () => {
       const target = measureTargets()[selectedIndex];
       if (target) moveTo(target, false);
-    });
-    observer.observe(group);
-    return () => observer.disconnect();
+    };
+    window.addEventListener("resize", reposition);
+    return () => window.removeEventListener("resize", reposition);
   }, [measureTargets, moveTo, selectedIndex]);
 
   useEffect(() => () => {
@@ -116,49 +145,36 @@ export function GlassSegmentedControl<T extends string>({ value, options, onChan
     window.cancelAnimationFrame(materialRef.current.frame);
   }, []);
 
-  const animateMaterial = (pressed: boolean) => {
-    const targetStrength = optics.strength + (pressed ? glassPressDelta.strength : 0);
-    const targetChroma = optics.chromaticAberration + (pressed ? glassPressDelta.chromaticAberration : 0);
-    const material = materialRef.current;
-    if (!material.strength) {
-      material.strength = optics.strength;
-      material.chromaticAberration = optics.chromaticAberration;
-    }
-    window.cancelAnimationFrame(material.frame);
-    if (reducedMotion) {
-      lensRef.current?.engine?.setOptions({ strength: targetStrength, chromaticAberration: targetChroma });
-      return;
-    }
-    const tick = () => {
-      material.strength += (targetStrength - material.strength) * 0.22;
-      material.chromaticAberration += (targetChroma - material.chromaticAberration) * 0.22;
-      lensRef.current?.engine?.setOptions({ strength: material.strength, chromaticAberration: material.chromaticAberration });
-      if (Math.abs(targetStrength - material.strength) > 0.0004 || Math.abs(targetChroma - material.chromaticAberration) > 0.004) material.frame = window.requestAnimationFrame(tick);
-    };
-    material.frame = window.requestAnimationFrame(tick);
-  };
-
   const onPointerDown = (event: PointerEvent<HTMLDivElement>) => {
     if ((event.target as Element).closest("button[data-glass-option]")) animateMaterial(true);
   };
 
   return (
-    <LiquidGlass
-      ref={lensRef}
-      className={`glass-selection ${className}`.trim()}
-      x={0.5}
-      y={0.5}
-      width={lensWidth}
-      height={className.includes("bottom-nav") ? 58 : 42}
-      radius="auto"
-      shadow={theme === "dark" ? "0 0 0 1px rgba(230,255,240,.28), 0 9px 24px rgba(0,0,0,.42)" : "0 0 0 1px rgba(255,255,255,.78), 0 9px 22px rgba(24,89,62,.16)"}
-      {...optics}
-      onPointerDownCapture={onPointerDown}
-      onPointerUpCapture={() => animateMaterial(false)}
-      onPointerCancelCapture={() => animateMaterial(false)}
-      onPointerLeave={() => animateMaterial(false)}
-    >
-      <div ref={groupRef} className="glass-selection-options" role={role} aria-label={ariaLabel}>
+    <div className={`glass-selection ${className}`.trim()}>
+      <LiquidGlass
+        ref={lensRef}
+        className="glass-selection-optics"
+        x={0.5}
+        y={0.5}
+        width={lensWidth}
+        height={className.includes("bottom-nav") ? 58 : 42}
+        radius="auto"
+        shadow={theme === "dark" ? "0 0 0 1px rgba(245,248,246,.16), 0 5px 14px rgba(0,0,0,.24)" : "0 0 0 1px rgba(255,255,255,.68), 0 5px 14px rgba(38,43,40,.09)"}
+        {...optics}
+      >
+        <div className="glass-selection-optical-source" aria-hidden="true" />
+      </LiquidGlass>
+
+      <div
+        ref={groupRef}
+        className="glass-selection-options"
+        role={role}
+        aria-label={ariaLabel}
+        onPointerDownCapture={onPointerDown}
+        onPointerUpCapture={() => animateMaterial(false)}
+        onPointerCancelCapture={() => animateMaterial(false)}
+        onPointerLeave={() => animateMaterial(false)}
+      >
         {options.map((option) => {
           const selected = option.value === value;
           return (
@@ -179,6 +195,6 @@ export function GlassSegmentedControl<T extends string>({ value, options, onChan
           );
         })}
       </div>
-    </LiquidGlass>
+    </div>
   );
 }

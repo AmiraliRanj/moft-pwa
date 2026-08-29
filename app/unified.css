@@ -843,8 +843,8 @@
 
 @media (max-width: 430px) {
   .profile-page .impact-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  .profile-page .impact-grid span { display: block; }
-  .profile-page .impact-grid small { margin-top: 5px; text-align: start; }
+  .profile-page .impact-grid > span { display: block; }
+  .profile-page .impact-grid > span > small { margin-top: 5px; text-align: start; }
   .business-content { padding-top: 19px; }
   .business-topbar .shared-theme-toggle { display: none; }
   .business-page-action { grid-template-columns: 1fr; }

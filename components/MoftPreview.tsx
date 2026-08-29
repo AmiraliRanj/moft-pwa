@@ -35,14 +35,26 @@ type Layer = "detail" | "reserve" | "filters" | "location" | "about" | "cancel" 
 type SortMode = "nearest" | "popular" | "discount";
 type ReservationView = "active" | "history";
 
-const productCutoutByCategory: Partial<Record<Offer["category"], string>> = {
-  cafe: "/images/products/dibz-bakery-cutout.png",
-  bakery: "/images/products/dibz-bakery-cutout.png",
-  confectionery: "/images/products/dibz-bakery-cutout.png",
-  "fast-food": "/images/products/dibz-pizza-cutout.png",
-  restaurant: "/images/products/dibz-sandwich-cutout.png",
-  fruit: "/images/products/dibz-sandwich-cutout.png",
-  grocery: "/images/products/dibz-sandwich-cutout.png",
+const productCutoutByOffer: Record<string, string> = {
+  "vienna-evening": "/images/products/dibz-dessert-box-cutout.png",
+  "vienna-bread": "/images/products/dibz-bread-box-cutout.png",
+  "vienna-brunch": "/images/products/dibz-sandwich-cutout.png",
+  "vienna-cake": "/images/products/dibz-dessert-box-cutout.png",
+  "radio-cafe": "/images/products/dibz-bakery-cutout.png",
+  "khooshe-bakery": "/images/products/dibz-bread-box-cutout.png",
+  "zoghali-burger": "/images/products/dibz-sandwich-cutout.png",
+  "sabz-fruit": "/images/products/dibz-fruit-crate-cutout.png",
+  "mah-pastry": "/images/products/dibz-dessert-box-cutout.png",
+  "narenj-market": "/images/products/dibz-grocery-box-cutout.png",
+  "mana-cafe": "/images/products/dibz-bakery-cutout.png",
+  "kooche-pizza": "/images/products/dibz-pizza-cutout.png",
+  "nan-ghahve": "/images/products/dibz-bread-box-cutout.png",
+  "roozbeh-store": "/images/products/dibz-grocery-box-cutout.png",
+  "sham-e-shahr": "/images/products/dibz-persian-meal-cutout.png",
+  "toranj-pastry": "/images/products/dibz-dessert-box-cutout.png",
+  "shomal-table": "/images/products/dibz-persian-meal-cutout.png",
+  "aftab-fruit": "/images/products/dibz-fruit-crate-cutout.png",
+  "sobhaneh-no": "/images/products/dibz-sandwich-cutout.png",
 };
 
 const storageKeys = {
@@ -59,7 +71,7 @@ function customerOffer(offer: MarketplaceOffer): Offer {
     coordinates: offer.coordinates, distanceKm: offer.distanceKm, rating: offer.rating, reviewCount: offer.reviewCount,
     pickup: `${dateLabel}، ${faDigits(offer.pickupStart)} تا ${faDigits(offer.pickupEnd)}`, pickupPeriod: offer.pickupPeriod,
     quantityLeft: remainingQuantity(offer), originalPrice: offer.originalValue, price: offer.salePrice, allergens: offer.allergens,
-    image: productCutoutByCategory[offer.category] ?? offer.image, endingSoon: offer.endingSoon, popular: offer.popular,
+    image: productCutoutByOffer[offer.id] ?? offer.image, endingSoon: offer.endingSoon, popular: offer.popular,
   };
 }
 
@@ -301,13 +313,16 @@ export default function MoftPreview({ initialTab = "home", initialFavoritesOnly 
       {islandVisible && successReservation && <div className="island-notice" role="status"><span className="island-check"><Icon name="check" /></span><span><strong>رزرو آماده شد</strong><small>کد دریافت {successReservation.code}</small></span></div>}
 
       <section className="app-canvas">
-        <header className="topbar glass-medium">
-          <button className="location-button" type="button" onClick={() => setLayer("location")} aria-label={`تغییر موقعیت فعلی؛ ${location}`}>
-            <span className="location-icon"><Icon name="pin" /></span>
-            <span><small>نزدیک شما</small><strong>{location}</strong></span>
-            <Icon name="chevron" />
-          </button>
-          <button className="round-button" type="button" onClick={openFavorites} aria-label="نمایش علاقه‌مندی‌ها"><Icon name="heart" filled={favorites.size > 0} />{favorites.size > 0 && <b>{numberFa(favorites.size)}</b>}</button>
+        <header className="topbar">
+          <div className="topbar-greeting"><small>سلام {state.customer.name.split(" ")[0]}،</small><strong>عصر بخیر 👋</strong></div>
+          <div className="topbar-actions">
+            <button className="location-button" type="button" onClick={() => setLayer("location")} aria-label={`تغییر موقعیت فعلی؛ ${location}`}>
+              <span className="location-icon"><Icon name="pin" /></span>
+              <span><small>نزدیک شما</small><strong>{location}</strong></span>
+              <Icon name="chevron" />
+            </button>
+            <button className="round-button" type="button" onClick={openFavorites} aria-label="نمایش علاقه‌مندی‌ها"><Icon name="heart" filled={favorites.size > 0} />{favorites.size > 0 && <b>{numberFa(favorites.size)}</b>}</button>
+          </div>
         </header>
 
         <div id="main-content" tabIndex={-1}>
@@ -344,13 +359,11 @@ function HomePage({ query, setQuery, category, setCategory, offers, allOffers, f
   const ending = allOffers.filter((offer) => offer.endingSoon).slice(0, 5);
   return (
     <div className="page-content home-page">
-      <p className="greeting">سلام سارا، عصر بخیر 👋</p>
+      <SearchBar value={query} onChange={setQuery} placeholder="کافه، رستوران یا محله..." />
+      <CategorySelector value={category} onChange={setCategory} />
       <HomeHeroCarousel onDiscover={onDiscover} />
 
       {!installed && installPrompt && <button className="install-banner glass-subtle" type="button" onClick={onInstall}><span className="install-icon"><Image src="/icons/dibz-liquid-glass-180-v1.png" alt="" width={46} height={46} /></span><span><strong>دیبز را نصب کن</strong><small>سریع‌تر بازش کن و آفلاین هم ببین</small></span><Icon name="arrow" /></button>}
-
-      <SearchBar value={query} onChange={setQuery} placeholder="کافه، رستوران یا محله..." />
-      <CategorySelector value={category} onChange={setCategory} />
 
       {browsing ? (
         <section className="content-section" aria-labelledby="search-results-title">
@@ -397,7 +410,7 @@ function DiscoverPage({ query, setQuery, category, setCategory, offers, favorite
         <button className={`favorite-filter ${favoritesOnly ? "active" : ""}`} type="button" onClick={() => setFavoritesOnly(!favoritesOnly)} aria-pressed={favoritesOnly}><Icon name="heart" filled={favoritesOnly} /> علاقه‌مندی‌ها</button>
         <label><span className="sr-only">مرتب‌سازی</span><select value={sort} onChange={(event) => setSort(event.target.value as SortMode)}><option value="nearest">نزدیک‌ترین</option><option value="popular">محبوب‌ترین</option><option value="discount">بیشترین تخفیف</option></select></label>
       </div>
-      <div className="results-heading"><span>{numberFa(offers.length)} پیشنهاد</span><GlassSegmentedControl value={viewMode} onChange={setViewMode} ariaLabel="نوع نمایش" className="view-toggle" options={[{ value: "list", ariaLabel: "نمایش فهرستی", label: <Icon name="list" /> }, { value: "map", ariaLabel: "پیش‌نمایش نقشه", label: <Icon name="map" /> }]} /></div>
+      <div className="results-heading"><span>{numberFa(offers.length)} پیشنهاد</span><div className="view-toggle" role="group" aria-label="نوع نمایش"><button type="button" className={viewMode === "list" ? "active" : ""} onClick={() => setViewMode("list")} aria-label="نمایش فهرستی" aria-pressed={viewMode === "list"}><Icon name="list" /></button><button type="button" className={viewMode === "map" ? "active" : ""} onClick={() => setViewMode("map")} aria-label="پیش‌نمایش نقشه" aria-pressed={viewMode === "map"}><Icon name="map" /></button></div></div>
       {offers.length ? viewMode === "list" ? <OfferList offers={offers} favorites={favorites} onFavorite={onFavorite} onSelect={onSelect} /> : <MapPreview offers={offers} onSelect={onSelect} /> : <EmptyState icon={favoritesOnly ? "heart" : "search"} title={favoritesOnly ? "علاقه‌مندی‌ای با این فیلتر نیست" : "پیشنهادی پیدا نشد"} text="فاصله یا سقف قیمت را بیشتر کن و دوباره ببین." action="پاک کردن جست‌وجو" onAction={() => { setQuery(""); setCategory("all"); setFavoritesOnly(false); }} />}
     </div>
   );
