@@ -408,7 +408,7 @@ img[src*="/images/products/"] { object-fit: contain !important; padding: 7%; fil
 .glass-selection-options button:active { transform: scale(.965); }
 .glass-selection-options button:focus-visible { outline: 3px solid color-mix(in srgb, var(--brand-2) 45%, transparent); outline-offset: -2px; }
 .bottom-nav-shell { position: fixed; z-index: 40; right: 0; bottom: max(12px, calc(env(safe-area-inset-bottom) + 8px)); left: 0; display: flex; justify-content: center; padding: 0 12px; background: transparent; border: 0; -webkit-backdrop-filter: none; backdrop-filter: none; pointer-events: none; }
-.bottom-nav { width: min(calc(100vw - 24px), 680px); min-height: 72px; pointer-events: auto; }
+.bottom-nav { width: min(calc(100vw - 24px), 680px); min-height: 72px; background: color-mix(in srgb, var(--surface-solid) 68%, transparent); -webkit-backdrop-filter: blur(28px) saturate(112%); backdrop-filter: blur(28px) saturate(112%); pointer-events: auto; }
 .bottom-nav .glass-selection-optical-source { min-height: 72px; background: color-mix(in srgb, var(--surface-solid) 84%, transparent); border-color: rgba(255,255,255,.68); box-shadow: 0 10px 28px rgba(23,27,25,.11); -webkit-backdrop-filter: blur(28px) saturate(118%); backdrop-filter: blur(28px) saturate(118%); }
 .bottom-nav .glass-selection-options { min-height: 72px; grid-template-columns: repeat(4, minmax(0, 1fr)); grid-auto-flow: initial; padding: 6px; }
 .bottom-nav .glass-selection-options button { min-height: 58px; flex-direction: column; gap: 3px; padding: 4px 6px; }
@@ -696,7 +696,7 @@ img[src*="/images/products/"] { object-fit: contain !important; padding: 7%; fil
   box-shadow: 0 30px 90px rgba(0, 0, 0, .24);
 }
 [data-theme="dark"] .bottom-nav {
-  background: rgba(31, 33, 32, .9);
+  background: rgba(25, 27, 26, .72);
   border-color: rgba(219, 232, 223, .12);
 }
 [data-theme="dark"] .topbar { background: transparent; border: 0; box-shadow: none; }
@@ -812,7 +812,6 @@ img[src*="/images/products/"] { object-fit: contain !important; padding: 7%; fil
   background: rgba(32, 37, 34, .98);
   border-color: var(--line);
 }
-[data-theme="dark"] .bottom-nav,
 [data-theme="dark"] .segmented-control,
 [data-theme="dark"] .theme-picker { background: transparent; border: 0; }
 [data-theme="dark"] .bottom-nav-shell { background: transparent; border: 0; }
