@@ -314,7 +314,7 @@ export default function MoftPreview({ initialTab = "home", initialFavoritesOnly 
 
       <section className="app-canvas">
         <header className="topbar">
-          <div className="topbar-greeting"><small>سلام {state.customer.name.split(" ")[0]}،</small><strong>عصر بخیر 👋</strong></div>
+          <p className="topbar-greeting">سلام {state.customer.name.split(" ")[0]}، عصر بخیر 👋</p>
           <div className="topbar-actions">
             <button className="location-button" type="button" onClick={() => setLayer("location")} aria-label={`تغییر موقعیت فعلی؛ ${location}`}>
               <span className="location-icon"><Icon name="pin" /></span>
@@ -421,7 +421,7 @@ function MapPreview({ offers, onSelect }: { offers: Offer[]; onSelect: (offer: O
     <div className="map-preview" aria-label="موقعیت تقریبی فروشگاه‌ها">
       <div className="map-streets" aria-hidden="true"><i /><i /><i /><i /></div>
       <div className="map-user"><span /><small>شما</small></div>
-      {offers.slice(0, 8).map((offer, index) => <button key={offer.id} type="button" className="map-pin" style={{ insetInlineStart: `${14 + (index * 23) % 72}%`, top: `${17 + (index * 31) % 62}%` }} onClick={() => onSelect(offer)} aria-label={`نمایش ${offer.merchantName}`}><span><FoodImage src={offer.image} sizes="44px" /></span><small>{money(offer.price)}</small></button>)}
+      {offers.slice(0, 8).map((offer, index) => <button key={offer.id} type="button" className="map-pin" style={{ insetInlineStart: `${14 + (index * 23) % 72}%`, top: `${17 + (index * 31) % 62}%` }} onClick={() => onSelect(offer)} aria-label={`نمایش ${offer.merchantName}`}><span><FoodImage src={offer.image} sizes="32px" /></span><small>{money(offer.price)}</small></button>)}
       <div className="map-note"><Icon name="info" /> موقعیت فروشگاه‌ها تقریبی است.</div>
     </div>
   );
@@ -516,7 +516,7 @@ function ReservationFlow({ offer, step, setStep, quantity, setQuantity, confirmi
   const [acknowledged, setAcknowledged] = useState(true);
   return (
     <DialogShell titleId="reservation-title" onClose={onClose}>
-      <div className="flow-header"><span>رزرو جعبه</span><strong>{step < 3 ? `${numberFa(step)} از ۲` : "انجام شد"}</strong></div>
+      <div className="flow-header"><strong>{step < 3 ? `${numberFa(step)} از ۲` : "انجام شد"}</strong></div>
       {step < 3 && <div className="flow-progress" aria-label={`مرحله ${numberFa(step)} از ۲`}>{[1, 2].map((item) => <i className={item <= step ? "active" : ""} key={item} />)}</div>}
       <div className="flow-content">
         {step === 1 && <><p className="eyebrow">تنظیم رزرو</p><h2 id="reservation-title">همه‌چیز در یک نگاه</h2><div className="review-box glass-subtle"><span className="store-logo large"><FoodImage src={offer.image} sizes="72px" /></span><div><strong>{offer.merchantName}</strong><p>{offer.title}</p><small>{offer.neighborhood}</small></div></div><div className="reservation-config"><div className="compact-quantity"><span>تعداد جعبه</span><div className="quantity-picker"><button type="button" onClick={() => setQuantity(Math.max(1, quantity - 1))} disabled={quantity <= 1} aria-label="کم کردن تعداد"><Icon name="minus" /></button><strong><AnimatedNumber value={quantity} /></strong><button type="button" onClick={() => setQuantity(Math.min(Math.min(3, offer.quantityLeft), quantity + 1))} disabled={quantity >= Math.min(3, offer.quantityLeft)} aria-label="زیاد کردن تعداد"><Icon name="plus" /></button></div></div><div className="pickup-choice selected"><span><Icon name="clock" /></span><div><strong>{offer.pickup}</strong><small>دریافت حضوری از {offer.neighborhood}</small></div><Icon name="check" /></div><label className="confirm-check"><Checkbox className="t-check" checked={acknowledged} onCheckedChange={setAcknowledged} /><p>می‌دانم ترکیب جعبه متغیر است و هشدار آلرژی را بررسی کرده‌ام.</p></label><div className="live-order-summary"><span>جمع رزرو</span><strong>{money(total)}</strong></div></div><div className="simulation-note"><Icon name="info" /><p><strong>این رزرو آزمایشی است.</strong> پرداخت واقعی انجام نمی‌شود.</p></div></>}
