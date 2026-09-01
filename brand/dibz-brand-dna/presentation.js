@@ -5,17 +5,22 @@ const previousButton = document.querySelector("#previous-slide");
 const nextButton = document.querySelector("#next-slide");
 
 let activeIndex = 0;
+const persianNumber = new Intl.NumberFormat("fa-IR", {
+  minimumIntegerDigits: 2,
+  useGrouping: false,
+});
+const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 
 function updateDeck(index) {
   activeIndex = Math.max(0, Math.min(slides.length - 1, index));
-  currentSlide.textContent = String(activeIndex + 1).padStart(2, "0");
+  currentSlide.textContent = persianNumber.format(activeIndex + 1);
   progressBar.style.width = `${((activeIndex + 1) / slides.length) * 100}%`;
-  document.title = `Dibz — Brand DNA · ${String(activeIndex + 1).padStart(2, "0")}`;
+  document.title = `دیبز — هویت برند · ${persianNumber.format(activeIndex + 1)}`;
 }
 
 function goToSlide(index) {
   const targetIndex = Math.max(0, Math.min(slides.length - 1, index));
-  slides[targetIndex].scrollIntoView({ behavior: "smooth", block: "start" });
+  slides[targetIndex].scrollIntoView({ behavior: reduceMotion.matches ? "auto" : "smooth", block: "start" });
 }
 
 const observer = new IntersectionObserver(
@@ -35,12 +40,12 @@ previousButton.addEventListener("click", () => goToSlide(activeIndex - 1));
 nextButton.addEventListener("click", () => goToSlide(activeIndex + 1));
 
 document.addEventListener("keydown", (event) => {
-  if (["ArrowRight", "ArrowDown", "PageDown", " "].includes(event.key)) {
+  if (["ArrowLeft", "ArrowDown", "PageDown", " "].includes(event.key)) {
     event.preventDefault();
     goToSlide(activeIndex + 1);
   }
 
-  if (["ArrowLeft", "ArrowUp", "PageUp"].includes(event.key)) {
+  if (["ArrowRight", "ArrowUp", "PageUp"].includes(event.key)) {
     event.preventDefault();
     goToSlide(activeIndex - 1);
   }
