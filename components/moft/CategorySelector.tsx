@@ -18,7 +18,9 @@ export function CategorySelector({ value, onChange }: { value: CategoryId; onCha
     <div className="category-row" role="group" aria-label="دسته‌بندی فروشگاه‌ها">
       {categories.map((item) => (
         <button key={item.id} className={`category-chip ${value === item.id ? "active" : ""}`} type="button" onClick={() => onChange(item.id)} aria-pressed={value === item.id}>
-          <Icon name={categoryIcons[item.id]} />{item.label}
+          <span className="category-icon"><Icon name={categoryIcons[item.id]} /></span>
+          <span className="category-label">{item.label}</span>
+          <span className="category-indicator" aria-hidden="true" />
         </button>
       ))}
     </div>

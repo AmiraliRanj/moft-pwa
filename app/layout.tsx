@@ -5,10 +5,6 @@ import { DemoProvider } from "@/demo/DemoProvider";
 import "@fontsource-variable/vazirmatn";
 import "./globals.css";
 import "./unified.css";
-import { Inter } from "next/font/google";
-import { cn } from "@/lib/utils";
-
-const inter = Inter({subsets:['latin'],variable:'--font-sans'});
 
 export const metadata: Metadata = {
   title: {
@@ -58,7 +54,7 @@ const themeBootScript = `
 
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
   return (
-    <html lang="fa" dir="rtl" suppressHydrationWarning className={cn("font-sans", inter.variable)}>
+    <html lang="fa" dir="rtl" suppressHydrationWarning className="font-sans" data-scroll-behavior="smooth">
       <head>
         <meta id="theme-color" name="theme-color" content="#14532D" />
         <meta id="apple-status-bar-style" name="apple-mobile-web-app-status-bar-style" content="default" />

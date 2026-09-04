@@ -33,7 +33,7 @@ export function HomeHeroCarousel({ onDiscover }: { onDiscover: () => void }) {
           <CarouselItem key={slide.title} aria-label={`${index + 1} از ${slides.length}`}>
             <section className="hero-card">
               <div className="hero-copy"><p className="hero-kicker">دیبز برای امروز</p><h1>{slide.title}</h1><p>{slide.text}</p><button type="button" onClick={onDiscover}>{slide.action} <Icon name="arrow" /></button></div>
-              <div className="hero-image"><FoodImage src={slide.image} sizes="(max-width: 700px) 92vw, 440px" priority={index === 0} /></div>
+              <div className="hero-image"><FoodImage src={slide.image} sizes="(max-width: 699px) calc(100vw - 50px), 440px" priority={index === 0} loading="eager" /></div>
             </section>
           </CarouselItem>
         ))}
