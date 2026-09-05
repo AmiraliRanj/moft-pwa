@@ -9,7 +9,6 @@ export function OfferCard({ offer, favorite, onFavorite, onSelect, compact = fal
       <button className="offer-card-main" type="button" onClick={() => onSelect(offer)} aria-label={`مشاهده ${offer.title} از ${offer.merchantName}`}>
         <div className="offer-visual">
           <FoodImage src={offer.image} sizes={compact ? "320px" : "(max-width: 700px) 100vw, 340px"} priority={priority} />
-          {offer.quantityLeft > 0 && offer.quantityLeft <= 3 && <span className={`availability-badge ${offer.quantityLeft <= 2 ? "low" : ""}`}>{numberFa(offer.quantityLeft)} جعبه موجود</span>}
         </div>
         <div className="offer-body">
           <div className="offer-topline">
@@ -20,7 +19,13 @@ export function OfferCard({ offer, favorite, onFavorite, onSelect, compact = fal
           <p>{offer.title}</p>
           <div className="pickup-line"><span><Icon name="clock" /> {offer.pickup}</span><span><Icon name="pin" /> {distanceFa(offer.distanceKm)}</span></div>
           <div className="price-line">
-            <div><del>ارزش {moneyCompact(offer.originalPrice)}</del><strong>{moneyCompact(offer.price)}</strong></div>
+            <div className="price-copy">
+              <del>ارزش {moneyCompact(offer.originalPrice)}</del>
+              <div className="price-current-row">
+                <strong>{moneyCompact(offer.price)}</strong>
+                {offer.quantityLeft > 0 && offer.quantityLeft <= 3 && <span className={`availability-badge ${offer.quantityLeft <= 2 ? "low" : ""}`}>{numberFa(offer.quantityLeft)} جعبه <span className="availability-word">موجود</span></span>}
+              </div>
+            </div>
           </div>
         </div>
       </button>
