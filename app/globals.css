@@ -259,10 +259,10 @@ img[src*="/images/products/"] { object-fit: contain !important; padding: 7%; fil
 .pickup-line { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 10px; margin-top: 11px; color: var(--muted); font-size: .68rem; font-weight: 560; }
 .pickup-line span { display: flex; align-items: center; gap: 4px; }
 .pickup-line svg { width: 13px; height: 13px; }
-.price-line { display: block; margin-top: 10px; padding-top: 9px; border-top: 1px solid var(--line); font-variant-numeric: tabular-nums; }
+.price-line { display: block; margin-top: 10px; padding-top: 9px; border-top: 1px solid var(--line); font-variant-numeric: proportional-nums; font-feature-settings: "pnum" 1, "tnum" 0; }
 .price-copy { min-width: 0; display: flex; flex-direction: column; gap: 0; }
-.price-line del, .sticky-action del { display: block; color: var(--muted); font-size: .61rem; line-height: 1.15; }
-.price-line strong { min-width: 0; display: block; margin-top: 0; font-size: .9rem; line-height: 1.3; white-space: nowrap; }
+.price-line del, .sticky-action del { display: block; color: var(--muted); font-size: .61rem; line-height: 1.05; }
+.price-line strong { min-width: 0; display: block; margin-top: -1px; font-size: .9rem; line-height: 1.18; letter-spacing: -.025em; white-space: nowrap; }
 .offer-availability { width: max-content; position: static; display: inline-flex; align-items: center; align-self: flex-end; margin-top: 8px; padding: 4px 6px; box-shadow: none; font-size: .55rem; line-height: 1.2; white-space: nowrap; }
 .offer-card:not(.compact) .offer-availability { margin-top: auto; margin-bottom: 5px; }
 .offer-card:not(.compact) .offer-availability + .price-line { margin-top: 0; }
@@ -421,8 +421,8 @@ img[src*="/images/products/"] { object-fit: contain !important; padding: 7%; fil
 .glass-selection-options button:active { transform: scale(.965); }
 .glass-selection-options button:focus-visible { outline: 3px solid color-mix(in srgb, var(--brand-2) 45%, transparent); outline-offset: -2px; }
 .bottom-nav-shell { position: fixed; z-index: 40; right: 0; bottom: max(12px, calc(env(safe-area-inset-bottom) + 8px)); left: 0; display: flex; justify-content: center; padding: 0 12px; background: transparent; border: 0; -webkit-backdrop-filter: none; backdrop-filter: none; pointer-events: none; }
-.bottom-nav { width: min(calc(100vw - 24px), 680px); min-height: 72px; background: color-mix(in srgb, var(--surface-solid) 68%, transparent); -webkit-backdrop-filter: blur(28px) saturate(112%); backdrop-filter: blur(28px) saturate(112%); pointer-events: auto; }
-.bottom-nav .glass-selection-optical-source { min-height: 72px; background: color-mix(in srgb, var(--surface-solid) 84%, transparent); border-color: rgba(255,255,255,.68); box-shadow: 0 10px 28px rgba(23,27,25,.11); -webkit-backdrop-filter: blur(28px) saturate(118%); backdrop-filter: blur(28px) saturate(118%); }
+.bottom-nav { width: min(calc(100vw - 24px), 680px); min-height: 72px; background: color-mix(in srgb, var(--surface-solid) 42%, transparent); -webkit-backdrop-filter: blur(16px) saturate(108%); backdrop-filter: blur(16px) saturate(108%); pointer-events: auto; }
+.bottom-nav .glass-selection-optical-source { min-height: 72px; background: color-mix(in srgb, var(--surface-solid) 62%, transparent); border-color: rgba(255,255,255,.58); box-shadow: 0 10px 28px rgba(23,27,25,.11); -webkit-backdrop-filter: blur(16px) saturate(112%); backdrop-filter: blur(16px) saturate(112%); }
 .bottom-nav .glass-selection-options { min-height: 72px; grid-template-columns: repeat(4, minmax(0, 1fr)); grid-auto-flow: initial; padding: 6px; }
 .bottom-nav .glass-selection-options button { min-height: 58px; flex-direction: column; gap: 3px; padding: 4px 6px; }
 .bottom-nav .glass-selection-options button.active { color: var(--brand); background: transparent; }
@@ -709,7 +709,7 @@ img[src*="/images/products/"] { object-fit: contain !important; padding: 7%; fil
   box-shadow: 0 30px 90px rgba(0, 0, 0, .24);
 }
 [data-theme="dark"] .bottom-nav {
-  background: rgba(25, 27, 26, .72);
+  background: rgba(25, 27, 26, .48);
   border-color: rgba(219, 232, 223, .12);
 }
 [data-theme="dark"] .topbar { background: transparent; border: 0; box-shadow: none; }
@@ -831,7 +831,7 @@ img[src*="/images/products/"] { object-fit: contain !important; padding: 7%; fil
 [data-theme="dark"] .bottom-nav-shell { background: transparent; border: 0; }
 [data-theme="dark"] .glass-selection-optical-source { background: rgba(38,41,39,.8); border-color: rgba(235,240,237,.12); box-shadow: 0 6px 18px rgba(0,0,0,.2); }
 [data-theme="dark"] .glass-selection-optics > div:last-child { background: rgba(255,255,255,.045) !important; }
-[data-theme="dark"] .bottom-nav .glass-selection-optical-source { background: rgba(35,38,36,.86); border-color: rgba(235,240,237,.14); box-shadow: 0 10px 28px rgba(0,0,0,.3); }
+[data-theme="dark"] .bottom-nav .glass-selection-optical-source { background: rgba(35,38,36,.62); border-color: rgba(235,240,237,.14); box-shadow: 0 10px 28px rgba(0,0,0,.3); }
 [data-theme="dark"] .glass-selection-options { color: var(--ink); background: transparent; border-color: transparent; box-shadow: none; }
 [data-theme="dark"] .glass-selection-options button.active { color: var(--brand); background: transparent; }
 [data-theme="dark"] .view-toggle { background: #262927; border-color: var(--line); }
@@ -907,6 +907,12 @@ img[src*="/images/products/"] { object-fit: contain !important; padding: 7%; fil
   .location-icon svg { width: 18px; }
   .home-page > .search-box { width: 100%; height: 46px; direction: ltr; margin: 2px 0 4px; padding-inline: 12px; border-radius: 999px; }
   .home-page > .search-box input { direction: rtl; text-align: right; }
+  .discover-toolbar { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px; overflow: visible; padding-bottom: 0; }
+  .discover-toolbar button, .discover-toolbar select { width: 100%; min-width: 0; min-height: 42px; font-size: .67rem; }
+  .discover-toolbar button { justify-content: center; gap: 4px; padding-inline: 5px; }
+  .discover-toolbar button svg { width: 15px; }
+  .discover-toolbar label { width: 100%; min-width: 0; margin-inline-start: 0; }
+  .discover-toolbar select { padding-inline: 7px 4px; }
   .category-row { min-height: 138px; display: grid; grid-template-columns: repeat(3, calc((100% - 8px) / 3)); grid-template-rows: repeat(2, clamp(66px, 16vw, 74px)); grid-auto-columns: calc((100% - 8px) / 3); grid-auto-flow: column; gap: 2px 4px; align-items: stretch; padding: 1px 8px 3px; scroll-padding-inline: 8px; }
   .category-chip { width: 100%; min-width: 0; min-height: 66px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 1px; padding: 0 3px 1px; text-align: center; }
   .category-chip:nth-child(1) { grid-column: 1; grid-row: 1; }
