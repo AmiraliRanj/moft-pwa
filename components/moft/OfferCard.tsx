@@ -18,13 +18,11 @@ export function OfferCard({ offer, favorite, onFavorite, onSelect, compact = fal
           <h3>{offer.merchantName}</h3>
           <p>{offer.title}</p>
           <div className="pickup-line"><span><Icon name="clock" /> {offer.pickup}</span><span><Icon name="pin" /> {distanceFa(offer.distanceKm)}</span></div>
+          {offer.quantityLeft > 0 && offer.quantityLeft <= 3 && <span className={`availability-badge offer-availability ${offer.quantityLeft <= 2 ? "low" : ""}`}>{numberFa(offer.quantityLeft)} جعبه موجود</span>}
           <div className="price-line">
             <div className="price-copy">
               <del>ارزش {moneyCompact(offer.originalPrice)}</del>
-              <div className="price-current-row">
-                <strong>{moneyCompact(offer.price)}</strong>
-                {offer.quantityLeft > 0 && offer.quantityLeft <= 3 && <span className={`availability-badge ${offer.quantityLeft <= 2 ? "low" : ""}`}>{numberFa(offer.quantityLeft)} جعبه <span className="availability-word">موجود</span></span>}
-              </div>
+              <strong>{moneyCompact(offer.price)}</strong>
             </div>
           </div>
         </div>
