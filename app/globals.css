@@ -307,8 +307,10 @@ img[src*="/images/products/"] { object-fit: contain !important; padding: 7%; fil
 .discover-sort .custom-select-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .discover-sort .custom-select-trigger { padding: 0 10px; background: var(--surface); }
 .discover-sort .custom-select-trigger strong { color: var(--ink-soft); font-size: inherit; }
+.discover-sort .custom-select-trigger svg { transition: transform .22s cubic-bezier(.22, 1, .36, 1); }
+.discover-sort.open .custom-select-trigger svg { transform: rotate(-90deg); }
 .discover-sort.custom-select.open .custom-select-trigger { border-color: var(--brand-3); box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand-3) 18%, transparent); }
-.discover-sort .custom-select-popover { color: var(--ink); background: color-mix(in srgb, var(--surface-raised) 96%, transparent); border-color: var(--line-strong); box-shadow: 0 -12px 42px rgba(22, 31, 26, .16); -webkit-backdrop-filter: blur(24px) saturate(118%); backdrop-filter: blur(24px) saturate(118%); }
+.discover-sort .custom-select-popover { color: var(--ink); background: color-mix(in srgb, var(--surface-raised) 96%, transparent); border-color: var(--line-strong); box-shadow: 0 -12px 42px rgba(22, 31, 26, .16); -webkit-backdrop-filter: blur(24px) saturate(118%); backdrop-filter: blur(24px) saturate(118%); transform-origin: top right; animation: sort-pop-in .24s cubic-bezier(.22, 1, .36, 1) both; }
 .discover-sort .custom-select-popover > button:hover, .discover-sort .custom-select-popover > button[aria-selected="true"] { background: var(--brand-soft); }
 .discover-sort .custom-select-popover button svg { color: var(--brand-2); }
 [data-theme="dark"] .discover-sort .custom-select-popover { background: rgba(39, 45, 41, .96); border-color: rgba(219, 232, 223, .14); box-shadow: 0 -14px 44px rgba(0, 0, 0, .42); }
@@ -430,8 +432,9 @@ img[src*="/images/products/"] { object-fit: contain !important; padding: 7%; fil
 .glass-selection-options button:active { transform: scale(.965); }
 .glass-selection-options button:focus-visible { outline: 3px solid color-mix(in srgb, var(--brand-2) 45%, transparent); outline-offset: -2px; }
 .bottom-nav-shell { position: fixed; z-index: 40; right: 0; bottom: max(12px, calc(env(safe-area-inset-bottom) + 8px)); left: 0; display: flex; justify-content: center; padding: 0 12px; background: transparent; border: 0; -webkit-backdrop-filter: none; backdrop-filter: none; pointer-events: none; }
-.bottom-nav { width: min(calc(100vw - 24px), 680px); min-height: 72px; background: color-mix(in srgb, var(--surface-solid) 42%, transparent); -webkit-backdrop-filter: blur(16px) saturate(108%); backdrop-filter: blur(16px) saturate(108%); pointer-events: auto; }
-.bottom-nav .glass-selection-optical-source { min-height: 72px; background: color-mix(in srgb, var(--surface-solid) 62%, transparent); border-color: rgba(255,255,255,.58); box-shadow: 0 10px 28px rgba(23,27,25,.11); -webkit-backdrop-filter: blur(16px) saturate(112%); backdrop-filter: blur(16px) saturate(112%); }
+.bottom-nav { width: min(calc(100vw - 24px), 680px); min-height: 72px; background: color-mix(in srgb, var(--surface-solid) 42%, transparent); -webkit-backdrop-filter: blur(14px) saturate(108%); backdrop-filter: blur(14px) saturate(108%); pointer-events: auto; }
+.bottom-nav .glass-selection-optical-source { min-height: 72px; background: color-mix(in srgb, var(--surface-solid) 62%, transparent); border-color: rgba(255,255,255,.58); box-shadow: 0 10px 28px rgba(23,27,25,.11); -webkit-backdrop-filter: blur(14px) saturate(112%); backdrop-filter: blur(14px) saturate(112%); }
+.bottom-nav .glass-selection-optics > div:last-child { background: color-mix(in srgb, var(--brand-soft) 82%, rgba(255,255,255,.42)) !important; }
 .bottom-nav .glass-selection-options { min-height: 72px; grid-template-columns: repeat(4, minmax(0, 1fr)); grid-auto-flow: initial; padding: 6px; }
 .bottom-nav .glass-selection-options button { min-height: 58px; flex-direction: column; gap: 3px; padding: 4px 6px; }
 .bottom-nav .glass-selection-options button.active { color: var(--brand); background: transparent; }
@@ -841,6 +844,7 @@ img[src*="/images/products/"] { object-fit: contain !important; padding: 7%; fil
 [data-theme="dark"] .glass-selection-optical-source { background: rgba(38,41,39,.8); border-color: rgba(235,240,237,.12); box-shadow: 0 6px 18px rgba(0,0,0,.2); }
 [data-theme="dark"] .glass-selection-optics > div:last-child { background: rgba(255,255,255,.045) !important; }
 [data-theme="dark"] .bottom-nav .glass-selection-optical-source { background: rgba(35,38,36,.62); border-color: rgba(235,240,237,.14); box-shadow: 0 10px 28px rgba(0,0,0,.3); }
+[data-theme="dark"] .bottom-nav .glass-selection-optics > div:last-child { background: rgba(63, 112, 80, .58) !important; }
 [data-theme="dark"] .glass-selection-options { color: var(--ink); background: transparent; border-color: transparent; box-shadow: none; }
 [data-theme="dark"] .glass-selection-options button.active { color: var(--brand); background: transparent; }
 [data-theme="dark"] .view-toggle { background: #262927; border-color: var(--line); }
@@ -973,6 +977,11 @@ img[src*="/images/products/"] { object-fit: contain !important; padding: 7%; fil
   .favorite-button { top: 9px; left: 9px; }
 }
 
+@media (max-width: 720px) {
+  .discover-sort.open::before { animation: fade-in .18s ease-out both; }
+  .discover-sort .custom-select-popover { transform-origin: center bottom; animation: sheet-up .32s cubic-bezier(.2, .82, .2, 1) both; }
+}
+
 @media (max-width: 420px) {
   .hero-card { min-height: 164px; grid-template-columns: minmax(0, 1.08fr) minmax(105px, .92fr); padding: 11px 12px; border-radius: 22px; }
   .hero-copy h1 { font-size: 1.05rem; }
@@ -1063,6 +1072,8 @@ img[src*="/images/products/"] { object-fit: contain !important; padding: 7%; fil
   .offer-body .pickup-line { font-size: .62rem !important; }
   .offer-body .price-line strong { font-size: .87rem !important; }
 }
+
+@keyframes sort-pop-in { from { opacity: 0; transform: translateY(-7px) scale(.97); } }
 
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
