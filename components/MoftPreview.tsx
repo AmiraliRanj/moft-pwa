@@ -17,6 +17,7 @@ import { Icon } from "@/components/moft/Icon";
 import { LoadingSkeleton } from "@/components/moft/LoadingSkeleton";
 import { OfferCard, OfferList } from "@/components/moft/OfferCard";
 import { SearchBar } from "@/components/moft/SearchBar";
+import { SelectField } from "@/components/shared/FormControls";
 import { useMoftTheme } from "@/components/shared/ThemeToggle";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Toaster, toast as toastManager } from "@/components/ui/toast";
@@ -408,7 +409,7 @@ function DiscoverPage({ query, setQuery, category, setCategory, offers, favorite
       <div className="discover-toolbar">
         <button className="filter-button" type="button" onClick={onFilters}><Icon name="sliders" /> فیلترها</button>
         <button className={`favorite-filter ${favoritesOnly ? "active" : ""}`} type="button" onClick={() => setFavoritesOnly(!favoritesOnly)} aria-pressed={favoritesOnly}><Icon name="heart" filled={favoritesOnly} /> علاقه‌مندی‌ها</button>
-        <label><span className="sr-only">مرتب‌سازی</span><select value={sort} onChange={(event) => setSort(event.target.value as SortMode)}><option value="nearest">نزدیک‌ترین</option><option value="popular">محبوب‌ترین</option><option value="discount">بیشترین تخفیف</option></select></label>
+        <SelectField className="discover-sort" label="مرتب‌سازی" value={sort} onChange={(value) => setSort(value as SortMode)} options={[{ value: "nearest", label: "نزدیک‌ترین" }, { value: "popular", label: "محبوب‌ترین" }, { value: "discount", label: "بیشترین تخفیف" }]} />
       </div>
       <div className="results-heading"><span>{numberFa(offers.length)} پیشنهاد</span><div className="view-toggle" role="group" aria-label="نوع نمایش"><button type="button" className={viewMode === "list" ? "active" : ""} onClick={() => setViewMode("list")} aria-label="نمایش فهرستی" aria-pressed={viewMode === "list"}><Icon name="list" /></button><button type="button" className={viewMode === "map" ? "active" : ""} onClick={() => setViewMode("map")} aria-label="پیش‌نمایش نقشه" aria-pressed={viewMode === "map"}><Icon name="map" /></button></div></div>
       {offers.length ? viewMode === "list" ? <OfferList offers={offers} favorites={favorites} onFavorite={onFavorite} onSelect={onSelect} /> : <MapPreview offers={offers} onSelect={onSelect} /> : <EmptyState icon={favoritesOnly ? "heart" : "search"} title={favoritesOnly ? "علاقه‌مندی‌ای با این فیلتر نیست" : "پیشنهادی پیدا نشد"} text="فاصله یا سقف قیمت را بیشتر کن و دوباره ببین." action="پاک کردن جست‌وجو" onAction={() => { setQuery(""); setCategory("all"); setFavoritesOnly(false); }} />}
