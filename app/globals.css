@@ -263,7 +263,7 @@ img[src*="/images/products/"] { object-fit: contain !important; padding: 7%; fil
 .price-copy { min-width: 0; display: flex; flex-direction: column; gap: 0; }
 .price-line del, .sticky-action del { display: block; color: var(--muted); font-size: .61rem; line-height: 1.05; }
 .price-line strong { min-width: 0; display: block; margin-top: -1px; font-size: .9rem; line-height: 1.18; letter-spacing: -.025em; white-space: nowrap; }
-.offer-availability { width: max-content; position: static; display: inline-flex; align-items: center; align-self: flex-end; margin-top: 8px; padding: 4px 6px; box-shadow: none; font-size: .55rem; line-height: 1.2; white-space: nowrap; }
+.offer-availability { width: max-content; min-height: 24px; position: static; display: inline-flex; align-items: center; justify-content: center; align-self: flex-start; margin-top: 8px; padding: 5px 8px; box-shadow: none; font-size: .6rem; line-height: 1.2; white-space: nowrap; }
 .offer-card:not(.compact) .offer-availability { margin-top: auto; margin-bottom: 5px; }
 .offer-card:not(.compact) .offer-availability + .price-line { margin-top: 0; }
 .favorite-button { position: absolute; z-index: 3; top: 12px; left: 12px; width: 44px; height: 44px; display: grid; place-items: center; color: #36534a; background: rgba(255,255,255,.76); border: 1px solid rgba(255,255,255,.7); border-radius: 14px; box-shadow: 0 7px 20px rgba(30,52,46,.1); backdrop-filter: blur(12px); cursor: pointer; }
@@ -973,7 +973,7 @@ img[src*="/images/products/"] { object-fit: contain !important; padding: 7%; fil
   .offer-card:not(.compact) .price-line { margin-top: auto; padding-top: 5px; }
   .offer-card:not(.compact) .price-line del { font-size: .55rem; }
   .offer-card:not(.compact) .price-line strong { font-size: .82rem; }
-  .offer-card:not(.compact) .offer-availability { padding: 3px 5px; font-size: .5rem; }
+  .offer-card:not(.compact) .offer-availability { padding: 5px 8px; font-size: .6rem; }
   .favorite-button { top: 9px; left: 9px; }
 }
 
@@ -1062,7 +1062,7 @@ img[src*="/images/products/"] { object-fit: contain !important; padding: 7%; fil
   .offer-card:not(.compact) .price-line { margin-top: auto; padding-top: 5px; }
   .offer-card:not(.compact) .price-line del { font-size: .55rem; }
   .offer-card:not(.compact) .price-line strong { font-size: .82rem; }
-  .offer-card:not(.compact) .offer-availability { padding: 3px 5px; font-size: .5rem; }
+  .offer-card:not(.compact) .offer-availability { padding: 5px 8px; font-size: .6rem; }
   .offer-card:not(.compact) .favorite-button { top: 9px; left: 9px; }
 }
 
