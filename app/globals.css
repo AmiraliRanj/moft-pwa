@@ -260,9 +260,10 @@ img[src*="/images/products/"] { object-fit: contain !important; padding: 7%; fil
 .pickup-line span { display: flex; align-items: center; gap: 4px; }
 .pickup-line svg { width: 13px; height: 13px; }
 .price-line { display: block; margin-top: 10px; padding-top: 9px; border-top: 1px solid var(--line); font-variant-numeric: proportional-nums; font-feature-settings: "pnum" 1, "tnum" 0; }
-.price-copy { min-width: 0; display: flex; flex-direction: column; gap: 0; }
-.price-line del, .sticky-action del { display: block; color: var(--muted); font-size: .61rem; line-height: 1.05; }
-.price-line strong { min-width: 0; display: block; margin-top: -1px; font-size: .9rem; line-height: 1.18; letter-spacing: -.025em; white-space: nowrap; }
+.price-copy { min-width: 0; display: flex; flex-direction: row; align-items: baseline; justify-content: flex-start; gap: clamp(4px, 3.5cqw, 7px); }
+.price-line del, .sticky-action del { display: block; color: var(--muted); font-size: .61rem; line-height: 1.2; }
+.price-line del { min-width: 0; flex: 0 0 auto; font-size: clamp(.65rem, 7cqw, .75rem); white-space: nowrap; }
+.price-line strong { min-width: 0; flex: 0 0 auto; order: -1; display: block; margin-top: 0; font-size: clamp(.9rem, 9cqw, 1rem); line-height: 1.2; letter-spacing: -.025em; white-space: nowrap; }
 .offer-availability { width: max-content; min-height: 24px; position: static; display: inline-flex; align-items: center; justify-content: center; align-self: flex-start; margin-top: 8px; padding: 5px 8px; box-shadow: none; font-size: .6rem; line-height: 1.2; white-space: nowrap; }
 .offer-card:not(.compact) .offer-availability { margin-top: auto; margin-bottom: 5px; }
 .offer-card:not(.compact) .offer-availability + .price-line { margin-top: 0; }
@@ -617,9 +618,9 @@ img[src*="/images/products/"] { object-fit: contain !important; padding: 7%; fil
 .confirm-check > span { width: 28px; height: 28px; display: grid; place-items: center; color: white; background: var(--brand-2); border-radius: 9px; }
 .confirm-check svg { width: 17px; }
 .confirm-check p { margin: 2px 0 0; color: var(--muted); font-size: .68rem; line-height: 1.7; }
-.flow-footer { position: sticky; bottom: calc(-24px - env(safe-area-inset-bottom)); display: flex; justify-content: flex-end; gap: 9px; margin-bottom: calc(-24px - env(safe-area-inset-bottom)); padding: 13px 20px calc(15px + env(safe-area-inset-bottom)); background: color-mix(in srgb, var(--surface-solid) 91%, transparent); border-top: 1px solid var(--line); backdrop-filter: blur(20px); }
-.flow-footer .primary-button { flex: 1.4; }
-.flow-footer .secondary-button { flex: .8; }
+.flow-footer { position: sticky; bottom: calc(-24px - env(safe-area-inset-bottom)); display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.4fr); gap: 9px; isolation: isolate; margin-bottom: calc(-24px - env(safe-area-inset-bottom)); padding: 13px 20px calc(15px + env(safe-area-inset-bottom)); background: var(--surface-solid); border-top: 1px solid var(--line); }
+.flow-footer .primary-button, .flow-footer .secondary-button { width: 100%; min-width: 0; position: relative; z-index: 1; white-space: nowrap; }
+.flow-footer .primary-button:only-child { grid-column: 1 / -1; }
 .spinner { width: 18px; height: 18px; border: 2px solid rgba(255,255,255,.35); border-top-color: white; border-radius: 50%; animation: spin .7s linear infinite; }
 .success-state { text-align: center; }
 .success-state > h2 { margin: 5px 0 6px; font-size: 1.8rem; }
@@ -960,19 +961,17 @@ img[src*="/images/products/"] { object-fit: contain !important; padding: 7%; fil
   .section-heading { margin-bottom: 8px; }
   .offer-list { gap: 8px; }
   .offer-card { border-radius: 20px; }
-  .offer-card:not(.compact) .offer-card-main { min-height: 188px; position: relative; direction: ltr; display: grid; grid-template-columns: minmax(0, 3fr) minmax(148px, 2fr); grid-template-areas: "visual body"; align-items: stretch; padding: 6px; }
+  .offer-card:not(.compact) .offer-card-main { min-height: 188px; position: relative; direction: ltr; display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(140px, 1fr); grid-template-areas: "visual body"; align-items: stretch; padding: 6px; }
   .offer-card:not(.compact) .offer-visual { height: 100%; min-height: 176px; grid-area: visual; aspect-ratio: auto; overflow: hidden; border-radius: 15px; }
   .offer-card:not(.compact) .offer-visual::after { content: ""; width: 32%; position: absolute; z-index: 1; inset: 0 0 0 auto; pointer-events: none; background: linear-gradient(to right, transparent, var(--surface-solid)); }
   .offer-card:not(.compact) .offer-visual .food-photo { object-fit: contain !important; object-position: center; padding: 2% !important; }
   .offer-card:not(.compact) .offer-body { min-width: 0; z-index: 2; direction: rtl; grid-area: body; display: flex; flex-direction: column; justify-content: flex-start; margin-left: -1px; padding: 11px 7px 9px 3px; text-align: right; background: var(--surface-solid); }
   .offer-card:not(.compact) .offer-topline { max-width: calc(60% - 22px); position: absolute; z-index: 4; left: 12px; bottom: 12px; display: flex; flex-direction: row; align-items: center; gap: 5px; padding: 5px 7px; color: var(--ink-soft); background: color-mix(in srgb, var(--surface-solid) 88%, transparent); border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 5px 14px rgba(19, 34, 24, .1); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); font-size: .6rem; font-weight: 720; white-space: nowrap; }
   .offer-card:not(.compact) .rating i { display: none; }
-  .offer-card:not(.compact) .offer-body h3 { margin: 0 0 3px; font-size: 1rem; line-height: 1.4; }
-  .offer-card:not(.compact) .offer-body > p { display: -webkit-box; overflow: hidden; font-size: .67rem; font-weight: 590; line-height: 1.5; white-space: normal; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
-  .offer-card:not(.compact) .pickup-line { flex-direction: column; flex-wrap: nowrap; gap: 3px; margin-top: 7px; font-size: .59rem; font-weight: 590; }
+  .offer-card:not(.compact) .offer-body h3 { margin: 0 0 3px; font-size: 1.08rem; line-height: 1.36; }
+  .offer-card:not(.compact) .offer-body > p { display: -webkit-box; overflow: hidden; font-size: .72rem; font-weight: 590; line-height: 1.48; white-space: normal; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+  .offer-card:not(.compact) .pickup-line { flex-direction: column; flex-wrap: nowrap; gap: 3px; margin-top: 7px; font-size: .63rem; font-weight: 590; }
   .offer-card:not(.compact) .price-line { margin-top: auto; padding-top: 5px; }
-  .offer-card:not(.compact) .price-line del { font-size: .55rem; }
-  .offer-card:not(.compact) .price-line strong { font-size: .82rem; }
   .offer-card:not(.compact) .offer-availability { padding: 5px 8px; font-size: .6rem; }
   .favorite-button { top: 9px; left: 9px; }
 }
@@ -1015,13 +1014,14 @@ img[src*="/images/products/"] { object-fit: contain !important; padding: 7%; fil
   .hero-copy > p:not(.hero-kicker) { -webkit-line-clamp: 1; }
   .hero-copy > button { min-height: 36px; margin-top: 5px; padding: 0 9px; font-size: .57rem; }
   .hero-image { height: 122px; }
-  .offer-card:not(.compact) .offer-card-main { grid-template-columns: minmax(0, 1.2fr) minmax(125px, 1fr); }
+  .offer-card:not(.compact) .offer-card-main { grid-template-columns: minmax(0, 1.2fr) minmax(140px, 1fr); }
   .offer-card:not(.compact) .offer-body { padding-inline-start: 6px; }
   .rating i { display: none; }
   .favorite-button { top: 8px; left: 8px; width: 44px; height: 44px; }
   .bottom-nav small { font-size: .58rem; }
   .detail-content, .flow-content, .filter-sheet, .simple-sheet { padding-inline: 15px; }
   .sticky-action, .flow-footer { padding-inline: 15px; }
+  .flow-footer { grid-template-columns: 1fr; }
   .reservation-actions, .success-actions, .cancel-dialog > div { grid-template-columns: 1fr; }
 }
 
@@ -1052,28 +1052,29 @@ img[src*="/images/products/"] { object-fit: contain !important; padding: 7%; fil
   .home-page > .content-section { margin-top: 0; }
   .home-page .section-heading { margin-bottom: 9px; }
   .offer-list { gap: 10px; }
-  .offer-card:not(.compact) .offer-card-main { min-height: 188px; position: relative; direction: ltr; display: grid; grid-template-columns: minmax(0, 3fr) minmax(116px, 2fr); grid-template-areas: "visual body"; align-items: stretch; padding: 6px; }
+  .offer-card:not(.compact) .offer-card-main { min-height: 188px; position: relative; direction: ltr; display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(140px, 1fr); grid-template-areas: "visual body"; align-items: stretch; padding: 6px; }
   .offer-card:not(.compact) .offer-visual { height: 100%; min-height: 176px; grid-area: visual; aspect-ratio: auto; overflow: hidden; border-radius: 15px; }
   .offer-card:not(.compact) .offer-visual::after { content: ""; width: 32%; position: absolute; z-index: 1; inset: 0 0 0 auto; pointer-events: none; background: linear-gradient(to right, transparent, var(--surface-solid)); }
   .offer-card:not(.compact) .offer-visual .food-photo { object-fit: contain !important; object-position: center; padding: 2% !important; }
   .offer-card:not(.compact) .offer-body { min-width: 0; z-index: 2; direction: rtl; grid-area: body; display: flex; flex-direction: column; justify-content: flex-start; margin-left: -1px; padding: 11px 7px 9px 3px; text-align: right; background: var(--surface-solid); }
   .offer-card:not(.compact) .offer-topline { max-width: calc(60% - 22px); position: absolute; z-index: 4; left: 12px; bottom: 12px; display: flex; flex-direction: row; align-items: center; gap: 5px; padding: 5px 7px; color: var(--ink-soft); background: color-mix(in srgb, var(--surface-solid) 88%, transparent); border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 5px 14px rgba(19, 34, 24, .1); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); font-size: .6rem; font-weight: 720; white-space: nowrap; }
   .offer-card:not(.compact) .rating i { display: none; }
-  .offer-card:not(.compact) .offer-body h3 { margin: 0 0 3px; font-size: 1rem; line-height: 1.4; }
-  .offer-card:not(.compact) .offer-body > p { display: -webkit-box; overflow: hidden; font-size: .67rem; font-weight: 590; line-height: 1.5; white-space: normal; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
-  .offer-card:not(.compact) .pickup-line { flex-direction: column; flex-wrap: nowrap; gap: 3px; margin-top: 7px; font-size: .59rem; font-weight: 590; }
+  .offer-card:not(.compact) .offer-body h3 { margin: 0 0 3px; font-size: 1.08rem; line-height: 1.36; }
+  .offer-card:not(.compact) .offer-body > p { display: -webkit-box; overflow: hidden; font-size: .72rem; font-weight: 590; line-height: 1.48; white-space: normal; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+  .offer-card:not(.compact) .pickup-line { flex-direction: column; flex-wrap: nowrap; gap: 3px; margin-top: 7px; font-size: .63rem; font-weight: 590; }
   .offer-card:not(.compact) .price-line { margin-top: auto; padding-top: 5px; }
-  .offer-card:not(.compact) .price-line del { font-size: .55rem; }
-  .offer-card:not(.compact) .price-line strong { font-size: .82rem; }
   .offer-card:not(.compact) .offer-availability { padding: 5px 8px; font-size: .6rem; }
   .offer-card:not(.compact) .favorite-button { top: 9px; left: 9px; }
 }
 
 @container (min-width: 140px) {
-  .offer-body h3 { font-size: 1.06rem !important; }
-  .offer-body > p { font-size: .72rem !important; }
-  .offer-body .pickup-line { font-size: .62rem !important; }
-  .offer-body .price-line strong { font-size: .87rem !important; }
+  .offer-body h3 { font-size: 1.12rem !important; }
+  .offer-body > p { font-size: .75rem !important; }
+  .offer-body .pickup-line { font-size: .65rem !important; }
+}
+
+@container (max-width: 220px) {
+  .price-reference-label { display: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
