@@ -55,12 +55,13 @@ export function SelectField({ label, value, options, onChange, required = false,
     <button ref={triggerRef} type="button" className="custom-select-trigger" aria-labelledby={`${id}-label ${id}-value`} aria-haspopup="listbox" aria-expanded={open} disabled={disabled} onClick={() => setOpen((current) => !current)} onKeyDown={(event) => { if (event.key === "ArrowDown" || event.key === "ArrowUp") { event.preventDefault(); setOpen(true); } }}>
       <span id={`${id}-value`}><strong>{selected?.label}</strong>{selected?.description && <small>{selected.description}</small>}</span><Icon name="chevron" />
     </button>
-    {open && <div className="custom-select-popover" role="listbox" aria-labelledby={`${id}-label`} onKeyDown={moveOptionFocus}>
+    <button className="custom-select-backdrop" type="button" tabIndex={-1} aria-label={`بستن ${label}`} onClick={() => setOpen(false)} />
+    <div className="custom-select-popover" role="listbox" aria-labelledby={`${id}-label`} aria-hidden={!open} inert={!open} onKeyDown={moveOptionFocus}>
       <div className="custom-select-mobile-head"><strong>{label}</strong><button type="button" onClick={() => setOpen(false)} aria-label="بستن"><Icon name="close" /></button></div>
       {options.map((option, index) => <button ref={(node) => { optionRefs.current[index] = node; }} type="button" role="option" aria-selected={option.value === value} key={option.value} onClick={() => { onChange(option.value); setOpen(false); triggerRef.current?.focus(); }}>
         <span><strong>{option.label}</strong>{option.description && <small>{option.description}</small>}</span>{option.value === value && <Icon name="check" />}
       </button>)}
-    </div>}
+    </div>
   </div>;
 }
 

@@ -12,8 +12,8 @@ const required = [
   "components/MoftPreview.tsx",
   "components/ServiceWorkerRegister.tsx",
   "public/sw.js",
-  "public/icons/dibz-liquid-glass-192-v1.png",
-  "public/icons/dibz-liquid-glass-512-v1.png",
+  "public/icons/dibz-ios-default-192-v2.png",
+  "public/icons/dibz-ios-default-512-v2.png",
   ".codex/hooks.json",
   ".agents/skills/moft-product-builder/SKILL.md"
 ];

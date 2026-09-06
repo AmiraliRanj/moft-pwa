@@ -205,14 +205,12 @@ export default function MoftPreview({ initialTab = "home", initialFavoritesOnly 
   }, [baseFilteredOffers, favoriteSet, favoritesOnly, maxDistance, maxPrice, pickupFilter, sort]);
 
   const toggleFavorite = (id: string) => {
-    setFavorites((current) => {
-      const next = new Set(current);
-      const removing = next.has(id);
-      if (removing) next.delete(id); else next.add(id);
-      localStorage.setItem(storageKeys.favorites, JSON.stringify([...next]));
-      showToast(removing ? "از علاقه‌مندی‌ها حذف شد." : "به علاقه‌مندی‌ها اضافه شد.");
-      return next;
-    });
+    const next = new Set(favorites);
+    const removing = next.has(id);
+    if (removing) next.delete(id); else next.add(id);
+    setFavorites(next);
+    localStorage.setItem(storageKeys.favorites, JSON.stringify([...next]));
+    showToast(removing ? "از علاقه‌مندی‌ها حذف شد." : "به علاقه‌مندی‌ها اضافه شد.");
   };
 
   const switchTab = (nextTab: AppTab) => {
@@ -364,7 +362,7 @@ function HomePage({ query, setQuery, category, setCategory, offers, allOffers, f
       <CategorySelector value={category} onChange={setCategory} />
       <HomeHeroCarousel onDiscover={onDiscover} />
 
-      {!installed && installPrompt && <button className="install-banner glass-subtle" type="button" onClick={onInstall}><span className="install-icon"><Image src="/icons/dibz-liquid-glass-180-v1.png" alt="" width={46} height={46} /></span><span><strong>دیبز را نصب کن</strong><small>سریع‌تر بازش کن و آفلاین هم ببین</small></span><Icon name="arrow" /></button>}
+      {!installed && installPrompt && <button className="install-banner glass-subtle" type="button" onClick={onInstall}><span className="install-icon"><Image src="/icons/dibz-ios-default-180-v2.png" alt="" width={46} height={46} /></span><span><strong>دیبز را نصب کن</strong><small>سریع‌تر بازش کن و آفلاین هم ببین</small></span><Icon name="arrow" /></button>}
 
       {browsing ? (
         <section className="content-section" aria-labelledby="search-results-title">
@@ -534,7 +532,7 @@ function SuccessState({ reservation, onDirections, onCalendar, onDone }: { reser
     <div className="success-state">
       <div className="success-burst"><span><SuccessCheck /></span></div>
       <p className="eyebrow">رزرو با موفقیت انجام شد</p><h2 id="reservation-title">جعبه‌ات کنار گذاشته شد!</h2><p>در بازهٔ تعیین‌شده به فروشگاه برو و کد دریافت را نشان بده.</p>
-      <div className="pickup-pass"><div className="pass-brand"><span><Image src="/icons/dibz-liquid-glass-180-v1.png" alt="" width={32} height={32} /></span><small>برگهٔ دریافت دیبز</small></div><div className="pass-store"><strong>{reservation.merchantName}</strong><small>{reservation.pickup}</small></div><div className="pass-code"><MiniQr code={reservation.code} /><span><small>کد دریافت</small><strong>{reservation.code}</strong></span></div><div className="pass-cut" /><p>{reservation.address}</p></div>
+      <div className="pickup-pass"><div className="pass-brand"><span><Image src="/icons/dibz-ios-default-180-v2.png" alt="" width={32} height={32} /></span><small>برگهٔ دریافت دیبز</small></div><div className="pass-store"><strong>{reservation.merchantName}</strong><small>{reservation.pickup}</small></div><div className="pass-code"><MiniQr code={reservation.code} /><span><small>کد دریافت</small><strong>{reservation.code}</strong></span></div><div className="pass-cut" /><p>{reservation.address}</p></div>
       <div className="success-countdown"><small>تا شروع زمان دریافت</small><strong>۲ ساعت و ۱۲ دقیقه</strong></div>
       <div className="success-actions"><button type="button" onClick={onDirections}><Icon name="route" /> مسیریابی</button><button type="button" onClick={onCalendar}><Icon name="calendar" /> افزودن به تقویم</button></div>
       <button className="primary-button full" type="button" onClick={onDone}>دیدن در رزروهای من</button>

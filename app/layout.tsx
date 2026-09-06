@@ -22,7 +22,11 @@ export const metadata: Metadata = {
   },
   formatDetection: { telephone: false },
   icons: {
-    icon: [{ url: "/icons/dibz-liquid-glass-512-v1.png", sizes: "512x512", type: "image/png" }]
+    icon: [
+      { url: "/icons/dibz-ios-default-192-v2.png", sizes: "192x192", type: "image/png" },
+      { url: "/icons/dibz-ios-default-512-v2.png", sizes: "512x512", type: "image/png" }
+    ],
+    apple: [{ url: "/icons/dibz-ios-default-180-v2.png", sizes: "180x180", type: "image/png" }]
   }
 };
 

@@ -296,7 +296,7 @@ img[src*="/images/products/"] { object-fit: contain !important; padding: 7%; fil
 .page-title { padding: 6px 2px 5px; }
 .page-title h1 { margin: 0; font-size: clamp(2rem, 7vw, 3.2rem); line-height: 1.22; letter-spacing: -.055em; }
 .page-title > p:last-child { max-width: 620px; margin: 7px 0 0; color: var(--muted); font-size: .82rem; line-height: 1.75; }
-.discover-toolbar { display: flex; align-items: center; gap: 7px; margin: 8px 0 12px; overflow-x: auto; padding-bottom: 3px; }
+.discover-toolbar { display: flex; align-items: center; gap: 7px; margin: 8px 0 12px; overflow: visible; padding-bottom: 3px; }
 .discover-toolbar > button, .discover-toolbar select, .discover-sort .custom-select-trigger { min-height: 43px; white-space: nowrap; color: var(--ink-soft); background: var(--surface); border: 1px solid var(--line); border-radius: 14px; cursor: pointer; }
 .discover-toolbar > button { display: flex; align-items: center; gap: 6px; padding: 0 12px; }
 .discover-toolbar > button svg { width: 17px; }
@@ -310,7 +310,7 @@ img[src*="/images/products/"] { object-fit: contain !important; padding: 7%; fil
 .discover-sort .custom-select-trigger svg { transition: transform .22s cubic-bezier(.22, 1, .36, 1); }
 .discover-sort.open .custom-select-trigger svg { transform: rotate(-90deg); }
 .discover-sort.custom-select.open .custom-select-trigger { border-color: var(--brand-3); box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand-3) 18%, transparent); }
-.discover-sort .custom-select-popover { color: var(--ink); background: color-mix(in srgb, var(--surface-raised) 96%, transparent); border-color: var(--line-strong); box-shadow: 0 -12px 42px rgba(22, 31, 26, .16); -webkit-backdrop-filter: blur(24px) saturate(118%); backdrop-filter: blur(24px) saturate(118%); transform-origin: top right; animation: sort-pop-in .24s cubic-bezier(.22, 1, .36, 1) both; }
+.discover-sort .custom-select-popover { inset-inline-start: auto; inset-inline-end: 0; color: var(--ink); background: color-mix(in srgb, var(--surface-raised) 96%, transparent); border-color: var(--line-strong); box-shadow: 0 12px 42px rgba(22, 31, 26, .16); -webkit-backdrop-filter: blur(24px) saturate(118%); backdrop-filter: blur(24px) saturate(118%); transform-origin: top left; }
 .discover-sort .custom-select-popover > button:hover, .discover-sort .custom-select-popover > button[aria-selected="true"] { background: var(--brand-soft); }
 .discover-sort .custom-select-popover button svg { color: var(--brand-2); }
 [data-theme="dark"] .discover-sort .custom-select-popover { background: rgba(39, 45, 41, .96); border-color: rgba(219, 232, 223, .14); box-shadow: 0 -14px 44px rgba(0, 0, 0, .42); }
@@ -978,8 +978,11 @@ img[src*="/images/products/"] { object-fit: contain !important; padding: 7%; fil
 }
 
 @media (max-width: 720px) {
-  .discover-sort.open::before { animation: fade-in .18s ease-out both; }
-  .discover-sort .custom-select-popover { transform-origin: center bottom; animation: sheet-up .32s cubic-bezier(.2, .82, .2, 1) both; }
+  .discover-sort .custom-select-backdrop { display: none; }
+  .discover-sort .custom-select-popover { width: max(100%, 190px); min-width: 0; max-height: none; position: absolute; top: calc(100% + 7px); right: auto; bottom: auto; left: 0; overflow: hidden; padding: 6px; border-radius: 16px; box-shadow: 0 16px 34px rgba(22, 31, 26, .18); opacity: 0; visibility: hidden; transform: translateY(-7px) scale(.975); transform-origin: top left; }
+  .discover-sort.open .custom-select-popover { opacity: 1; visibility: visible; transform: translateY(0) scale(1); }
+  .discover-sort .custom-select-popover::before, .discover-sort .custom-select-mobile-head { display: none; }
+  .discover-sort .custom-select-popover > button { min-height: 43px; padding: 6px 9px; }
 }
 
 @media (max-width: 420px) {
@@ -1072,8 +1075,6 @@ img[src*="/images/products/"] { object-fit: contain !important; padding: 7%; fil
   .offer-body .pickup-line { font-size: .62rem !important; }
   .offer-body .price-line strong { font-size: .87rem !important; }
 }
-
-@keyframes sort-pop-in { from { opacity: 0; transform: translateY(-7px) scale(.97); } }
 
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }

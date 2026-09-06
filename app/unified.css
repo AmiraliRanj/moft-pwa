@@ -657,16 +657,19 @@
 .custom-select { min-width: 0; position: relative; display: grid; gap: 5px; text-align: start; }
 .custom-select-label { color: var(--muted); font-size: .61rem; font-weight: 700; }
 .custom-select-label b, .form-field > span b, .upload-field > span b { color: var(--danger); }
-.custom-select-trigger { width: 100%; min-height: 46px; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 7px 11px; color: var(--ink); background: var(--surface-raised); border: 1px solid var(--line); border-radius: 13px; cursor: pointer; text-align: start; }
+.custom-select-trigger { width: 100%; min-height: 46px; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 7px 11px; color: var(--ink); background: var(--surface-raised); border: 1px solid var(--line); border-radius: 13px; cursor: pointer; text-align: start; transition: color .18s ease, background .18s ease, border-color .18s ease, box-shadow .24s cubic-bezier(.22, 1, .36, 1); }
 .custom-select.open .custom-select-trigger { border-color: var(--business-primary); box-shadow: 0 0 0 3px color-mix(in srgb, var(--business-primary) 13%, transparent); }
 .custom-select-trigger > span { min-width: 0; }
 .custom-select-trigger strong, .custom-select-trigger small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .custom-select-trigger strong { font-size: .7rem; }
 .custom-select-trigger small { margin-top: 2px; color: var(--muted); font-size: .55rem; }
 .custom-select-trigger svg { width: 16px; flex: 0 0 auto; transform: rotate(90deg); }
-.custom-select-popover { min-width: 240px; position: absolute; z-index: 140; top: calc(100% + 7px); inset-inline-start: 0; display: grid; gap: 3px; padding: 7px; background: var(--surface-solid); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow-float); }
-.custom-select-popover > button { min-height: 48px; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 7px 10px; color: var(--ink); background: transparent; border: 0; border-radius: 11px; cursor: pointer; text-align: start; }
+.custom-select-backdrop { display: none; }
+.custom-select-popover { min-width: 240px; position: absolute; z-index: 140; top: calc(100% + 7px); inset-inline-start: 0; display: grid; gap: 3px; padding: 7px; color: var(--ink); background: var(--surface-solid); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow-float); opacity: 0; visibility: hidden; pointer-events: none; transform: translateY(-7px) scale(.975); transform-origin: top right; transition: opacity .18s ease, transform .26s cubic-bezier(.22, 1, .36, 1), visibility 0s linear .26s; }
+.custom-select.open .custom-select-popover { opacity: 1; visibility: visible; pointer-events: auto; transform: translateY(0) scale(1); transition-delay: 0s; }
+.custom-select-popover > button { min-height: 48px; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 7px 10px; color: var(--ink); background: transparent; border: 0; border-radius: 11px; cursor: pointer; text-align: start; transition: color .16s ease, background .16s ease, transform .2s cubic-bezier(.22, 1, .36, 1); }
 .custom-select-popover > button:hover, .custom-select-popover > button[aria-selected="true"] { background: var(--business-soft); }
+.custom-select-popover > button:focus-visible { outline: 2px solid color-mix(in srgb, var(--business-primary) 60%, transparent); outline-offset: -2px; }
 .custom-select-popover button strong, .custom-select-popover button small { display: block; }
 .custom-select-popover button strong { font-size: .68rem; }
 .custom-select-popover button small { margin-top: 3px; color: var(--muted); font-size: .54rem; }
@@ -819,8 +822,11 @@
   .business-offer-image { height: clamp(240px, 68vw, 330px); }
   .business-offer-actions { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .business-offer-actions button { min-height: 42px; padding-inline: 5px; }
-  .custom-select.open::before { content: ""; position: fixed; z-index: 149; inset: 0; background: rgba(10, 7, 8, .45); }
-  .custom-select-popover { min-width: 0; max-height: min(70dvh, 540px); position: fixed; z-index: 150; top: auto; right: 0; bottom: 0; left: 0; overflow-y: auto; padding: 9px 12px calc(14px + env(safe-area-inset-bottom)); border-radius: 24px 24px 0 0; }
+  .custom-select-backdrop { position: fixed; z-index: 149; inset: 0; display: block; padding: 0; background: rgba(10, 15, 12, .42); border: 0; opacity: 0; visibility: hidden; pointer-events: none; -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px); transition: opacity .2s ease, visibility 0s linear .3s; }
+  .custom-select.open .custom-select-backdrop { opacity: 1; visibility: visible; pointer-events: auto; transition-delay: 0s; }
+  .custom-select-popover { min-width: 0; max-height: min(70dvh, 540px); position: fixed; z-index: 150; top: auto; right: 0; bottom: 0; left: 0; overflow-y: auto; padding: 9px 12px calc(14px + env(safe-area-inset-bottom)); border-radius: 26px 26px 0 0; opacity: 0; visibility: hidden; transform: translateY(calc(100% + 24px)); transform-origin: center bottom; transition: opacity .2s ease, transform .34s cubic-bezier(.2, .82, .2, 1), visibility 0s linear .34s; }
+  .custom-select.open .custom-select-popover { opacity: 1; visibility: visible; transform: translateY(0); transition-delay: 0s; }
+  .custom-select-popover::before { content: ""; width: 38px; height: 4px; justify-self: center; margin: 1px 0 3px; background: var(--line-strong); border-radius: 999px; }
   .custom-select-mobile-head { min-height: 52px; display: flex; align-items: center; justify-content: space-between; padding: 0 4px 7px; }
   .custom-select-mobile-head button { width: 42px; height: 42px; display: grid; place-items: center; background: var(--surface); border: 1px solid var(--line); border-radius: 13px; }
   .custom-select-mobile-head svg { width: 18px; }
@@ -855,7 +861,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .business-topbar, .mini-bar-chart button > i, .custom-select-popover, .business-mobile-nav { transition: none !important; animation: none !important; }
+  .business-topbar, .mini-bar-chart button > i, .custom-select-backdrop, .custom-select-popover, .business-mobile-nav { transition: none !important; animation: none !important; }
 }
 
 /* Latest Business corrections: maroon-neutral identity, opaque chrome and readable actions */

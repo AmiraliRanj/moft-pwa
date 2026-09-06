@@ -244,7 +244,7 @@ export function createDemoSeed(): DemoState {
     customer: { id: DEMO_CUSTOMER_ID, name: "سارا احمدی", mobile: "09120000000", joinedAt: iso(-120) },
     business: {
       id: DEMO_BUSINESS_ID, name: "کافه ویونا", ownerName: "امیر رضایی", category: "کافه و نانوایی", rating: 4.6,
-      logo: "/icons/dibz-liquid-glass-180-v1.png", cover: "/images/offers/offer-01.webp", demoBankIban: "IR00 •••• •••• •••• •••• 0000 00",
+      logo: "/icons/dibz-ios-default-180-v2.png", cover: "/images/offers/offer-01.webp", demoBankIban: "IR00 •••• •••• •••• •••• 0000 00",
     },
     branches: [
       { id: "branch-jordan", businessId: DEMO_BUSINESS_ID, name: "شعبه جردن", area: "جردن", address: "تهران، جردن، خیابان ناهید غربی", phone: "021-00000000", acceptsOrders: true, openingHours: "۸:۰۰ تا ۲۲:۰۰", pickupWindows: ["۱۹:۳۰ تا ۲۰:۳۰", "۲۰:۳۰ تا ۲۱:۳۰"] },
