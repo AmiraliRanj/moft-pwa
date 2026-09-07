@@ -21,7 +21,7 @@ export function OfferCard({ offer, favorite, onFavorite, onSelect, compact = fal
           {offer.quantityLeft > 0 && offer.quantityLeft <= 3 && <span className={`availability-badge offer-availability ${offer.quantityLeft <= 2 ? "low" : ""}`}>{numberFa(offer.quantityLeft)} جعبه موجود</span>}
           <div className="price-line">
             <div className="price-copy">
-              <del aria-label={`ارزش ${moneyCompact(offer.originalPrice)}`}><span className="price-reference-label">ارزش </span>{moneyCompact(offer.originalPrice).replace(/ تومان$/, "")}<span className="price-reference-label"> تومان</span></del>
+              <del aria-label={`ارزش ${moneyCompact(offer.originalPrice)}`}><span className="price-reference-label">ارزش </span>{moneyCompact(offer.originalPrice)}</del>
               <strong>{moneyCompact(offer.price)}</strong>
             </div>
           </div>

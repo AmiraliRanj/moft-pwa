@@ -8,17 +8,17 @@ import "./unified.css";
 
 export const metadata: Metadata = {
   title: {
-    default: "Dibz! | دیبز!",
-    template: "%s | Dibz! | دیبز!"
+    default: "Dibz!",
+    template: "%s | Dibz!"
   },
   description: "جعبه‌های غافلگیرکنندهٔ غذای سالم برای دریافت حضوری در بازهٔ مشخص.",
-  applicationName: "Dibz! | دیبز!",
+  applicationName: "Dibz!",
   category: "food",
   keywords: ["جعبه سورپرایزی", "دریافت حضوری", "پیشنهادهای امروز", "دیبز"],
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
-    title: "Dibz! | دیبز!"
+    title: "Dibz!"
   },
   formatDetection: { telephone: false },
   icons: {

@@ -1068,10 +1068,14 @@ img[src*="/images/products/"] { object-fit: contain !important; padding: 7%; fil
 }
 
 @container (min-width: 140px) {
-  .offer-body h3 { font-size: 1.12rem !important; }
-  .offer-body > p { font-size: .75rem !important; }
-  .offer-body .pickup-line { font-size: .65rem !important; }
+  .offer-body h3 { font-size: 1.18rem !important; }
+  .offer-body > p { font-size: .8rem !important; }
+  .offer-body .pickup-line { font-size: .7rem !important; }
 }
+
+/* Reserve enough room for both full prices at their existing type sizes. */
+.offer-card:not(.compact) .offer-card-main { grid-template-columns: minmax(0, 1.1fr) minmax(170px, 1fr); }
+.offer-card:not(.compact) .pickup-line { margin-bottom: 8px; }
 
 @container (max-width: 220px) {
   .price-reference-label { display: none; }

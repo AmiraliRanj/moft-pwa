@@ -2,8 +2,8 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Dibz! | دیبز!",
-    short_name: "Dibz! | دیبز!",
+    name: "Dibz!",
+    short_name: "Dibz!",
     description: "جعبه‌های غافلگیرکنندهٔ غذای سالم برای دریافت حضوری در بازهٔ مشخص.",
     start_url: "/",
     scope: "/",
