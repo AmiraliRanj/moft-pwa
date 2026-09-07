@@ -1,8 +1,6 @@
 const slides = Array.from(document.querySelectorAll(".slide"));
 const currentSlide = document.querySelector("#current-slide");
 const progressBar = document.querySelector("#progress-bar");
-const previousButton = document.querySelector("#previous-slide");
-const nextButton = document.querySelector("#next-slide");
 
 let activeIndex = 0;
 const persianNumber = new Intl.NumberFormat("fa-IR", {
@@ -36,8 +34,6 @@ const observer = new IntersectionObserver(
 );
 
 slides.forEach((slide) => observer.observe(slide));
-previousButton.addEventListener("click", () => goToSlide(activeIndex - 1));
-nextButton.addEventListener("click", () => goToSlide(activeIndex + 1));
 
 document.addEventListener("keydown", (event) => {
   if (["ArrowLeft", "ArrowDown", "PageDown", " "].includes(event.key)) {
