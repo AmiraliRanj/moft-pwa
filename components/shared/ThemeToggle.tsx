@@ -45,9 +45,17 @@ export function ThemeToggle({ compact = false }: { compact?: boolean }) {
   const next: ThemePreference = theme === "light" ? "dark" : "light";
   const label = theme === "light" ? "تغییر به حالت تاریک" : "تغییر به حالت روشن";
   return (
-    <button className={`shared-theme-toggle ${compact ? "compact" : ""}`} type="button" onClick={() => setTheme(next)} aria-label={label} title={label}>
-      <Icon name={theme === "dark" ? "moon" : "sun"} />
-      {!compact && <span>{theme === "light" ? "روشن" : "تاریک"}</span>}
+    <button
+      className={`inline-flex items-center justify-center gap-2 rounded-2xl border border-line bg-surface text-brand-2 shadow-xs transition-colors hover:bg-surface-raised active:scale-95 cursor-pointer ${
+        compact ? "h-11 w-11 min-w-[44px] p-0" : "min-h-[44px] min-w-[92px] px-3.5"
+      }`}
+      type="button"
+      onClick={() => setTheme(next)}
+      aria-label={label}
+      title={label}
+    >
+      <span className="[&>svg]:w-5 [&>svg]:h-5"><Icon name={theme === "dark" ? "moon" : "sun"} /></span>
+      {!compact && <span className="text-xs font-bold">{theme === "light" ? "روشن" : "تاریک"}</span>}
     </button>
   );
 }

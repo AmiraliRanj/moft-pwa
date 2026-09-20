@@ -48,9 +48,9 @@ const paths: Record<IconName, ReactNode> = {
   camera: <><rect x="3" y="6" width="18" height="13" rx="3"/><path d="m8 6 1.5-2h5L16 6"/><circle cx="12" cy="12.5" r="3.5"/></>
 };
 
-export function Icon({ name, filled = false }: { name: IconName; filled?: boolean }) {
+export function Icon({ name, filled = false, className = "" }: { name: IconName; filled?: boolean; className?: string }) {
   return (
-    <svg aria-hidden="true" viewBox="0 0 24 24" fill={filled ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <svg aria-hidden="true" viewBox="0 0 24 24" fill={filled ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={className}>
       {paths[name]}
     </svg>
   );

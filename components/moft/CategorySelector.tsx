@@ -10,19 +10,50 @@ const categoryIcons: Record<CategoryId, IconName> = {
   bakery: "bread",
   confectionery: "cake",
   fruit: "apple",
-  grocery: "cart"
+  grocery: "cart",
 };
 
-export function CategorySelector({ value, onChange }: { value: CategoryId; onChange: (value: CategoryId) => void }) {
+export function CategorySelector({
+  value,
+  onChange,
+}: {
+  value: CategoryId;
+  onChange: (value: CategoryId) => void;
+}) {
   return (
-    <div className="category-row" role="group" aria-label="دسته‌بندی فروشگاه‌ها">
-      {categories.map((item) => (
-        <button key={item.id} className={`category-chip ${value === item.id ? "active" : ""}`} type="button" onClick={() => onChange(item.id)} aria-pressed={value === item.id}>
-          <span className="category-icon"><Icon name={categoryIcons[item.id]} /></span>
-          <span className="category-label">{item.label}</span>
-          <span className="category-indicator" aria-hidden="true" />
-        </button>
-      ))}
+    <div
+      className="flex items-center gap-2 overflow-x-auto py-1 scrollbar-none"
+      style={{ scrollbarWidth: "none" }}
+      role="group"
+      aria-label="دسته‌بندی فروشگاه‌ها"
+    >
+      {categories.map((item) => {
+        const active = value === item.id;
+        return (
+          <button
+            key={item.id}
+            type="button"
+            onClick={() => onChange(item.id)}
+            aria-pressed={active}
+            className={`flex flex-col items-center gap-1.5 p-1.5 rounded-2xl shrink-0 transition-all ${
+              active
+                ? "text-brand-2 font-bold"
+                : "text-muted hover:text-ink"
+            }`}
+          >
+            <span
+              className={`w-12 h-12 rounded-2xl grid place-items-center transition-all ${
+                active
+                  ? "bg-brand-soft text-brand-2 shadow-xs ring-2 ring-brand-2/30"
+                  : "bg-surface border border-line text-muted hover:border-brand-2/30"
+              }`}
+            >
+              <Icon name={categoryIcons[item.id]} className="w-5 h-5" />
+            </span>
+            <span className="text-[11px] whitespace-nowrap">{item.label}</span>
+          </button>
+        );
+      })}
     </div>
   );
 }

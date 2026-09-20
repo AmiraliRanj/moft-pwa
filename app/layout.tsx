@@ -4,7 +4,6 @@ import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 import { DemoProvider } from "@/demo/DemoProvider";
 import "@fontsource-variable/vazirmatn";
 import "./globals.css";
-import "./unified.css";
 
 export const metadata: Metadata = {
   title: {
