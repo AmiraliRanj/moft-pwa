@@ -11,7 +11,8 @@ export default async function CustomerPage({ params }: { params: Promise<{ path?
   const { path = [] } = await params;
   const section = path[0];
   if (section === "support") return <CustomerSupportPage initialOrderId={path[1]} />;
-  const initialTab = section === "orders" ? "reservations" : section === "profile" ? "profile" : ["offers", "favorites", "cart"].includes(section ?? "") ? "discover" : "home";
+  const initialTab = section === "orders" || section === "cart" ? "reservations" : section === "profile" ? "profile" : ["offers", "favorites"].includes(section ?? "") ? "discover" : "home";
 
   return <MoftPreview initialTab={initialTab} initialFavoritesOnly={section === "favorites"} initialOfferId={section === "offers" ? path[1] : undefined} />;
 }
+

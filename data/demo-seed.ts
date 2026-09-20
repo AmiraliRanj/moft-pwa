@@ -12,7 +12,7 @@ import type {
   Review,
 } from "@/types/demo";
 
-export const DEMO_STATE_VERSION = 2;
+export const DEMO_STATE_VERSION = 3;
 export const DEMO_STORAGE_KEY = "moft-unified-demo-v1";
 export const DEMO_BUSINESS_ID = "business-vienna";
 export const DEMO_CUSTOMER_ID = "customer-sara";
@@ -123,8 +123,8 @@ const orders: Order[] = Array.from({ length: 25 }, (_, index) => {
   return {
     id: `order-${String(index + 1).padStart(3, "0")}`,
     code: `MF-${String(3100 + index)}`,
-    customerId: index < 4 ? DEMO_CUSTOMER_ID : `customer-${index + 1}`,
-    customerName: index < 4 ? "سارا احمدی" : ["نگار مرادی", "پارسا شریفی", "رها کریمی", "آرین محمدی"][index % 4],
+    customerId: index < 6 ? DEMO_CUSTOMER_ID : `customer-${index + 1}`,
+    customerName: index < 6 ? "سارا احمدی" : ["نگار مرادی", "پارسا شریفی", "رها کریمی", "آرین محمدی"][index % 4],
     businessId: DEMO_BUSINESS_ID,
     branchId: offer.branchId,
     items: [{ offerId: offer.id, title: offer.title, unitPrice: offer.salePrice, quantity }],

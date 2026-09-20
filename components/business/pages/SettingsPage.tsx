@@ -471,7 +471,7 @@ export function SettingsPage() {
                 <div className="flex items-center gap-3 p-3 rounded-xl bg-canvas/60 border border-line">
                   <span className="w-9 h-9 grid place-items-center rounded-lg bg-rose-600 text-white font-bold text-[10px]">PDF</span>
                   <strong className="flex-1 text-xs font-medium text-ink">{documentName}</strong>
-                  <button type="button" onClick={() => setDocumentName("")} aria-label="حذف مدرک" className="w-8 h-8 grid place-items-center text-muted hover:text-rose-600 transition-colors">
+                  <button type="button" onClick={() => setDocumentName("")} aria-label="حذف مدرک" className="min-w-[44px] min-h-[44px] w-11 h-11 grid place-items-center rounded-xl text-muted hover:text-rose-600 transition-colors cursor-pointer">
                     <Icon name="trash" className="w-4 h-4" />
                   </button>
                 </div>
@@ -496,8 +496,7 @@ export function SettingsPage() {
             }}
           >
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-wider text-muted">شعبه تازه</p>
-              <h2 id="branch-dialog-title" className="text-base font-black text-ink mt-0.5">اطلاعات شعبه</h2>
+              <h2 id="branch-dialog-title" className="text-base font-black text-ink">اطلاعات شعبه</h2>
             </div>
             <label className="flex flex-col gap-1.5">
               <span className="text-xs font-medium text-muted">نام شعبه</span>
@@ -535,8 +534,7 @@ export function SettingsPage() {
             }}
           >
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-wider text-muted">عضو تازه</p>
-              <h2 id="staff-dialog-title" className="text-base font-black text-ink mt-0.5">اطلاعات کارمند</h2>
+              <h2 id="staff-dialog-title" className="text-base font-black text-ink">اطلاعات کارمند</h2>
             </div>
             <label className="flex flex-col gap-1.5">
               <span className="text-xs font-medium text-muted">نام و نام خانوادگی</span>

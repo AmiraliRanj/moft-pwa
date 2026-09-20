@@ -1,6 +1,7 @@
-const CACHE_NAME = "dibz-shell-v5";
+const CACHE_NAME = "dibz-shell-v7";
 const OFFER_IMAGES = Array.from({ length: 16 }, (_, index) => `/images/offers/offer-${String(index + 1).padStart(2, "0")}.webp`);
-const APP_SHELL = ["/", "/customer", "/business", "/offline", "/manifest.webmanifest", "/icons/dibz-ios-default-180-v2.png", "/icons/dibz-ios-default-192-v2.png", "/icons/dibz-ios-default-512-v2.png", "/brand/dibz-mascot-transparent.png", ...OFFER_IMAGES];
+// [BUSINESS ROUTE OMITTED - SEPARATE APP]
+const APP_SHELL = ["/", "/customer", "/offline", "/manifest.webmanifest", "/icons/dibz-ios-default-180-v2.png", "/icons/dibz-ios-default-192-v2.png", "/icons/dibz-ios-default-512-v2.png", "/brand/dibz-mascot-transparent.png", ...OFFER_IMAGES];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL)).then(() => self.skipWaiting()));

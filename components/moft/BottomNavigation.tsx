@@ -1,52 +1,49 @@
+"use client";
+
 import { Icon, type IconName } from "@/components/moft/Icon";
 import type { AppTab } from "@/types/moft";
-import { AnimatedNumber } from "@/components/moft/AnimatedNumber";
-import { GlassSegmentedControl } from "@/components/glass/GlassSegmentedControl";
 
 const items: Array<{ id: AppTab; label: string; icon: IconName }> = [
   { id: "home", label: "خانه", icon: "home" },
   { id: "discover", label: "کشف", icon: "search" },
-  { id: "reservations", label: "رزروهای من", icon: "bag" },
   { id: "profile", label: "پروفایل", icon: "user" },
 ];
 
 export function BottomNavigation({
   value,
   onChange,
-  reservationCount,
 }: {
   value: AppTab;
   onChange: (tab: AppTab) => void;
-  reservationCount: number;
+  reservationCount?: number;
 }) {
-  const options = items.map((item) => ({
-    value: item.id,
-    ariaLabel: item.label,
-    label: (
-      <span className="flex flex-col items-center justify-center gap-0.5 relative py-1">
-        <span className="relative">
-          <Icon name={item.icon} className="w-5 h-5" />
-          {item.id === "reservations" && reservationCount > 0 && (
-            <b className="absolute -top-1.5 -end-2.5 min-w-[16px] h-4 px-1 rounded-full bg-brand-2 text-white text-[10px] font-black grid place-items-center leading-none">
-              <AnimatedNumber value={reservationCount} />
-            </b>
-          )}
-        </span>
-        <small className="text-[10px] font-medium leading-none">{item.label}</small>
-      </span>
-    ),
-  }));
-
   return (
-    <nav className="fixed bottom-3 inset-x-4 z-40 max-w-md mx-auto" aria-label="ناوبری اصلی">
-      <GlassSegmentedControl
-        value={value}
-        options={options}
-        onChange={onChange}
-        ariaLabel="بخش‌های اصلی دیبز"
-        className="bottom-nav shadow-lg"
-        preset="navigation"
-      />
+    <nav
+      className="fixed bottom-3 inset-x-4 z-40 max-w-md mx-auto"
+      aria-label="ناوبری اصلی"
+    >
+      <div className="bg-surface dark:bg-[#18201a] border border-line rounded-full shadow-lg p-1.5 flex items-center justify-between gap-1">
+        {items.map((item) => {
+          const isActive = value === item.id;
+          return (
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => onChange(item.id)}
+              className={`relative flex-1 min-h-[48px] h-12 rounded-full flex flex-col items-center justify-center gap-0.5 transition-all duration-200 cursor-pointer active:scale-95 ${
+                isActive
+                  ? "bg-brand-soft/70 text-[#16a34a] font-black dark:bg-emerald-950/60 dark:text-emerald-400 shadow-2xs"
+                  : "text-muted hover:text-ink hover:bg-canvas-soft/40 font-medium"
+              }`}
+              aria-label={item.label}
+              aria-current={isActive ? "page" : undefined}
+            >
+              <Icon name={item.icon} className="w-5 h-5" />
+              <small className="text-[10px] leading-none">{item.label}</small>
+            </button>
+          );
+        })}
+      </div>
     </nav>
   );
 }

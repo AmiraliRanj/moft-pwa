@@ -7,3 +7,4 @@ out/
 .env.*
 !.env.example
 .DS_Store
+.chrome_data/

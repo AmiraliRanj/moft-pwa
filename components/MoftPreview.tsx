@@ -13,8 +13,7 @@ import { AnimatedNumber } from "@/components/moft/AnimatedNumber";
 import { GlassSegmentedControl } from "@/components/glass/GlassSegmentedControl";
 import { GlassToggle } from "@/components/glass/GlassToggle";
 import { SuccessCheck } from "@/components/motion/SuccessCheck";
-import { Icon } from "@/components/moft/Icon";
-import { LoadingSkeleton } from "@/components/moft/LoadingSkeleton";
+import { Icon, type IconName } from "@/components/moft/Icon";
 import { OfferCard, OfferList } from "@/components/moft/OfferCard";
 import { SearchBar } from "@/components/moft/SearchBar";
 import { SelectField } from "@/components/shared/FormControls";
@@ -23,7 +22,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Toaster, toast as toastManager } from "@/components/ui/toast";
 import { useDemo } from "@/demo/DemoProvider";
 import { orderStatusLabel, remainingQuantity } from "@/lib/demo-format";
-import { decimalFa, discountPercent, distanceFa, money, numberFa } from "@/lib/moft-format";
+import { decimalFa, discountPercent, distanceFa, money, moneyCompact, numberFa } from "@/lib/moft-format";
 import type { MarketplaceOffer, Order } from "@/types/demo";
 import type { AppTab, CategoryId, Offer, PickupPeriod, Reservation } from "@/types/moft";
 
@@ -34,7 +33,6 @@ type InstallPromptEvent = Event & {
 
 type Layer = "detail" | "reserve" | "filters" | "location" | "about" | "cancel" | "review" | null;
 type SortMode = "nearest" | "popular" | "discount";
-type ReservationView = "active" | "history";
 
 const productCutoutByOffer: Record<string, string> = {
   "vienna-evening": "/images/products/dibz-dessert-box-cutout.png",
@@ -131,6 +129,8 @@ export default function MoftPreview({
 }: MoftPreviewProps) {
   const { state, placeOrder, transitionOrder, submitReview } = useDemo();
   const [tab, setTab] = useState<AppTab>(initialTab);
+  const [previousTab, setPreviousTab] = useState<AppTab>("home");
+  const [cartClosing, setCartClosing] = useState(false);
   const [category, setCategory] = useState<CategoryId>("all");
   const [query, setQuery] = useState("");
   const offers = useMemo(
@@ -153,8 +153,6 @@ export default function MoftPreview({
   const [successReservation, setSuccessReservation] = useState<Reservation | null>(null);
   const [cancelId, setCancelId] = useState<string | null>(null);
   const [reviewOrderId, setReviewOrderId] = useState<string | null>(null);
-  const [reservationView, setReservationView] = useState<ReservationView>("active");
-  const [pageLoading, setPageLoading] = useState(false);
   const [storageWarning, setStorageWarning] = useState(false);
   const [online, setOnline] = useState(true);
   const [notifications, setNotifications] = useState(true);
@@ -165,13 +163,49 @@ export default function MoftPreview({
   const [maxPrice, setMaxPrice] = useState(300000);
   const [pickupFilter, setPickupFilter] = useState<"all" | PickupPeriod>("all");
   const [sort, setSort] = useState<SortMode>("nearest");
-  const [viewMode, setViewMode] = useState<"list" | "map">("list");
   const [favoritesOnly, setFavoritesOnly] = useState(initialFavoritesOnly);
   const [location, setLocation] = useState("تهران، ونک");
+  const [searchVisible, setSearchVisible] = useState(true);
+  const lastScrollYRef = useRef(0);
+  const isInputFocusedRef = useRef(false);
   const routeHandledRef = useRef(false);
 
   const showToast = useCallback((message: string) => {
     toastManager.add({ title: message, type: "success", timeout: 3400 });
+  }, []);
+
+  useEffect(() => {
+    let ticking = false;
+
+    const onScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const currentScrollY = window.scrollY || document.documentElement.scrollTop;
+          const diff = currentScrollY - lastScrollYRef.current;
+
+          // Always reveal search bar when near the top of the page
+          if (currentScrollY <= 20) {
+            setSearchVisible(true);
+          } else if (!isInputFocusedRef.current) {
+            // Scrolling down past threshold -> hide search bar
+            if (diff > 8 && currentScrollY > 60) {
+              setSearchVisible(false);
+            }
+            // Scrolling up anywhere on the page -> show search bar
+            else if (diff < -8) {
+              setSearchVisible(true);
+            }
+          }
+
+          lastScrollYRef.current = currentScrollY;
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
   useEffect(() => {
@@ -202,14 +236,31 @@ export default function MoftPreview({
     };
     const onOnline = () => setOnline(true);
     const onOffline = () => setOnline(false);
+
+    const handlePopState = () => {
+      const path = window.location.pathname;
+      if (path.includes("/orders") || path.includes("/cart")) {
+        setTab("reservations");
+      } else if (path.includes("/offers") || path.includes("/discover") || path.includes("/favorites")) {
+        setTab("discover");
+      } else if (path.includes("/profile")) {
+        setTab("profile");
+      } else {
+        setTab("home");
+        setSearchVisible(true);
+      }
+    };
+
     window.addEventListener("beforeinstallprompt", onInstall);
     window.addEventListener("online", onOnline);
     window.addEventListener("offline", onOffline);
+    window.addEventListener("popstate", handlePopState);
     return () => {
       window.clearTimeout(hydrateTimer);
       window.removeEventListener("beforeinstallprompt", onInstall);
       window.removeEventListener("online", onOnline);
       window.removeEventListener("offline", onOffline);
+      window.removeEventListener("popstate", handlePopState);
     };
   }, []);
 
@@ -227,7 +278,6 @@ export default function MoftPreview({
   }, [initialOfferId, offers]);
 
   const activeReservations = reservations.filter((item) => item.status === "active");
-  const historyReservations = reservations.filter((item) => item.status !== "active");
   const favoriteSet = favorites;
 
   const baseFilteredOffers = useMemo(() => {
@@ -264,19 +314,53 @@ export default function MoftPreview({
     showToast(removing ? "از علاقه‌مندی‌ها حذف شد." : "به علاقه‌مندی‌ها اضافه شد.");
   };
 
+  const paths: Record<AppTab, string> = {
+    home: "/customer",
+    discover: "/customer/offers",
+    reservations: "/customer/orders",
+    profile: "/customer/profile",
+  };
+
+  const handleBackFromReservations = () => {
+    if (cartClosing) return;
+    setCartClosing(true);
+    window.setTimeout(() => {
+      const target = previousTab === "reservations" ? "home" : previousTab;
+      setTab(target);
+      setCartClosing(false);
+      window.history.pushState({}, "", paths[target]);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }, 240);
+  };
+
+  const toggleReservations = () => {
+    if (tab === "reservations") {
+      handleBackFromReservations();
+    } else {
+      setPreviousTab(tab);
+      setCartClosing(false);
+      setTab("reservations");
+      window.history.pushState({}, "", paths.reservations);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
+
   const switchTab = (nextTab: AppTab) => {
     if (nextTab === tab) return;
-    setPageLoading(true);
+    if (tab === "reservations" && nextTab !== "reservations") {
+      handleBackFromReservations();
+      return;
+    }
+    if (nextTab === "reservations") {
+      setPreviousTab(tab);
+      setCartClosing(false);
+    }
     setTab(nextTab);
-    const paths: Record<AppTab, string> = {
-      home: "/customer",
-      discover: "/customer/offers",
-      reservations: "/customer/orders",
-      profile: "/customer/profile",
-    };
+    if (nextTab === "home") {
+      setSearchVisible(true);
+    }
     window.history.pushState({}, "", paths[nextTab]);
     window.scrollTo({ top: 0, behavior: "smooth" });
-    window.setTimeout(() => setPageLoading(false), 360);
   };
 
   const openOffer = (offer: Offer) => {
@@ -363,13 +447,6 @@ export default function MoftPreview({
     setInstallPrompt(null);
   };
 
-  const openFavorites = () => {
-    setFavoritesOnly(true);
-    setCategory("all");
-    setQuery("");
-    switchTab("discover");
-    window.history.replaceState({}, "", "/customer/favorites");
-  };
 
   const requestReview = (id: string) => {
     setReviewOrderId(id);
@@ -381,7 +458,7 @@ export default function MoftPreview({
     .reduce((sum, item) => sum + item.quantity, 0);
 
   return (
-    <main className="min-h-screen bg-canvas text-ink relative overflow-hidden font-sans select-none pb-24">
+    <main className={`min-h-screen bg-canvas text-ink relative overflow-x-clip font-sans ${tab === "discover" ? "h-screen overflow-hidden pb-0" : "pb-24"}`}>
       <a
         className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:start-2 focus:z-50 px-3 py-1 bg-surface text-ink rounded-lg border border-line"
         href="#main-content"
@@ -389,9 +466,7 @@ export default function MoftPreview({
         رفتن به محتوای اصلی
       </a>
 
-      {/* Ambient background glows */}
-      <div className="pointer-events-none absolute -top-40 start-1/2 -translate-x-1/2 w-[600px] h-[350px] bg-brand-soft/60 blur-[100px] rounded-full" aria-hidden="true" />
-      <div className="pointer-events-none absolute top-1/3 -start-32 w-[350px] h-[350px] bg-amber-500/10 blur-[90px] rounded-full" aria-hidden="true" />
+      {/* Ambient background glows removed */}
 
       {!online && (
         <div className="sticky top-0 z-50 flex items-center justify-center gap-2 p-2.5 bg-rose-600 text-white text-xs font-semibold text-center" role="status">
@@ -421,116 +496,183 @@ export default function MoftPreview({
         </div>
       )}
 
-      <section className="max-w-md mx-auto px-4 pt-3 space-y-4">
-        <header className="flex items-center justify-between gap-3 py-1">
-          <p className="text-xs font-bold text-muted">سلام {state.customer.name.split(" ")[0]}، عصر بخیر 👋</p>
-          <div className="flex items-center gap-2">
-            <button
-              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface border border-line shadow-xs hover:border-brand-2/40 transition-colors text-start"
-              type="button"
-              onClick={() => setLayer("location")}
-              aria-label={`تغییر موقعیت فعلی؛ ${location}`}
-            >
-              <span className="w-5 h-5 rounded-full bg-brand-soft text-brand-2 grid place-items-center shrink-0">
-                <Icon name="pin" className="w-3 h-3" />
-              </span>
-              <div className="leading-tight">
-                <small className="block text-[9px] text-muted">نزدیک شما</small>
-                <strong className="block text-[11px] font-bold text-ink truncate max-w-[90px]">{location}</strong>
-              </div>
-              <Icon name="chevron" className="w-3 h-3 text-muted rtl:rotate-180 opacity-60" />
-            </button>
-            <button
-              className="relative w-9 h-9 rounded-full bg-surface border border-line shadow-xs grid place-items-center hover:border-brand-2/40 transition-colors"
-              type="button"
-              onClick={openFavorites}
-              aria-label="نمایش علاقه‌مندی‌ها"
-            >
-              <Icon name="heart" filled={favorites.size > 0} className={`w-4 h-4 ${favorites.size > 0 ? "text-rose-500" : "text-muted"}`} />
-              {favorites.size > 0 && (
-                <b className="absolute -top-1 -end-1 w-4 h-4 rounded-full bg-rose-500 text-white text-[10px] font-black grid place-items-center">
-                  {numberFa(favorites.size)}
-                </b>
+      {/* Fixed/Sticky Top Header & Collapsible Search Bar */}
+      <div className="sticky top-0 z-30 w-full bg-canvas/90 backdrop-blur-xl transition-shadow">
+        <div className="max-w-md mx-auto px-4">
+          <header className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 min-h-[56px] sm:min-h-[60px] py-3">
+            <div className="flex items-center justify-start">
+              {tab === "reservations" ? (
+                <button
+                  type="button"
+                  onClick={handleBackFromReservations}
+                  className="flex items-center justify-center min-h-[44px] min-w-[44px] w-11 h-11 rounded-2xl hover:bg-surface/80 active:scale-95 transition-all cursor-pointer text-ink hover:text-brand-2 -ms-1"
+                  aria-label="بازگشت به صفحه قبلی"
+                >
+                  <Icon name="arrow" className="w-5 h-5 text-ink" />
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => switchTab("home")}
+                  className="group flex items-center gap-2 min-h-[44px] min-w-[44px] -ms-1 p-1 rounded-2xl hover:opacity-90 active:scale-95 transition-all cursor-pointer"
+                  aria-label="دیبز - صفحه اصلی"
+                >
+                  <span className="relative w-9 h-9 sm:w-10 sm:h-10 rounded-2xl overflow-hidden shadow-xs border border-line/50 shrink-0 bg-brand-soft grid place-items-center">
+                    <Image
+                      src="/icons/dibz-ios-default-180-v2.png"
+                      alt="لوگوی دیبز"
+                      width={40}
+                      height={40}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                      priority
+                    />
+                  </span>
+                  <strong className="hidden sm:inline-block font-black text-sm tracking-tight text-ink">
+                    دیبز
+                  </strong>
+                </button>
               )}
-            </button>
-          </div>
-        </header>
+            </div>
 
-        <div id="main-content" tabIndex={-1} className="space-y-4">
-          {pageLoading ? (
-            <LoadingSkeleton />
-          ) : (
-            <>
-              {tab === "home" && (
-                <HomePage
-                  query={query}
-                  setQuery={setQuery}
-                  category={category}
-                  setCategory={setCategory}
-                  offers={baseFilteredOffers}
-                  allOffers={offers}
-                  favorites={favorites}
-                  onFavorite={toggleFavorite}
-                  onSelect={openOffer}
-                  onDiscover={() => switchTab("discover")}
-                  installPrompt={installPrompt}
-                  installed={installed}
-                  onInstall={install}
-                  savedMeals={savedMeals}
-                />
+            {tab === "reservations" ? (
+              <div className="flex flex-col items-center justify-center min-h-[44px]">
+                <strong className="text-sm sm:text-base font-black text-ink tracking-tight">رزروهای من</strong>
+                <div className="w-10 h-[3px] bg-brand-2 rounded-full mt-1.5" aria-hidden="true" />
+              </div>
+            ) : (
+              <button
+                className="group flex flex-col items-center justify-center min-h-[44px] px-3 py-1 bg-transparent hover:opacity-85 transition-all active:scale-[0.98] text-center cursor-pointer"
+                type="button"
+                onClick={() => setLayer("location")}
+                aria-label={`تغییر موقعیت فعلی؛ ${location}`}
+              >
+                <div className="flex items-center gap-1.5">
+                  <span className="w-5 h-5 text-brand-2 shrink-0 flex items-center justify-center">
+                    <Icon name="pin" className="w-4.5 h-4.5" />
+                  </span>
+                  <strong className="text-sm sm:text-base font-black text-ink tracking-tight">{location}</strong>
+                  <Icon name="chevron" className="w-4 h-4 text-muted rotate-90 opacity-80 group-hover:text-brand-2 transition-transform group-hover:translate-y-0.5" />
+                </div>
+                <div className="w-10 h-[3px] bg-brand-2 rounded-full mt-1.5 transition-all group-hover:w-14" aria-hidden="true" />
+              </button>
+            )}
+
+            <div className="flex justify-end">
+              {tab !== "reservations" ? (
+                <button
+                  className="relative w-11 h-11 rounded-2xl transition-all active:scale-95 cursor-pointer grid place-items-center bg-transparent text-ink hover:text-brand-2 hover:bg-surface/60"
+                  type="button"
+                  onClick={toggleReservations}
+                  aria-label="سبد خرید و رزروها"
+                >
+                  <Icon name="cart" className="w-6 h-6" />
+                  {activeReservations.length > 0 && (
+                    <b className="pointer-events-none absolute -top-0.5 -end-0.5 min-w-5 h-5 px-1 rounded-full bg-brand-2 text-white text-[11px] font-black grid place-items-center border-2 border-canvas shadow-xs">
+                      {numberFa(activeReservations.length)}
+                    </b>
+                  )}
+                </button>
+              ) : (
+                <div className="w-11 h-11" aria-hidden="true" />
               )}
-              {tab === "discover" && (
-                <DiscoverPage
-                  query={query}
-                  setQuery={setQuery}
-                  category={category}
-                  setCategory={setCategory}
-                  offers={discoverOffers}
-                  favorites={favorites}
-                  onFavorite={toggleFavorite}
-                  onSelect={openOffer}
-                  viewMode={viewMode}
-                  setViewMode={setViewMode}
-                  sort={sort}
-                  setSort={setSort}
-                  onFilters={() => setLayer("filters")}
-                  favoritesOnly={favoritesOnly}
-                  setFavoritesOnly={setFavoritesOnly}
-                />
-              )}
-              {tab === "reservations" && (
+            </div>
+          </header>
+
+          {/* Collapsible Search Bar (only on home tab) */}
+          {tab === "home" && (
+            <div
+              className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                searchVisible
+                  ? "max-h-16 opacity-100 pb-3 translate-y-0"
+                  : "max-h-0 opacity-0 pb-0 -translate-y-2 pointer-events-none"
+              }`}
+            >
+              <SearchBar
+                value={query}
+                onChange={setQuery}
+                placeholder="کافه، رستوران یا محله..."
+                onFocus={() => {
+                  isInputFocusedRef.current = true;
+                  setSearchVisible(true);
+                }}
+                onBlur={() => {
+                  isInputFocusedRef.current = false;
+                }}
+              />
+            </div>
+          )}
+        </div>
+      </div>
+
+      {tab === "discover" ? (
+        <div id="main-content" tabIndex={-1} className="w-full h-[calc(100dvh-56px)] sm:h-[calc(100vh-60px)] relative overflow-hidden">
+          <DiscoverPage
+            offers={offers}
+            favorites={favorites}
+            onFavorite={toggleFavorite}
+            onSelect={openOffer}
+            showToast={showToast}
+            onFilters={() => setLayer("filters")}
+          />
+        </div>
+      ) : (
+        <section className="max-w-md mx-auto px-4 pt-3 space-y-4">
+          <div id="main-content" tabIndex={-1} className="space-y-4">
+            {tab === "home" && (
+              <HomePage
+                query={query}
+                category={category}
+                setCategory={setCategory}
+                offers={discoverOffers}
+                allOffers={offers}
+                favorites={favorites}
+                onFavorite={toggleFavorite}
+                onSelect={openOffer}
+                onDiscover={() => switchTab("discover")}
+                savedMeals={savedMeals}
+                onFilters={() => setLayer("filters")}
+                favoritesOnly={favoritesOnly}
+                setFavoritesOnly={setFavoritesOnly}
+                sort={sort}
+                setSort={setSort}
+              />
+            )}
+            {tab === "reservations" && (
+              <div className={cartClosing ? "animate-cart-slide-out" : "animate-cart-slide-in"}>
                 <ReservationsPage
                   active={activeReservations}
-                  history={historyReservations}
-                  view={reservationView}
-                  setView={setReservationView}
                   onCancel={requestCancel}
                   onReview={requestReview}
                   onDiscover={() => switchTab("discover")}
                   onDirections={() => showToast("مسیریابی این فروشگاه اکنون در دسترس نیست.")}
                 />
-              )}
-              {tab === "profile" && (
-                <ProfilePage
-                  savedMeals={savedMeals}
-                  favoriteOffers={offers.filter((offer) => favorites.has(offer.id))}
-                  reservations={reservations}
-                  notifications={notifications}
-                  setNotifications={setNotifications}
-                  installed={installed}
-                  onInstall={install}
-                  onOpenOffer={openOffer}
-                  onAbout={() => setLayer("about")}
-                  showToast={showToast}
-                  customerName={state.customer.name}
-                />
-              )}
-            </>
-          )}
-        </div>
+              </div>
+            )}
+            {tab === "profile" && (
+              <ProfilePage
+                savedMeals={savedMeals}
+                favoriteOffers={offers.filter((offer) => favorites.has(offer.id))}
+                reservations={reservations}
+                notifications={notifications}
+                setNotifications={setNotifications}
+                installed={installed}
+                onInstall={install}
+                onOpenOffer={openOffer}
+                onAbout={() => setLayer("about")}
+                showToast={showToast}
+                customerName={state.customer.name}
+                onCancel={requestCancel}
+                onReview={requestReview}
+                onDirections={() => showToast("مسیریابی این فروشگاه اکنون در دسترس نیست.")}
+              />
+            )}
+          </div>
+        </section>
+      )}
 
+      {tab !== "reservations" && (
         <BottomNavigation value={tab} onChange={switchTab} reservationCount={activeReservations.length} />
-      </section>
+      )}
 
       {/* Sheets & Dialogs */}
       {layer === "detail" && selected && (
@@ -621,7 +763,6 @@ export default function MoftPreview({
 
 function HomePage({
   query,
-  setQuery,
   category,
   setCategory,
   offers,
@@ -630,13 +771,14 @@ function HomePage({
   onFavorite,
   onSelect,
   onDiscover,
-  installPrompt,
-  installed,
-  onInstall,
   savedMeals,
+  onFilters,
+  favoritesOnly,
+  setFavoritesOnly,
+  sort,
+  setSort,
 }: {
   query: string;
-  setQuery: (value: string) => void;
   category: CategoryId;
   setCategory: (value: CategoryId) => void;
   offers: Offer[];
@@ -645,10 +787,12 @@ function HomePage({
   onFavorite: (id: string) => void;
   onSelect: (offer: Offer) => void;
   onDiscover: () => void;
-  installPrompt: InstallPromptEvent | null;
-  installed: boolean;
-  onInstall: () => void;
   savedMeals: number;
+  onFilters: () => void;
+  favoritesOnly: boolean;
+  setFavoritesOnly: (value: boolean) => void;
+  sort: SortMode;
+  setSort: (value: SortMode) => void;
 }) {
   const browsing = Boolean(query.trim()) || category !== "all";
   const popular = allOffers.filter((offer) => offer.popular).slice(0, 4);
@@ -656,30 +800,50 @@ function HomePage({
 
   return (
     <div className="space-y-4">
-      <SearchBar value={query} onChange={setQuery} placeholder="کافه، رستوران یا محله..." />
       <CategorySelector value={category} onChange={setCategory} />
-      <HomeHeroCarousel onDiscover={onDiscover} />
 
-      {!installed && installPrompt && (
+      {/* Filter Buttons moved to Home Page */}
+      <div className="flex flex-wrap items-center gap-2">
         <button
-          className="w-full flex items-center gap-3 p-3 rounded-2xl bg-surface border border-line shadow-xs hover:border-brand-2/40 transition-colors text-start"
+          className="inline-flex items-center gap-1.5 px-3.5 min-h-[44px] text-xs font-semibold rounded-2xl bg-surface border border-line text-ink hover:bg-surface-raised transition-all shadow-xs cursor-pointer active:scale-95"
           type="button"
-          onClick={onInstall}
+          onClick={onFilters}
         >
-          <span className="w-11 h-11 rounded-xl overflow-hidden bg-brand-soft shrink-0">
-            <Image src="/icons/dibz-ios-default-180-v2.png" alt="" width={44} height={44} />
-          </span>
-          <div className="flex-1">
-            <strong className="block text-xs font-bold text-ink">دیبز را نصب کن</strong>
-            <small className="block text-[11px] text-muted mt-0.5">سریع‌تر بازش کن و آفلاین هم ببین</small>
-          </div>
-          <Icon name="arrow" className="w-4 h-4 text-muted rtl:rotate-180 shrink-0" />
+          <Icon name="sliders" className="w-4 h-4 text-muted" />
+          <span>فیلترها</span>
         </button>
-      )}
+        <button
+          className={`inline-flex items-center gap-1.5 px-3.5 min-h-[44px] text-xs font-semibold rounded-2xl border transition-all shadow-xs cursor-pointer active:scale-95 ${
+            favoritesOnly
+              ? "bg-rose-500/10 text-rose-600 border-rose-500/30 font-bold"
+              : "bg-surface border-line text-ink hover:bg-surface-raised"
+          }`}
+          type="button"
+          onClick={() => setFavoritesOnly(!favoritesOnly)}
+          aria-pressed={favoritesOnly}
+        >
+          <Icon name="heart" filled={favoritesOnly} className="w-4 h-4" />
+          <span>علاقه‌مندی‌ها</span>
+        </button>
+        <div className="ms-auto">
+          <SelectField
+            label=""
+            value={sort}
+            onChange={(value) => setSort(value as SortMode)}
+            options={[
+              { value: "nearest", label: "نزدیک‌ترین" },
+              { value: "popular", label: "محبوب‌ترین" },
+              { value: "discount", label: "بیشترین تخفیف" },
+            ]}
+          />
+        </div>
+      </div>
+
+      <HomeHeroCarousel onDiscover={onDiscover} />
 
       {browsing ? (
         <section className="space-y-3" aria-labelledby="search-results-title">
-          <SectionHeading eyebrow="نتیجهٔ جست‌وجو" title={`${numberFa(offers.length)} پیشنهاد پیدا شد`} id="search-results-title" />
+          <SectionHeading title={`${numberFa(offers.length)} پیشنهاد پیدا شد`} id="search-results-title" />
           {offers.length ? (
             <OfferList offers={offers} favorites={favorites} onFavorite={onFavorite} onSelect={onSelect} />
           ) : (
@@ -689,12 +853,12 @@ function HomePage({
       ) : (
         <>
           <section className="space-y-3" aria-labelledby="near-title">
-            <SectionHeading eyebrow="نزدیک شما" title="انتخاب‌های تازهٔ امروز" id="near-title" action="دیدن همه" onAction={onDiscover} />
+            <SectionHeading title="انتخاب‌های تازهٔ امروز" id="near-title" action="دیدن همه" onAction={onDiscover} />
             <OfferList offers={allOffers.slice(0, 4)} favorites={favorites} onFavorite={onFavorite} onSelect={onSelect} />
           </section>
 
           <section className="space-y-3" aria-labelledby="ending-title">
-            <SectionHeading eyebrow="فرصت کوتاه" title="داره تموم می‌شه" id="ending-title" />
+            <SectionHeading title="داره تموم می‌شه" id="ending-title" />
             <div className="flex items-center gap-3 overflow-x-auto py-1 scrollbar-none" style={{ scrollbarWidth: "none" }}>
               {ending.map((offer) => (
                 <OfferCard compact key={offer.id} offer={offer} favorite={favorites.has(offer.id)} onFavorite={onFavorite} onSelect={onSelect} />
@@ -703,7 +867,7 @@ function HomePage({
           </section>
 
           <section className="space-y-3" aria-labelledby="popular-title">
-            <SectionHeading eyebrow="محبوب این هفته" title="همسایه‌های خوش‌سلیقه" id="popular-title" />
+            <SectionHeading title="همسایه‌های خوش‌سلیقه" id="popular-title" />
             <div className="grid gap-2">
               {popular.map((offer) => (
                 <button
@@ -713,7 +877,7 @@ function HomePage({
                   onClick={() => onSelect(offer)}
                 >
                   <div className="flex items-center gap-3">
-                    <span className="w-11 h-11 rounded-xl overflow-hidden bg-canvas shrink-0">
+                    <span className="relative block w-11 h-11 rounded-xl overflow-hidden bg-canvas shrink-0">
                       <FoodImage src={offer.image} sizes="48px" className="w-full h-full object-cover" />
                     </span>
                     <div>
@@ -732,7 +896,6 @@ function HomePage({
               <span className="w-8 h-8 rounded-xl bg-brand-soft text-brand-2 grid place-items-center mb-1">
                 <Icon name="leaf" className="w-4 h-4" />
               </span>
-              <p className="text-[11px] font-bold uppercase tracking-wider text-muted">اثر کوچک، حال خوب بزرگ</p>
               <h2 className="text-sm font-black text-ink leading-snug">
                 تا امروز <AnimatedNumber value={savedMeals || 1} /> وعده با یک انتخاب خوب همراه شده.
               </h2>
@@ -755,157 +918,535 @@ function HomePage({
   );
 }
 
+function getCategoryIconName(category: CategoryId | string): IconName {
+  switch (category) {
+    case "cafe":
+      return "coffee";
+    case "restaurant":
+      return "utensils";
+    case "fast-food":
+      return "pizza";
+    case "bakery":
+      return "bread";
+    case "confectionery":
+      return "cake";
+    case "fruit":
+      return "apple";
+    case "grocery":
+      return "store";
+    default:
+      return "utensils";
+  }
+}
+
 function DiscoverPage({
-  query,
-  setQuery,
-  category,
-  setCategory,
   offers,
-  favorites,
-  onFavorite,
   onSelect,
-  viewMode,
-  setViewMode,
-  sort,
-  setSort,
+  showToast,
   onFilters,
-  favoritesOnly,
-  setFavoritesOnly,
 }: {
-  query: string;
-  setQuery: (value: string) => void;
-  category: CategoryId;
-  setCategory: (value: CategoryId) => void;
   offers: Offer[];
   favorites: Set<string>;
   onFavorite: (id: string) => void;
   onSelect: (offer: Offer) => void;
-  viewMode: "list" | "map";
-  setViewMode: (value: "list" | "map") => void;
-  sort: SortMode;
-  setSort: (value: SortMode) => void;
-  onFilters: () => void;
-  favoritesOnly: boolean;
-  setFavoritesOnly: (value: boolean) => void;
+  showToast: (msg: string) => void;
+  onFilters?: () => void;
 }) {
-  return (
-    <div className="space-y-4">
-      <PageTitle eyebrow="کشف" title="مزه‌های خوبِ اطراف" text="پیشنهادها را بر اساس فاصله، قیمت و زمان دریافت پیدا کن." />
-      <SearchBar value={query} onChange={setQuery} />
-      <CategorySelector value={category} onChange={setCategory} />
+  const [activeOffer, setActiveOffer] = useState<Offer | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<CategoryId>("all");
 
-      <div className="flex flex-wrap items-center gap-2">
-        <button
-          className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-xl bg-surface border border-line text-ink hover:bg-surface-raised transition-colors shadow-xs"
-          type="button"
-          onClick={onFilters}
-        >
-          <Icon name="sliders" className="w-3.5 h-3.5 text-muted" />
-          <span>فیلترها</span>
-        </button>
-        <button
-          className={`inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-xl border transition-colors shadow-xs ${
-            favoritesOnly
-              ? "bg-rose-500/10 text-rose-600 border-rose-500/30 font-bold"
-              : "bg-surface border-line text-ink hover:bg-surface-raised"
-          }`}
-          type="button"
-          onClick={() => setFavoritesOnly(!favoritesOnly)}
-          aria-pressed={favoritesOnly}
-        >
-          <Icon name="heart" filled={favoritesOnly} className="w-3.5 h-3.5" />
-          <span>علاقه‌مندی‌ها</span>
-        </button>
-        <div className="ms-auto">
-          <SelectField
-            label=""
-            value={sort}
-            onChange={(value) => setSort(value as SortMode)}
-            options={[
-              { value: "nearest", label: "نزدیک‌ترین" },
-              { value: "popular", label: "محبوب‌ترین" },
-              { value: "discount", label: "بیشترین تخفیف" },
-            ]}
-          />
+  const quickCategories: Array<{ id: CategoryId; label: string }> = [
+    { id: "all", label: "همه" },
+    { id: "restaurant", label: "رستوران" },
+    { id: "cafe", label: "کافه" },
+    { id: "fast-food", label: "فست‌فود" },
+    { id: "bakery", label: "نانوایی" },
+    { id: "confectionery", label: "شیرینی" },
+    { id: "fruit", label: "میوه" },
+    { id: "grocery", label: "سوپرمارکت" },
+  ];
+
+  const filteredOffers = useMemo(() => {
+    if (selectedCategory === "all") return offers;
+    return offers.filter((o) => o.category === selectedCategory);
+  }, [offers, selectedCategory]);
+
+  // Spaced coordinates for restaurants across Vanak, Jordan, Mirdamad & Vali Asr
+  const pinCoordinates = [
+    { top: "18%", left: "30%" }, // Vali Asr North
+    { top: "22%", left: "68%" }, // Mirdamad East
+    { top: "36%", left: "54%" }, // Jordan Central
+    { top: "38%", left: "20%" }, // Mollasadra West
+    { top: "48%", left: "76%" }, // Haghani East
+    { top: "54%", left: "34%" }, // Vanak Central
+    { top: "66%", left: "60%" }, // Jordan South
+    { top: "68%", left: "18%" }, // Shiraz South
+    { top: "76%", left: "44%" }, // Kordestan
+    { top: "82%", left: "68%" }, // Hemmat East
+    { top: "28%", left: "38%" }, // Dastgerdi
+    { top: "44%", left: "38%" }, // Khoddami
+    { top: "60%", left: "78%" }, // Ghandi
+    { top: "84%", left: "26%" }, // Shiraz West
+  ];
+
+  const activeOfferPacks = useMemo(() => {
+    if (!activeOffer) return [];
+
+    // Find all offers from the same merchant
+    const sameMerchant = offers.filter((o) => o.merchantName === activeOffer.merchantName);
+    if (sameMerchant.length > 1) {
+      return sameMerchant;
+    }
+
+    // Generate 2-3 realistic pack options for this merchant so they are scrollable horizontally
+    const base = activeOffer;
+    const pack1: Offer = { ...base };
+    const pack2: Offer = {
+      ...base,
+      title: base.title.includes("نان")
+        ? "بسته عصرانه و شیرینی"
+        : base.title.includes("میوه")
+        ? "سبد میوه دستچین"
+        : base.title.includes("برگر") || base.title.includes("پیتزا")
+        ? "باکس میکس ویژه"
+        : "باکس برانچ فردا",
+      price: Math.round((base.price * 1.25) / 1000) * 1000,
+      originalPrice: Math.round((base.originalPrice * 1.3) / 1000) * 1000,
+      quantityLeft: Math.max(1, Math.min(base.quantityLeft, 2)),
+      pickup: base.pickupPeriod === "tomorrow" ? "امروز، ۱۹:۳۰ تا ۲۱:۰۰" : "فردا، ۱۰:۰۰ تا ۱۲:۰۰",
+    };
+    const pack3: Offer = {
+      ...base,
+      title: "باکس سورپرایز اقتصادی",
+      price: Math.max(49000, Math.round((base.price * 0.75) / 1000) * 1000),
+      originalPrice: Math.round((base.originalPrice * 0.8) / 1000) * 1000,
+      quantityLeft: 1,
+      pickup: base.pickup,
+    };
+
+    return [pack1, pack2, pack3];
+  }, [activeOffer, offers]);
+
+  const totalPacks = useMemo(() => {
+    return activeOfferPacks.reduce((sum, p) => sum + p.quantityLeft, 0);
+  }, [activeOfferPacks]);
+
+  return (
+    <div className="relative w-full h-full overflow-hidden bg-[#edf1ed] dark:bg-[#161c18] flex flex-col">
+      {/* Top Header Panel: Below the header, with a clear background behind itself */}
+      <div className="w-full bg-canvas/95 dark:bg-canvas/95 backdrop-blur-xl border-b border-line shadow-xs px-4 py-2.5 z-20 shrink-0">
+        <div className="max-w-md mx-auto space-y-2">
+          {/* Row 1: Discover Box Title, Store Count & Toggle Filter Button */}
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <span className="w-8 h-8 rounded-xl bg-brand-2/10 text-brand-2 grid place-items-center shrink-0 shadow-xs">
+                <Icon name="map" className="w-4.5 h-4.5" />
+              </span>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-sm font-black text-ink tracking-tight">کشف جعبه‌های اطراف</h2>
+                  <span className="text-[10px] font-bold text-brand-2 bg-brand-soft px-2 py-0.5 rounded-full">
+                    {numberFa(filteredOffers.length)} فروشگاه
+                  </span>
+                </div>
+                <p className="text-[11px] text-muted">محدودهٔ ونک، جردن و میرداماد</p>
+              </div>
+            </div>
+
+            {/* Toggle Filter Button */}
+            <button
+              type="button"
+              onClick={onFilters}
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 min-h-[38px] rounded-xl bg-surface border border-line text-xs font-bold text-ink hover:text-brand-2 hover:bg-surface-raised active:scale-95 transition-all shadow-xs cursor-pointer"
+              aria-label="فیلترهای پیشرفته"
+            >
+              <Icon name="sliders" className="w-4 h-4 text-brand-2" />
+              <span>فیلترها</span>
+            </button>
+          </div>
+
+          {/* Row 2: Category Toggle Filter Chips */}
+          <div
+            className="flex items-center gap-1.5 overflow-x-auto scrollbar-none py-0.5"
+            style={{ scrollbarWidth: "none" }}
+          >
+            {quickCategories.map((cat) => (
+              <button
+                key={cat.id}
+                type="button"
+                onClick={() => setSelectedCategory(cat.id)}
+                className={`px-3.5 py-1 min-h-[32px] rounded-full text-[11px] font-bold whitespace-nowrap transition-all shadow-xs cursor-pointer active:scale-95 border ${
+                  selectedCategory === cat.id
+                    ? "bg-ink text-canvas border-ink shadow-xs"
+                    : "bg-surface text-ink border-line hover:bg-surface-raised"
+                }`}
+              >
+                {cat.label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
-      <div className="flex items-center justify-between text-xs text-muted pt-1">
-        <span>{numberFa(offers.length)} پیشنهاد</span>
-        <div className="flex items-center rounded-xl bg-surface border border-line p-0.5 shadow-xs" role="group" aria-label="نوع نمایش">
-          <button
-            type="button"
-            className={`w-7 h-7 rounded-lg grid place-items-center transition-colors ${
-              viewMode === "list" ? "bg-brand-soft text-brand-2 font-bold" : "text-muted hover:text-ink"
-            }`}
-            onClick={() => setViewMode("list")}
-            aria-label="نمایش فهرستی"
-            aria-pressed={viewMode === "list"}
-          >
-            <Icon name="list" className="w-3.5 h-3.5" />
-          </button>
-          <button
-            type="button"
-            className={`w-7 h-7 rounded-lg grid place-items-center transition-colors ${
-              viewMode === "map" ? "bg-brand-soft text-brand-2 font-bold" : "text-muted hover:text-ink"
-            }`}
-            onClick={() => setViewMode("map")}
-            aria-label="پیش‌نمایش نقشه"
-            aria-pressed={viewMode === "map"}
-          >
-            <Icon name="map" className="w-3.5 h-3.5" />
-          </button>
-        </div>
-      </div>
-
-      {offers.length ? (
-        viewMode === "list" ? (
-          <OfferList offers={offers} favorites={favorites} onFavorite={onFavorite} onSelect={onSelect} />
-        ) : (
-          <MapPreview offers={offers} onSelect={onSelect} />
-        )
-      ) : (
-        <EmptyState
-          icon={favoritesOnly ? "heart" : "search"}
-          title={favoritesOnly ? "علاقه‌مندی‌ای با این فیلتر نیست" : "پیشنهادی پیدا نشد"}
-          text="فاصله یا سقف قیمت را بیشتر کن و دوباره ببین."
-          action="پاک کردن جست‌وجو"
-          onAction={() => {
-            setQuery("");
-            setCategory("all");
-            setFavoritesOnly(false);
-          }}
-        />
-      )}
-    </div>
-  );
-}
-
-function MapPreview({ offers, onSelect }: { offers: Offer[]; onSelect: (offer: Offer) => void }) {
-  return (
-    <div className="relative h-72 rounded-3xl bg-surface border border-line overflow-hidden shadow-xs flex items-center justify-center" aria-label="موقعیت تقریبی فروشگاه‌ها">
-      <div className="absolute inset-0 opacity-20 pointer-events-none bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-brand-soft to-canvas" />
-      <div className="absolute z-10 flex flex-col items-center">
-        <span className="w-3.5 h-3.5 rounded-full bg-sky-500 ring-4 ring-sky-500/30 animate-pulse"></span>
-        <small className="text-[10px] font-bold text-ink mt-1">شما</small>
-      </div>
-      {offers.slice(0, 6).map((offer, index) => (
-        <button
-          key={offer.id}
-          type="button"
-          className="absolute z-20 flex items-center gap-1 p-1 rounded-full bg-surface border border-line shadow-xs hover:scale-110 transition-transform"
-          style={{ insetInlineStart: `${15 + ((index * 27) % 65)}%`, top: `${20 + ((index * 33) % 55)}%` }}
-          onClick={() => onSelect(offer)}
-          aria-label={`نمایش ${offer.merchantName}`}
+      {/* Map Area */}
+      <div className="relative flex-1 w-full overflow-hidden">
+        {/* SVG Imaginary Map Vector Canvas (Google Maps & Fresha inspired) */}
+        <div
+          className="absolute inset-0 overflow-hidden cursor-grab active:cursor-grabbing"
+          onClick={() => setActiveOffer(null)}
         >
-          <span className="w-6 h-6 rounded-full overflow-hidden bg-canvas">
-            <FoodImage src={offer.image} sizes="24px" className="w-full h-full object-cover" />
+          <svg
+            className="w-full h-full object-cover"
+            viewBox="0 0 800 1000"
+            preserveAspectRatio="xMidYMid slice"
+            aria-hidden="true"
+          >
+            <defs>
+              <pattern id="city-blocks" width="60" height="60" patternUnits="userSpaceOnUse">
+                <rect width="56" height="56" rx="4" fill="none" stroke="currentColor" strokeWidth="0.8" className="text-line/40 dark:text-line/20" />
+              </pattern>
+            </defs>
+
+            {/* Background Street Grid & City Blocks */}
+            <rect width="100%" height="100%" fill="#f4f6f4" className="dark:fill-[#171e19]" />
+            <rect width="100%" height="100%" fill="url(#city-blocks)" />
+
+            {/* Green Park Zones (Mellat, Abo-Atash, Taleghani) */}
+            <path
+              d="M 50 100 C 130 80, 180 200, 130 320 C 80 400, 30 280, 50 100 Z"
+              className="fill-emerald-500/25 dark:fill-emerald-500/15"
+            />
+            <text x="85" y="210" className="text-[13px] fill-emerald-800/70 dark:fill-emerald-400/60 font-black" transform="rotate(-15 85 210)">
+              بوستان ملت
+            </text>
+
+            {/* Abo-o-Atash Park */}
+            <path
+              d="M 570 410 C 690 370, 770 510, 690 630 C 610 690, 530 530, 570 410 Z"
+              className="fill-emerald-500/25 dark:fill-emerald-500/15"
+            />
+            <text x="615" y="510" className="text-[13px] fill-emerald-800/70 dark:fill-emerald-400/60 font-black" transform="rotate(10 615 510)">
+              پارک آب‌و‌آتش
+            </text>
+
+            {/* Taleghani Forest Park */}
+            <path
+              d="M 270 710 C 380 680, 450 790, 370 880 C 290 920, 230 810, 270 710 Z"
+              className="fill-emerald-500/20 dark:fill-emerald-500/15"
+            />
+            <text x="300" y="790" className="text-[13px] fill-emerald-800/60 dark:fill-emerald-400/50 font-black">
+              بوستان طالقانی
+            </text>
+
+            {/* Mirdamad Canal (Waterway Feature) */}
+            <path
+              d="M 0 370 Q 400 375 800 370"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="10"
+              className="text-sky-300/40 dark:text-sky-600/30"
+            />
+
+            {/* Road Network - Google Maps Arterial Styling */}
+            {/* Vali Asr Avenue (خیابان ولی‌عصر) */}
+            <path d="M 210 0 L 250 400 L 310 1000" fill="none" stroke="currentColor" strokeWidth="32" className="text-white dark:text-[#252f28]" />
+            <path d="M 210 0 L 250 400 L 310 1000" fill="none" stroke="currentColor" strokeWidth="20" className="text-[#edf2ee] dark:text-[#323f36]" />
+            <text x="235" y="240" className="text-[12px] fill-muted/80 font-black" transform="rotate(76 235 240)">
+              خیابان ولی‌عصر (عج)
+            </text>
+
+            {/* Nelson Mandela Boulevard / Jordan */}
+            <path d="M 440 40 L 460 520 L 480 960" fill="none" stroke="currentColor" strokeWidth="26" className="text-white dark:text-[#252f28]" />
+            <path d="M 440 40 L 460 520 L 480 960" fill="none" stroke="currentColor" strokeWidth="16" className="text-[#edf2ee] dark:text-[#323f36]" />
+            <text x="445" y="320" className="text-[12px] fill-muted/80 font-black" transform="rotate(84 445 320)">
+              بلوار نلسون ماندلا (جردن)
+            </text>
+
+            {/* Mirdamad Boulevard */}
+            <path d="M 0 350 L 800 350" fill="none" stroke="currentColor" strokeWidth="28" className="text-white dark:text-[#252f28]" />
+            <path d="M 0 350 L 800 350" fill="none" stroke="currentColor" strokeWidth="18" className="text-[#fef3d6] dark:text-[#383324]" />
+            <text x="350" y="345" className="text-[12px] fill-muted/80 font-black">
+              بلوار میرداماد
+            </text>
+
+            {/* Haghani Highway (بزرگراه شهید حقانی) */}
+            <path d="M 110 530 Q 400 510 800 650" fill="none" stroke="currentColor" strokeWidth="34" className="text-white dark:text-[#252f28]" />
+            <path d="M 110 530 Q 400 510 800 650" fill="none" stroke="currentColor" strokeWidth="22" className="text-[#fef3d6] dark:text-[#3c3624]" />
+            <text x="480" y="570" className="text-[12px] fill-muted/80 font-black" transform="rotate(12 480 570)">
+              بزرگراه شهید حقانی
+            </text>
+
+            {/* Tabiat Bridge (پل طبیعت) across Haghani */}
+            <path d="M 590 535 L 610 575" fill="none" stroke="currentColor" strokeWidth="8" strokeLinecap="round" className="text-amber-600/70" />
+            <text x="618" y="555" className="text-[10px] fill-amber-700 dark:fill-amber-400 font-black">
+              پل طبیعت
+            </text>
+
+            {/* Mollasadra Street */}
+            <path d="M 0 530 L 270 520" fill="none" stroke="currentColor" strokeWidth="24" className="text-white dark:text-[#252f28]" />
+            <path d="M 0 530 L 270 520" fill="none" stroke="currentColor" strokeWidth="14" className="text-[#edf2ee] dark:text-[#323f36]" />
+            <text x="110" y="515" className="text-[11px] fill-muted/80 font-black">
+              خیابان ملاصدرا
+            </text>
+
+            {/* Hemmat Highway */}
+            <path d="M 0 780 L 800 780" fill="none" stroke="currentColor" strokeWidth="32" className="text-white dark:text-[#252f28]" />
+            <path d="M 0 780 L 800 780" fill="none" stroke="currentColor" strokeWidth="22" className="text-[#fef3d6] dark:text-[#3c3624]" />
+            <text x="500" y="775" className="text-[12px] fill-muted/80 font-black">
+              بزرگراه شهید همت
+            </text>
+
+            {/* Vanak Square Rotary */}
+            <circle cx="260" cy="525" r="34" fill="none" stroke="currentColor" strokeWidth="20" className="text-white dark:text-[#252f28]" />
+            <circle cx="260" cy="525" r="34" fill="none" stroke="currentColor" strokeWidth="12" className="text-[#edf2ee] dark:text-[#323f36]" />
+            <circle cx="260" cy="525" r="20" className="fill-emerald-500/30" />
+            <text x="260" y="529" textAnchor="middle" className="text-[11px] fill-ink font-black">
+              میدان ونک
+            </text>
+
+            {/* Metro Stations Icons */}
+            <g transform="translate(680, 580)">
+              <circle cx="10" cy="10" r="10" className="fill-blue-500 shadow-sm" />
+              <text x="10" y="14" textAnchor="middle" fill="#ffffff" className="text-[10px] font-black">M</text>
+              <text x="25" y="14" className="text-[10px] fill-muted font-bold">مترو حقانی</text>
+            </g>
+            <g transform="translate(620, 320)">
+              <circle cx="10" cy="10" r="10" className="fill-blue-500 shadow-sm" />
+              <text x="10" y="14" textAnchor="middle" fill="#ffffff" className="text-[10px] font-black">M</text>
+              <text x="25" y="14" className="text-[10px] fill-muted font-bold">مترو میرداماد</text>
+            </g>
+          </svg>
+        </div>
+
+        {/* User Location Radar Marker */}
+        <div
+          className="absolute z-10 flex flex-col items-center pointer-events-none -translate-x-1/2 -translate-y-1/2"
+          style={{ top: "52%", left: "48%" }}
+        >
+          <span className="relative flex h-6 w-6">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-6 w-6 bg-sky-500 border-2 border-white shadow-md"></span>
           </span>
-          <small className="text-[10px] font-bold px-1 text-ink">{money(offer.price)}</small>
-        </button>
-      ))}
-      <div className="absolute bottom-2 inset-x-2 text-center text-[10px] text-muted bg-surface/80 backdrop-blur-sm py-1 rounded-xl border border-line">
-        <Icon name="info" className="w-3 h-3 inline me-1 text-muted" /> موقعیت فروشگاه‌ها تقریبی است.
+          <span className="mt-1 px-2 py-0.5 rounded-full bg-surface/90 backdrop-blur-xs text-[9px] font-black text-ink border border-line shadow-xs">
+            موقعیت شما
+          </span>
+        </div>
+
+        {/* Restaurant Marker Pins: Circular 2D SVG icon pin by default, title card above location when selected */}
+        {filteredOffers.map((offer, index) => {
+          const coords = pinCoordinates[index % pinCoordinates.length];
+          const isSelected = activeOffer?.id === offer.id;
+          const iconName = getCategoryIconName(offer.category);
+
+          return (
+            <div
+              key={offer.id}
+              className="absolute z-20 -translate-x-1/2 -translate-y-1/2"
+              style={{ top: coords.top, left: coords.left }}
+            >
+              {/* Selected State: Title card above location with restaurant icon, name and available packs (NO price!) */}
+              {isSelected && (
+                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-30 pointer-events-none flex flex-col items-center animate-in fade-in zoom-in-95 duration-200">
+                  <div className="flex items-center gap-2 p-1.5 pe-3 rounded-full bg-surface border border-line shadow-lg">
+                    <span className="w-8 h-8 rounded-full bg-brand-soft text-[#16a34a] grid place-items-center shrink-0 border border-line/40 shadow-2xs">
+                      <Icon name={iconName} className="w-4.5 h-4.5" />
+                    </span>
+                    <div className="flex items-center gap-2 text-start whitespace-nowrap">
+                      <strong className="text-xs font-black text-ink">
+                        {offer.merchantName}
+                      </strong>
+                      <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-300">
+                        {numberFa(offer.quantityLeft)} بسته موجود
+                      </span>
+                    </div>
+                  </div>
+                  {/* Pointer triangle pointing down to pin */}
+                  <span
+                    className="w-0 h-0 border-x-[6px] border-x-transparent border-t-[6px] border-t-surface -mt-[1px] drop-shadow-xs"
+                    aria-hidden="true"
+                  />
+                </div>
+              )}
+
+              {/* Location Marker Pin: 2D SVG Restaurant/Cafe Category Icon */}
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setActiveOffer(offer);
+                }}
+                className={`pointer-events-auto relative w-11 h-11 rounded-full flex items-center justify-center transition-all duration-200 cursor-pointer active:scale-90 focus:outline-none ${
+                  isSelected
+                    ? "bg-surface text-[#16a34a] ring-3 ring-[#16a34a] shadow-xl scale-110 z-30"
+                    : "bg-surface text-ink/80 hover:text-[#16a34a] border border-line/70 shadow-md hover:shadow-lg hover:scale-110"
+                }`}
+                aria-label={`انتخاب ${offer.merchantName} - ${numberFa(offer.quantityLeft)} بسته موجود`}
+              >
+                <Icon name={iconName} className="w-5 h-5" />
+                {/* Pointer tip at bottom of circle */}
+                <span
+                  className={`absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 rotate-45 border-r border-b ${
+                    isSelected
+                      ? "bg-[#16a34a] border-[#16a34a]"
+                      : "bg-surface border-line/70"
+                  }`}
+                  aria-hidden="true"
+                />
+              </button>
+            </div>
+          );
+        })}
+
+        {/* Bottom Floating Controls: Strictly on the RIGHT side, My Location above Nearest, primary green bg & white icons */}
+        <div
+          className={`absolute bottom-24 right-4 z-30 flex flex-col items-end gap-2.5 transition-all duration-300 ${
+            activeOffer ? "opacity-0 translate-y-4 pointer-events-none" : "opacity-100 translate-y-0 pointer-events-auto"
+          }`}
+        >
+          {/* My Location Button (Above) - App primary green bg, white icon */}
+          <button
+            type="button"
+            onClick={() => {
+              showToast("موقعیت شما روی ونک تنظیم شد.");
+            }}
+            className="pointer-events-auto flex items-center gap-2 px-4 py-2.5 min-h-[44px] rounded-full bg-[#16a34a] hover:bg-[#15803d] text-white shadow-lg text-xs font-bold active:scale-95 transition-all cursor-pointer"
+            aria-label="موقعیت من"
+          >
+            <Icon name="pin" className="w-4.5 h-4.5 text-white" />
+            <span>موقعیت من</span>
+          </button>
+
+          {/* Nearest Box Button (Below) - App primary green bg, white icon */}
+          <button
+            type="button"
+            onClick={() => {
+              if (filteredOffers.length) {
+                setActiveOffer(filteredOffers[0]);
+              }
+            }}
+            className="pointer-events-auto flex items-center gap-2 px-4 py-2.5 min-h-[44px] rounded-full bg-[#16a34a] hover:bg-[#15803d] text-white shadow-lg text-xs font-bold active:scale-95 transition-all cursor-pointer"
+            aria-label="نزدیک‌ترین جعبه"
+          >
+            <Icon name="spark" className="w-4.5 h-4.5 text-white" />
+            <span>نزدیک‌ترین جعبه</span>
+          </button>
+        </div>
+
+        {/* Slide-Up Popup from Bottom: Overlays the Bottom Navigation bar with fixed z-50 */}
+        {activeOffer && (
+          <div
+            className="fixed bottom-3 inset-x-3 sm:inset-x-4 max-w-lg mx-auto z-50 transition-all duration-300 ease-out transform translate-y-0 opacity-100 pointer-events-auto"
+          >
+            <div className="relative bg-surface dark:bg-[#18201a] rounded-3xl border border-line shadow-2xl p-3.5 sm:p-4 space-y-3">
+              {/* Header with pack count, distance and close button */}
+              <div className="flex items-center justify-between pb-2 border-b border-line/40">
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] font-black text-emerald-700 dark:text-emerald-300 bg-emerald-500/15 px-2.5 py-0.5 rounded-full">
+                    {numberFa(totalPacks)} بسته موجود
+                  </span>
+                  <span className="text-[11px] font-bold text-muted">
+                    • حدود {numberFa(Math.round(activeOffer.distanceKm * 1000))} متر تا شما
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setActiveOffer(null)}
+                  className="min-w-[44px] min-h-[44px] w-11 h-11 -me-2 rounded-full hover:bg-canvas-soft text-muted hover:text-ink grid place-items-center transition-colors cursor-pointer active:scale-90"
+                  aria-label="بستن پیش‌نمایش فروشگاه"
+                >
+                  <Icon name="close" className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Pack Options: Horizontally scrollable container */}
+              <div
+                className="flex items-stretch gap-3 overflow-x-auto snap-x scrollbar-none py-1 -mx-1 px-1"
+                style={{ scrollbarWidth: "none" }}
+              >
+                {activeOfferPacks.map((pack, pIndex) => {
+                  const discount =
+                    pack.originalPrice > pack.price
+                      ? Math.round(((pack.originalPrice - pack.price) / pack.originalPrice) * 100)
+                      : 0;
+
+                  return (
+                    <div
+                      key={`${pack.id}-${pack.title}-${pIndex}`}
+                      className="w-[285px] sm:w-[320px] shrink-0 snap-center rounded-2xl bg-canvas/60 dark:bg-canvas/40 border border-line p-3.5 flex flex-col justify-between gap-3 shadow-2xs"
+                    >
+                      {/* Top: Photo on right and Info on left (in RTL) */}
+                      <div className="flex items-center gap-3">
+                        {/* Photo Thumbnail */}
+                        <div className="relative w-20 h-20 sm:w-22 sm:h-22 rounded-2xl overflow-hidden bg-canvas border border-line/40 shrink-0 shadow-2xs">
+                          <FoodImage
+                            src={pack.image}
+                            sizes="88px"
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+
+                        {/* Information */}
+                        <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
+                          <div className="flex items-start justify-between gap-1.5">
+                            <div className="min-w-0 flex-1">
+                              <h3 className="text-sm font-black text-ink truncate leading-snug">
+                                {pack.title}
+                              </h3>
+                              <p className="text-[11px] font-medium text-muted truncate mt-0.5">
+                                {pack.merchantName}
+                              </p>
+                            </div>
+                            <div className="inline-flex items-center gap-1 shrink-0 text-xs font-black text-ink pt-0.5">
+                              <Icon name="star" filled className="w-3.5 h-3.5 text-brand-2" />
+                              <span>{decimalFa(pack.rating)}</span>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-1.5 text-[10px] text-muted mt-2 truncate">
+                            <Icon name="clock" className="w-3 h-3 text-muted/70 shrink-0" />
+                            <span className="truncate">{pack.pickup}</span>
+                            <span className="text-muted/40 shrink-0">•</span>
+                            <Icon name="pin" className="w-3 h-3 text-muted/70 shrink-0" />
+                            <span className="shrink-0">{distanceFa(pack.distanceKm)}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Dedicated Price Row */}
+                      <div className="flex items-center justify-between pt-2 border-t border-line/50">
+                        {discount > 0 ? (
+                          <span className="text-xs font-black text-rose-600">
+                            {numberFa(discount)}٪ تخفیف
+                          </span>
+                        ) : (
+                          <span />
+                        )}
+                        <div className="flex items-baseline gap-2">
+                          <del className="text-xs text-muted line-through" aria-label={`ارزش اصلی ${moneyCompact(pack.originalPrice)}`}>
+                            {moneyCompact(pack.originalPrice)}
+                          </del>
+                          <strong className="text-sm font-black text-ink">
+                            {moneyCompact(pack.price)}
+                          </strong>
+                        </div>
+                      </div>
+
+                      {/* Action Button */}
+                      <button
+                        type="button"
+                        onClick={() => onSelect(pack)}
+                        className="w-full min-h-[44px] py-2.5 px-4 rounded-xl sm:rounded-2xl bg-brand-2 text-white font-black text-xs hover:bg-brand-2/90 active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-2 shadow-xs"
+                      >
+                        <span>مشاهده و رزرو این جعبه</span>
+                        <Icon name="chevron" className="w-4 h-4 rotate-180" />
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -913,45 +1454,22 @@ function MapPreview({ offers, onSelect }: { offers: Offer[]; onSelect: (offer: O
 
 function ReservationsPage({
   active,
-  history,
-  view,
-  setView,
   onCancel,
   onReview,
   onDiscover,
   onDirections,
 }: {
   active: Reservation[];
-  history: Reservation[];
-  view: ReservationView;
-  setView: (view: ReservationView) => void;
   onCancel: (id: string) => void;
   onReview: (id: string) => void;
   onDiscover: () => void;
   onDirections: () => void;
 }) {
-  const items = view === "active" ? active : history;
   return (
     <div className="space-y-4">
-      <PageTitle
-        eyebrow="رزروهای من"
-        title="جعبه‌ات منتظرته"
-        text="کد دریافت را فقط وقتی به فروشنده نشان بده که جعبه را تحویل می‌گیری."
-      />
-      <GlassSegmentedControl
-        value={view}
-        onChange={setView}
-        ariaLabel="نوع رزرو"
-        className="segmented-control"
-        role="tablist"
-        options={[
-          { value: "active", label: <>فعال <span>({numberFa(active.length)})</span></> },
-          { value: "history", label: <>گذشته <span>({numberFa(history.length)})</span></> },
-        ]}
-      />
-      {items.length ? (
+      {active.length ? (
         <div className="grid gap-3.5">
-          {items.map((reservation) => (
+          {active.map((reservation) => (
             <ReservationCard
               key={reservation.id}
               reservation={reservation}
@@ -964,9 +1482,9 @@ function ReservationsPage({
       ) : (
         <EmptyState
           icon="bag"
-          title={view === "active" ? "رزرو فعالی نداری" : "هنوز سابقه‌ای نیست"}
-          text={view === "active" ? "یک جعبهٔ نزدیک پیدا کن و برای امشب رزرو کن." : "رزروهای دریافت‌شده یا لغوشده اینجا می‌مانند."}
-          action={view === "active" ? "کشف جعبه‌ها" : undefined}
+          title="رزرو فعالی نداری"
+          text="یک جعبهٔ نزدیک پیدا کن و برای امشب رزرو کن."
+          action="کشف جعبه‌ها"
           onAction={onDiscover}
         />
       )}
@@ -1059,9 +1577,9 @@ function ReservationCard({
           <button
             type="button"
             onClick={onDirections}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl bg-surface border border-line text-ink hover:bg-surface-raised transition-colors"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 min-h-[44px] text-xs font-semibold rounded-xl bg-surface border border-line text-ink hover:bg-surface-raised transition-colors"
           >
-            <Icon name="route" className="w-3.5 h-3.5 text-muted" />
+            <Icon name="route" className="w-4 h-4 text-muted" />
             <span>مسیریابی</span>
           </button>
         )}
@@ -1069,7 +1587,7 @@ function ReservationCard({
           <button
             type="button"
             onClick={() => onCancel(reservation.id)}
-            className="inline-flex items-center px-3 py-1.5 text-xs font-semibold rounded-xl text-rose-600 hover:bg-rose-500/10 transition-colors"
+            className="inline-flex items-center px-3.5 py-2 min-h-[44px] text-xs font-semibold rounded-xl text-rose-600 hover:bg-rose-500/10 transition-colors"
           >
             لغو رزرو
           </button>
@@ -1078,15 +1596,15 @@ function ReservationCard({
           <button
             type="button"
             onClick={() => onReview(reservation.id)}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl bg-brand-2 text-white hover:opacity-90 transition-opacity"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 min-h-[44px] text-xs font-semibold rounded-xl bg-brand-2 text-white hover:opacity-90 transition-opacity"
           >
-            <Icon name="star" className="w-3.5 h-3.5" />
+            <Icon name="star" className="w-4 h-4" />
             <span>ثبت نظر</span>
           </button>
         )}
         {reservation.status === "collected" && reservation.hasReview && (
-          <span className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-emerald-600 bg-emerald-500/10 rounded-xl">
-            <Icon name="check" className="w-3.5 h-3.5" />
+          <span className="inline-flex items-center gap-1.5 px-3.5 py-2 min-h-[44px] text-xs font-semibold text-emerald-600 bg-emerald-500/10 rounded-xl">
+            <Icon name="check" className="w-4 h-4" />
             <span>نظر ثبت شده</span>
           </span>
         )}
@@ -1107,6 +1625,9 @@ function ProfilePage({
   onAbout,
   showToast,
   customerName,
+  onCancel,
+  onReview,
+  onDirections,
 }: {
   savedMeals: number;
   favoriteOffers: Offer[];
@@ -1119,10 +1640,64 @@ function ProfilePage({
   onAbout: () => void;
   showToast: (message: string) => void;
   customerName: string;
+  onCancel: (id: string) => void;
+  onReview: (id: string) => void;
+  onDirections: () => void;
 }) {
+  const [profileSubpage, setProfileSubpage] = useState<"main" | "history">("main");
   const { theme, setTheme } = useMoftTheme();
   const preventedWaste = savedMeals * 0.78;
   const co2 = savedMeals * 2.4;
+  const historyReservations = useMemo(
+    () => reservations.filter((item) => item.status !== "active"),
+    [reservations]
+  );
+
+  if (profileSubpage === "history") {
+    return (
+      <div className="space-y-4 animate-in fade-in slide-in-from-start-2 duration-200">
+        <div className="flex items-center justify-between pb-1">
+          <button
+            type="button"
+            onClick={() => setProfileSubpage("main")}
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-ink hover:text-brand-2 transition-colors py-1 cursor-pointer"
+            aria-label="بازگشت به پروفایل و گزینه‌ها"
+          >
+            <Icon name="arrow" className="w-4 h-4 text-brand-2" />
+            <span>پروفایل و گزینه‌ها</span>
+          </button>
+          <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-surface border border-line text-muted">
+            {numberFa(historyReservations.length)} سفارش گذشته
+          </span>
+        </div>
+
+        <div>
+          <h1 className="text-base font-black text-ink">تاریخچهٔ سفارش‌ها</h1>
+          <p className="text-xs text-muted mt-0.5">سفارش‌های قبلی، دریافت‌شده و سوابق خرید شما</p>
+        </div>
+
+        {historyReservations.length ? (
+          <div className="grid gap-3.5">
+            {historyReservations.map((reservation) => (
+              <ReservationCard
+                key={reservation.id}
+                reservation={reservation}
+                onCancel={onCancel}
+                onReview={onReview}
+                onDirections={onDirections}
+              />
+            ))}
+          </div>
+        ) : (
+          <EmptyState
+            icon="clock"
+            title="هنوز سابقه‌ای نداری"
+            text="سفارش‌های قبلی، دریافت‌شده یا لغوشده در این بخش نمایش داده می‌شوند."
+          />
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
@@ -1142,8 +1717,7 @@ function ProfilePage({
             <Icon name="leaf" className="w-4 h-4" />
           </span>
           <div>
-            <p className="text-[11px] font-bold uppercase tracking-wider text-muted">اثر تو تا امروز</p>
-            <h2 className="text-sm font-black text-ink mt-0.5">
+            <h2 className="text-sm font-black text-ink">
               <AnimatedNumber value={savedMeals} /> وعده انتخاب‌شده
             </h2>
           </div>
@@ -1167,7 +1741,7 @@ function ProfilePage({
       </section>
 
       <section className="p-5 rounded-3xl bg-surface border border-line shadow-xs space-y-3">
-        <SectionHeading eyebrow="ذخیره‌شده‌ها" title="فروشگاه‌های محبوب" />
+        <SectionHeading title="فروشگاه‌های محبوب" />
         {favoriteOffers.length ? (
           <div className="flex items-center gap-3 overflow-x-auto py-1 scrollbar-none" style={{ scrollbarWidth: "none" }}>
             {favoriteOffers.slice(0, 5).map((offer) => (
@@ -1177,7 +1751,7 @@ function ProfilePage({
                 key={offer.id}
                 className="flex flex-col items-center gap-1.5 p-2 rounded-2xl shrink-0 hover:bg-canvas transition-colors"
               >
-                <span className="w-12 h-12 rounded-xl overflow-hidden bg-canvas border border-line shrink-0">
+                <span className="relative block w-12 h-12 rounded-xl overflow-hidden bg-canvas border border-line shrink-0">
                   <FoodImage src={offer.image} sizes="50px" className="w-full h-full object-cover" />
                 </span>
                 <small className="text-[11px] font-bold text-ink truncate max-w-[80px]">{offer.merchantName}</small>
@@ -1194,8 +1768,7 @@ function ProfilePage({
 
       <section className="p-5 rounded-3xl bg-surface border border-line shadow-xs space-y-3">
         <div>
-          <p className="text-[11px] font-bold uppercase tracking-wider text-muted">ظاهر برنامه</p>
-          <h2 className="text-sm font-black text-ink mt-0.5">حال‌وهوای دلخواهت</h2>
+          <h2 className="text-sm font-black text-ink">حال‌وهوای دلخواهت</h2>
         </div>
         <GlassSegmentedControl
           value={theme}
@@ -1212,6 +1785,34 @@ function ProfilePage({
       </section>
 
       <div className="rounded-3xl bg-surface border border-line shadow-xs divide-y divide-line overflow-hidden">
+        <button
+          type="button"
+          onClick={() => setProfileSubpage("history")}
+          className="w-full flex items-center justify-between p-3.5 text-start hover:bg-canvas/40 transition-colors cursor-pointer"
+        >
+          <div className="flex items-center gap-3">
+            <span className="w-8 h-8 rounded-xl bg-canvas grid place-items-center text-muted shrink-0">
+              <Icon name="clock" className="w-4 h-4" />
+            </span>
+            <div>
+              <strong className="block text-xs font-bold text-ink">تاریخچهٔ سفارش‌ها</strong>
+              <small className="block text-[11px] text-muted mt-0.5">
+                {historyReservations.length
+                  ? `${numberFa(historyReservations.length)} سفارش گذشته`
+                  : "سفارش‌های قبلی و تحویل‌شده"}
+              </small>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            {historyReservations.length > 0 && (
+              <span className="px-2 py-0.5 rounded-full bg-brand-soft text-brand-2 text-[11px] font-bold">
+                {numberFa(historyReservations.length)}
+              </span>
+            )}
+            <Icon name="chevron" className="w-4 h-4 text-muted rtl:rotate-180" />
+          </div>
+        </button>
+
         <div className="flex items-center justify-between p-3.5">
           <div className="flex items-center gap-3">
             <span className="w-8 h-8 rounded-xl bg-canvas grid place-items-center text-muted shrink-0">
@@ -1273,6 +1874,7 @@ function ProfilePage({
           <Icon name="chevron" className="w-4 h-4 text-muted rtl:rotate-180" />
         </Link>
 
+        {/* [BUSINESS LINK HIDDEN FOR SEPARATE BUSINESS APP - DO NOT DELETE]
         <Link href="/business" className="flex items-center justify-between p-3.5 hover:bg-canvas/40 transition-colors">
           <div className="flex items-center gap-3">
             <span className="w-8 h-8 rounded-xl bg-brand-soft text-brand-2 grid place-items-center shrink-0">
@@ -1285,7 +1887,9 @@ function ProfilePage({
           </div>
           <Icon name="chevron" className="w-4 h-4 text-muted rtl:rotate-180" />
         </Link>
+        */}
 
+        {/* [ROLE SELECTOR LINK HIDDEN FOR USER-ONLY APP - DO NOT DELETE]
         <Link href="/" className="flex items-center justify-between p-3.5 hover:bg-canvas/40 transition-colors">
           <div className="flex items-center gap-3">
             <span className="w-8 h-8 rounded-xl bg-canvas grid place-items-center text-muted shrink-0">
@@ -1298,6 +1902,7 @@ function ProfilePage({
           </div>
           <Icon name="chevron" className="w-4 h-4 text-muted rtl:rotate-180" />
         </Link>
+        */}
       </div>
 
       <p className="text-center text-[11px] text-muted py-2">{numberFa(reservations.length)} رزرو در این دستگاه</p>
@@ -1336,7 +1941,7 @@ function OfferDetails({
   return (
     <DialogShell titleId="offer-title" onClose={onClose} size="detail">
       <button
-        className={`absolute top-3.5 end-3.5 z-20 w-8 h-8 rounded-full border backdrop-blur-md grid place-items-center transition-colors ${
+        className={`absolute top-3 end-3 z-20 min-w-[44px] min-h-[44px] w-11 h-11 rounded-full border backdrop-blur-md grid place-items-center transition-colors ${
           favorite
             ? "bg-rose-500 text-white border-rose-500 shadow-xs"
             : "bg-surface/80 text-muted border-line hover:text-rose-500 hover:bg-surface"
@@ -1345,7 +1950,7 @@ function OfferDetails({
         onClick={() => onFavorite(offer.id)}
         aria-label={favorite ? "حذف از علاقه‌مندی‌ها" : "افزودن به علاقه‌مندی‌ها"}
       >
-        <Icon name="heart" filled={favorite} className="w-4 h-4" />
+        <Icon name="heart" filled={favorite} className="w-5 h-5" />
       </button>
 
       <div ref={detailScrollRef} className="overflow-y-auto max-h-[75vh] flex-1">
@@ -1429,14 +2034,13 @@ function OfferDetails({
           </section>
 
           <section className="p-3.5 rounded-2xl bg-canvas border border-line space-y-1">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-muted">محل دریافت</p>
             <h3 className="text-xs font-bold text-ink">{offer.address}</h3>
             <small className="block text-[11px] text-muted">دریافت فقط حضوری و در بازهٔ مشخص‌شده است.</small>
           </section>
 
           {related.length > 0 && (
             <section className="space-y-3 pt-2">
-              <SectionHeading eyebrow="همین اطراف" title="شاید این‌ها را هم دوست داشته باشی" />
+              <SectionHeading title="شاید این‌ها را هم دوست داشته باشی" />
               <div className="grid grid-cols-2 gap-3">
                 {related.map((item) => (
                   <OfferCard
@@ -1519,11 +2123,10 @@ function ReservationFlow({
         {step === 1 && (
           <>
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-wider text-muted">تنظیم رزرو</p>
-              <h2 id="reservation-title" className="text-base font-black text-ink mt-0.5">همه‌چیز در یک نگاه</h2>
+              <h2 id="reservation-title" className="text-base font-black text-ink">همه‌چیز در یک نگاه</h2>
             </div>
             <div className="flex items-center gap-3 p-3 rounded-2xl bg-canvas border border-line">
-              <span className="w-14 h-14 rounded-xl overflow-hidden bg-surface shrink-0">
+              <span className="relative block w-14 h-14 rounded-xl overflow-hidden bg-surface shrink-0">
                 <FoodImage src={offer.image} sizes="60px" className="w-full h-full object-cover" />
               </span>
               <div>
@@ -1541,18 +2144,18 @@ function ReservationFlow({
                     type="button"
                     onClick={() => setQuantity(Math.max(1, quantity - 1))}
                     disabled={quantity <= 1}
-                    className="w-8 h-8 rounded-lg bg-surface border border-line grid place-items-center text-ink disabled:opacity-40"
+                    className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-xl bg-surface border border-line grid place-items-center text-ink disabled:opacity-40 hover:bg-surface-raised transition-colors"
                   >
-                    <Icon name="minus" className="w-3.5 h-3.5" />
+                    <Icon name="minus" className="w-4 h-4" />
                   </button>
-                  <strong className="text-sm font-black min-w-[20px] text-center"><AnimatedNumber value={quantity} /></strong>
+                  <strong className="text-sm font-black min-w-[24px] text-center"><AnimatedNumber value={quantity} /></strong>
                   <button
                     type="button"
                     onClick={() => setQuantity(Math.min(Math.min(3, offer.quantityLeft), quantity + 1))}
                     disabled={quantity >= Math.min(3, offer.quantityLeft)}
-                    className="w-8 h-8 rounded-lg bg-surface border border-line grid place-items-center text-ink disabled:opacity-40"
+                    className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-xl bg-surface border border-line grid place-items-center text-ink disabled:opacity-40 hover:bg-surface-raised transition-colors"
                   >
-                    <Icon name="plus" className="w-3.5 h-3.5" />
+                    <Icon name="plus" className="w-4 h-4" />
                   </button>
                 </div>
               </div>
@@ -1591,8 +2194,7 @@ function ReservationFlow({
         {step === 2 && (
           <>
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-wider text-muted">مرور نهایی</p>
-              <h2 id="reservation-title" className="text-base font-black text-ink mt-0.5">آمادهٔ ثبت رزرو</h2>
+              <h2 id="reservation-title" className="text-base font-black text-ink">آمادهٔ ثبت رزرو</h2>
             </div>
             <div className="divide-y divide-line rounded-2xl bg-canvas border border-line overflow-hidden">
               <div className="flex items-center justify-between p-3 text-xs">
@@ -1628,7 +2230,7 @@ function ReservationFlow({
         <div className="p-4 border-t border-line flex items-center justify-end gap-2 bg-surface">
           {step > 1 && (
             <button
-              className="px-4 py-2 text-xs font-semibold rounded-xl bg-canvas border border-line text-ink hover:bg-surface-raised transition-colors"
+              className="px-4 h-11 min-h-[44px] text-xs font-semibold rounded-xl bg-canvas border border-line text-ink hover:bg-surface-raised transition-colors"
               type="button"
               onClick={() => setStep(step - 1)}
             >
@@ -1636,7 +2238,7 @@ function ReservationFlow({
             </button>
           )}
           <button
-            className="flex-1 h-10 inline-flex items-center justify-center text-xs font-bold rounded-xl bg-brand-2 text-white hover:opacity-90 shadow-xs transition-opacity disabled:opacity-50"
+            className="flex-1 h-11 min-h-[44px] inline-flex items-center justify-center text-xs font-bold rounded-xl bg-brand-2 text-white hover:opacity-90 shadow-xs transition-opacity disabled:opacity-50"
             type="button"
             onClick={() => (step === 2 ? onConfirm() : setStep(2))}
             disabled={confirming || !acknowledged}
@@ -1699,23 +2301,23 @@ function SuccessState({
         <button
           type="button"
           onClick={onDirections}
-          className="flex-1 h-9 inline-flex items-center justify-center gap-1.5 text-xs font-semibold rounded-xl bg-canvas border border-line text-ink hover:bg-surface-raised transition-colors"
+          className="flex-1 h-11 min-h-[44px] inline-flex items-center justify-center gap-1.5 text-xs font-semibold rounded-xl bg-canvas border border-line text-ink hover:bg-surface-raised transition-colors"
         >
-          <Icon name="route" className="w-3.5 h-3.5 text-muted" />
+          <Icon name="route" className="w-4 h-4 text-muted" />
           <span>مسیریابی</span>
         </button>
         <button
           type="button"
           onClick={onCalendar}
-          className="flex-1 h-9 inline-flex items-center justify-center gap-1.5 text-xs font-semibold rounded-xl bg-canvas border border-line text-ink hover:bg-surface-raised transition-colors"
+          className="flex-1 h-11 min-h-[44px] inline-flex items-center justify-center gap-1.5 text-xs font-semibold rounded-xl bg-canvas border border-line text-ink hover:bg-surface-raised transition-colors"
         >
-          <Icon name="calendar" className="w-3.5 h-3.5 text-muted" />
+          <Icon name="calendar" className="w-4 h-4 text-muted" />
           <span>افزودن به تقویم</span>
         </button>
       </div>
 
       <button
-        className="w-full h-10 inline-flex items-center justify-center text-xs font-bold rounded-xl bg-brand-2 text-white hover:opacity-90 shadow-xs transition-opacity"
+        className="w-full h-11 min-h-[44px] inline-flex items-center justify-center text-xs font-bold rounded-xl bg-brand-2 text-white hover:opacity-90 shadow-xs transition-opacity"
         type="button"
         onClick={onDone}
       >
@@ -1750,8 +2352,7 @@ function FilterSheet({
     <DialogShell titleId="filters-title" onClose={onClose}>
       <div className="p-5 space-y-5">
         <div>
-          <p className="text-[11px] font-bold uppercase tracking-wider text-muted">پیدا کردن بهترین گزینه</p>
-          <h2 id="filters-title" className="text-base font-black text-ink mt-0.5">فیلتر پیشنهادها</h2>
+          <h2 id="filters-title" className="text-base font-black text-ink">فیلتر پیشنهادها</h2>
         </div>
 
         <div className="space-y-2">
@@ -1805,11 +2406,11 @@ function FilterSheet({
         </fieldset>
 
         <div className="flex items-center justify-between gap-3 pt-3 border-t border-line">
-          <button className="text-xs font-semibold text-muted hover:text-ink px-2 py-1" type="button" onClick={onReset}>
+          <button className="text-xs font-semibold text-muted hover:text-ink px-3 py-2 min-h-[44px] inline-flex items-center cursor-pointer" type="button" onClick={onReset}>
             پاک کردن همه
           </button>
           <button
-            className="h-10 px-5 inline-flex items-center justify-center text-xs font-bold rounded-xl bg-brand-2 text-white hover:opacity-90 shadow-xs transition-opacity"
+            className="h-11 min-h-[44px] px-5 inline-flex items-center justify-center text-xs font-bold rounded-xl bg-brand-2 text-white hover:opacity-90 shadow-xs transition-opacity cursor-pointer"
             type="button"
             onClick={onClose}
           >
@@ -1835,8 +2436,7 @@ function LocationSheet({
     <DialogShell titleId="location-title" onClose={onClose}>
       <div className="p-5 space-y-4">
         <div>
-          <p className="text-[11px] font-bold uppercase tracking-wider text-muted">موقعیت فعلی</p>
-          <h2 id="location-title" className="text-base font-black text-ink mt-0.5">کجای تهران هستی؟</h2>
+          <h2 id="location-title" className="text-base font-black text-ink">کجای تهران هستی؟</h2>
           <p className="text-xs text-muted mt-1">محدودهٔ نزدیک خودت را انتخاب کن.</p>
         </div>
         <div className="divide-y divide-line rounded-2xl bg-canvas border border-line overflow-hidden">
@@ -1845,7 +2445,7 @@ function LocationSheet({
               type="button"
               key={item}
               onClick={() => onChange(item)}
-              className={`w-full flex items-center justify-between p-3.5 text-xs text-start transition-colors ${
+              className={`w-full flex items-center justify-between p-3.5 min-h-[44px] text-xs text-start transition-colors cursor-pointer ${
                 value === item ? "bg-brand-soft text-brand-2 font-bold" : "text-ink hover:bg-surface"
               }`}
             >
@@ -1902,7 +2502,7 @@ function AboutSheet({ onClose }: { onClose: () => void }) {
         </ul>
 
         <button
-          className="w-full h-10 inline-flex items-center justify-center text-xs font-bold rounded-xl bg-brand-2 text-white hover:opacity-90 shadow-xs transition-opacity"
+          className="w-full h-11 min-h-[44px] inline-flex items-center justify-center text-xs font-bold rounded-xl bg-brand-2 text-white hover:opacity-90 shadow-xs transition-opacity cursor-pointer"
           type="button"
           onClick={onClose}
         >
@@ -1928,14 +2528,14 @@ function CancelDialog({ onClose, onConfirm }: { onClose: () => void; onConfirm: 
         </div>
         <div className="flex gap-2 pt-2">
           <button
-            className="flex-1 h-10 text-xs font-bold rounded-xl bg-canvas border border-line text-ink hover:bg-surface-raised transition-colors"
+            className="flex-1 h-11 min-h-[44px] text-xs font-bold rounded-xl bg-canvas border border-line text-ink hover:bg-surface-raised transition-colors cursor-pointer"
             type="button"
             onClick={onClose}
           >
             نه، نگهش دار
           </button>
           <button
-            className="flex-1 h-10 text-xs font-bold rounded-xl bg-rose-600 text-white hover:bg-rose-700 shadow-xs transition-colors"
+            className="flex-1 h-11 min-h-[44px] text-xs font-bold rounded-xl bg-rose-600 text-white hover:bg-rose-700 shadow-xs transition-colors cursor-pointer"
             type="button"
             onClick={onConfirm}
           >
@@ -1969,8 +2569,7 @@ function ReviewDialog({
         }}
       >
         <div>
-          <p className="text-[11px] font-bold uppercase tracking-wider text-muted">تجربه دریافت</p>
-          <h2 id="customer-review-title" className="text-base font-black text-ink mt-0.5">نظرت درباره این سفارش چیست؟</h2>
+          <h2 id="customer-review-title" className="text-base font-black text-ink">نظرت درباره این سفارش چیست؟</h2>
           <p className="text-xs text-muted mt-1">پاسخ شما در پنل کیفیت کسب‌وکار دیده می‌شود. سفارش: <b className="font-mono">{orderId}</b></p>
         </div>
 
@@ -1980,7 +2579,7 @@ function ReviewDialog({
               type="button"
               role="radio"
               aria-checked={rating === value}
-              className={`text-2xl transition-transform hover:scale-125 ${
+              className={`min-w-[44px] min-h-[44px] grid place-items-center text-2xl transition-transform hover:scale-125 cursor-pointer ${
                 rating >= value ? "text-amber-500" : "text-muted/40"
               }`}
               onClick={() => setRating(value)}
@@ -2004,7 +2603,7 @@ function ReviewDialog({
         </label>
 
         <button
-          className="w-full h-11 inline-flex items-center justify-center text-xs font-bold rounded-xl bg-brand-2 text-white hover:opacity-90 shadow-xs transition-opacity"
+          className="w-full h-11 min-h-[44px] inline-flex items-center justify-center text-xs font-bold rounded-xl bg-brand-2 text-white hover:opacity-90 shadow-xs transition-opacity cursor-pointer"
           type="submit"
         >
           ثبت نظر
@@ -2015,13 +2614,12 @@ function ReviewDialog({
 }
 
 function SectionHeading({
-  eyebrow,
   title,
   id,
   action,
   onAction,
 }: {
-  eyebrow: string;
+  eyebrow?: string;
   title: string;
   id?: string;
   action?: string;
@@ -2030,14 +2628,13 @@ function SectionHeading({
   return (
     <div className="flex items-end justify-between gap-3">
       <div>
-        <p className="text-[11px] font-bold uppercase tracking-wider text-muted">{eyebrow}</p>
-        <h2 id={id} className="text-sm font-black text-ink mt-0.5">{title}</h2>
+        <h2 id={id} className="text-sm font-black text-ink">{title}</h2>
       </div>
       {action && (
         <button
           type="button"
           onClick={onAction}
-          className="inline-flex items-center gap-1 text-xs font-bold text-brand-2 hover:opacity-80 transition-opacity"
+          className="inline-flex items-center gap-1 min-h-[44px] px-2 text-xs font-bold text-brand-2 hover:opacity-80 transition-opacity cursor-pointer"
         >
           <span>{action}</span>
           <Icon name="arrow" className="w-3.5 h-3.5 rtl:rotate-180" />
@@ -2047,15 +2644,6 @@ function SectionHeading({
   );
 }
 
-function PageTitle({ eyebrow, title, text }: { eyebrow: string; title: string; text: string }) {
-  return (
-    <div className="space-y-1 pb-1">
-      <p className="text-[11px] font-bold uppercase tracking-wider text-muted">{eyebrow}</p>
-      <h1 className="text-lg font-black text-ink">{title}</h1>
-      <p className="text-xs text-muted leading-relaxed">{text}</p>
-    </div>
-  );
-}
 
 function MiniQr({ code }: { code: string }) {
   const seed = [...code].reduce((sum, char) => sum + char.charCodeAt(0), 0);

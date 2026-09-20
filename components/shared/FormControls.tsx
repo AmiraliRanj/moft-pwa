@@ -266,19 +266,19 @@ export function UploadField({
       </span>
       {value ? (
         <div className="flex items-center gap-4 p-3 rounded-2xl border border-line bg-surface-raised">
-          <span className="h-16 w-16 overflow-hidden rounded-xl border border-line shrink-0">
+          <span className="relative block h-16 w-16 overflow-hidden rounded-xl border border-line shrink-0">
             <FoodImage src={value} alt="پیش‌نمایش تصویر انتخاب‌شده" sizes="180px" />
           </span>
           <div className="flex items-center gap-3">
             <label
-              className="inline-flex min-h-[38px] items-center justify-center rounded-xl border border-line bg-surface px-3 text-xs font-bold text-ink hover:bg-surface-raised cursor-pointer transition-colors"
+              className="inline-flex min-h-[44px] items-center justify-center rounded-xl border border-line bg-surface px-3.5 text-xs font-bold text-ink hover:bg-surface-raised cursor-pointer transition-colors"
               htmlFor={inputId}
             >
               جایگزینی تصویر
             </label>
             <button
               type="button"
-              className="text-xs font-bold text-danger hover:underline cursor-pointer"
+              className="min-h-[44px] px-2 inline-flex items-center text-xs font-bold text-danger hover:underline cursor-pointer"
               onClick={() => onChange("")}
             >
               حذف تصویر

@@ -96,7 +96,7 @@ export function TodayPage() {
           {activeOffers.map((offer) => (
             <article className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-3.5 sm:p-4 rounded-2xl border border-line bg-surface-raised transition-all hover:border-line-strong" key={offer.id}>
               <div className="flex items-center gap-3.5">
-                <span className="h-16 w-16 overflow-hidden rounded-xl border border-line shrink-0">
+                <span className="relative block h-16 w-16 overflow-hidden rounded-xl border border-line shrink-0">
                   <FoodImage src={offer.image} sizes="80px" />
                 </span>
                 <div className="flex flex-col">
@@ -121,7 +121,7 @@ export function TodayPage() {
                 <div className="flex items-center gap-1.5">
                   <button
                     type="button"
-                    className="h-8 w-8 grid place-items-center rounded-lg border border-line bg-surface text-ink hover:bg-canvas-soft cursor-pointer transition-colors [&>svg]:w-3.5 [&>svg]:h-3.5"
+                    className="min-h-[44px] min-w-[44px] h-11 w-11 grid place-items-center rounded-xl border border-line bg-surface text-ink hover:bg-canvas-soft cursor-pointer transition-colors [&>svg]:w-4 [&>svg]:h-4"
                     onClick={() => stock(offer.id, 1)}
                     aria-label={`افزایش موجودی ${offer.title}`}
                   >
@@ -129,7 +129,7 @@ export function TodayPage() {
                   </button>
                   <button
                     type="button"
-                    className="h-8 w-8 grid place-items-center rounded-lg border border-line bg-surface text-ink hover:bg-canvas-soft cursor-pointer transition-colors [&>svg]:w-3.5 [&>svg]:h-3.5"
+                    className="min-h-[44px] min-w-[44px] h-11 w-11 grid place-items-center rounded-xl border border-line bg-surface text-ink hover:bg-canvas-soft cursor-pointer transition-colors [&>svg]:w-4 [&>svg]:h-4"
                     onClick={() => stock(offer.id, -1)}
                     aria-label={`کاهش موجودی ${offer.title}`}
                   >
@@ -137,21 +137,21 @@ export function TodayPage() {
                   </button>
                   <button
                     type="button"
-                    className="h-8 px-2.5 rounded-lg border border-line bg-surface text-xs font-bold text-ink hover:bg-canvas-soft cursor-pointer transition-colors"
+                    className="min-h-[44px] h-11 px-3 rounded-xl border border-line bg-surface text-xs font-bold text-ink hover:bg-canvas-soft cursor-pointer transition-colors"
                     onClick={() => status(offer.id, offer.status === "paused" ? "active" : "paused")}
                   >
                     {offer.status === "paused" ? "ادامه" : "توقف"}
                   </button>
                   <button
                     type="button"
-                    className="h-8 px-2.5 rounded-lg border border-line bg-surface text-xs font-bold text-ink hover:bg-canvas-soft cursor-pointer transition-colors"
+                    className="min-h-[44px] h-11 px-3 rounded-xl border border-line bg-surface text-xs font-bold text-ink hover:bg-canvas-soft cursor-pointer transition-colors"
                     onClick={() => duplicate(offer.id)}
                   >
                     کپی
                   </button>
                   <Link
                     href="/business/orders"
-                    className="h-8 inline-flex items-center px-2.5 rounded-lg bg-surface-raised border border-line text-xs font-bold text-muted hover:text-ink no-underline transition-colors"
+                    className="min-h-[44px] h-11 inline-flex items-center px-3 rounded-xl bg-surface-raised border border-line text-xs font-bold text-muted hover:text-ink no-underline transition-colors"
                   >
                     سفارش‌ها
                   </Link>

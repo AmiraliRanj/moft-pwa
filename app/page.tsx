@@ -1,5 +1,10 @@
-import RoleSelector from "@/components/RoleSelector";
+import { redirect } from "next/navigation";
+// [ROLE SELECTOR TEMPORARILY HIDDEN - APP IS CURRENTLY USER/CUSTOMER ONLY - DO NOT DELETE]
+// import RoleSelector from "@/components/RoleSelector";
 
 export default function Page() {
-  return <RoleSelector />;
+  // Directly open the user side app
+  redirect("/customer");
+  // return <RoleSelector />;
 }
+

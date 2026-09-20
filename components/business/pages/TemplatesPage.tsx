@@ -157,14 +157,14 @@ export function TemplatesPage() {
               <div className="flex items-center gap-2">
                 <button
                   type="button"
-                  className="flex-1 h-8 inline-flex items-center justify-center text-xs font-semibold rounded-lg bg-surface border border-line text-ink hover:bg-surface-raised transition-colors"
+                  className="flex-1 h-11 min-h-[44px] inline-flex items-center justify-center text-xs font-semibold rounded-xl bg-surface border border-line text-ink hover:bg-surface-raised transition-colors cursor-pointer"
                   onClick={() => openEdit(template)}
                 >
                   ویرایش
                 </button>
                 <button
                   type="button"
-                  className="flex-1 h-8 inline-flex items-center justify-center text-xs font-semibold rounded-lg bg-surface border border-line text-ink hover:bg-surface-raised transition-colors"
+                  className="flex-1 h-11 min-h-[44px] inline-flex items-center justify-center text-xs font-semibold rounded-xl bg-surface border border-line text-ink hover:bg-surface-raised transition-colors cursor-pointer"
                   onClick={() => {
                     if (!ensurePermission()) return;
                     const result = duplicateTemplate(template.id);
@@ -175,7 +175,7 @@ export function TemplatesPage() {
                 </button>
                 <button
                   type="button"
-                  className="px-2.5 h-8 inline-flex items-center justify-center text-xs font-semibold rounded-lg text-rose-600 hover:bg-rose-500/10 transition-colors"
+                  className="px-3 h-11 min-h-[44px] inline-flex items-center justify-center text-xs font-semibold rounded-xl text-rose-600 hover:bg-rose-500/10 transition-colors cursor-pointer"
                   onClick={() => setConfirmDelete(template)}
                 >
                   حذف
@@ -202,8 +202,7 @@ export function TemplatesPage() {
             }}
           >
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-wider text-muted">انتشار سریع</p>
-              <h2 id="publish-template-title" className="text-base font-black text-ink mt-0.5">{publishing.templateName}</h2>
+              <h2 id="publish-template-title" className="text-base font-black text-ink">{publishing.templateName}</h2>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <label className="flex flex-col gap-1.5">
@@ -292,8 +291,7 @@ export function TemplatesPage() {
             }}
           >
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-wider text-muted">{editing === "new" ? "قالب تازه" : "ویرایش قالب"}</p>
-              <h2 id="edit-template-title" className="text-base font-black text-ink mt-0.5">اطلاعات پایه</h2>
+              <h2 id="edit-template-title" className="text-base font-black text-ink">اطلاعات پایه</h2>
             </div>
             <label className="flex flex-col gap-1.5">
               <span className="text-xs font-medium text-muted">نام قالب</span>

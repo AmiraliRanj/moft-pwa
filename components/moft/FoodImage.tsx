@@ -15,5 +15,10 @@ export function FoodImage({
   loading?: "eager" | "lazy";
   className?: string;
 }) {
-  return <Image className={className} src={src} alt={alt} fill sizes={sizes} priority={priority} loading={priority ? "eager" : loading} />;
+  return (
+    <div className="relative w-full h-full overflow-hidden">
+      <Image className={className} src={src} alt={alt} fill sizes={sizes} priority={priority} loading={priority ? "eager" : loading} />
+    </div>
+  );
 }
+

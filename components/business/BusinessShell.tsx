@@ -112,7 +112,7 @@ export function BusinessShell({ children }: { children: ReactNode }) {
           <div className="flex items-center justify-between pb-4 border-b border-line mb-3">
             <BrandMark subtitle="پنل کسب‌وکار" />
             <button
-              className="md:hidden p-1.5 rounded-xl text-muted hover:text-ink hover:bg-canvas-soft cursor-pointer [&>svg]:w-5 [&>svg]:h-5"
+              className="md:hidden min-h-[44px] min-w-[44px] grid place-items-center rounded-xl text-muted hover:text-ink hover:bg-canvas-soft cursor-pointer [&>svg]:w-5 [&>svg]:h-5"
               type="button"
               onClick={() => setNavOpen(false)}
               aria-label="بستن منو"
@@ -158,14 +158,7 @@ export function BusinessShell({ children }: { children: ReactNode }) {
               }))}
             />
             <div className="flex flex-col gap-1 text-xs text-muted pt-1">
-              <Link href="/customer" className="flex items-center gap-2 p-1.5 rounded-lg hover:text-ink hover:bg-canvas-soft no-underline">
-                <span className="[&>svg]:w-3.5 [&>svg]:h-3.5"><Icon name="user" /></span>
-                <span>رفتن به نسخه مشتری</span>
-              </Link>
-              <Link href="/" className="flex items-center gap-2 p-1.5 rounded-lg hover:text-ink hover:bg-canvas-soft no-underline">
-                <span className="[&>svg]:w-3.5 [&>svg]:h-3.5"><Icon name="home" /></span>
-                <span>انتخاب نوع ورود</span>
-              </Link>
+              <small className="text-muted">نسخهٔ پیش‌نمایش دیبز</small>
             </div>
           </div>
         </aside>
@@ -175,7 +168,7 @@ export function BusinessShell({ children }: { children: ReactNode }) {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
               <div className="flex items-center justify-between sm:justify-start gap-2 sm:gap-3 flex-1">
                 <button
-                  className="md:hidden p-2 rounded-xl text-ink hover:bg-canvas-soft cursor-pointer [&>svg]:w-5 [&>svg]:h-5"
+                  className="md:hidden min-h-[44px] min-w-[44px] grid place-items-center rounded-xl text-ink hover:bg-canvas-soft cursor-pointer [&>svg]:w-5 [&>svg]:h-5"
                   type="button"
                   onClick={() => setNavOpen(true)}
                   aria-label="باز کردن منوی پنل"
@@ -208,7 +201,7 @@ export function BusinessShell({ children }: { children: ReactNode }) {
                     )}
                   </button>
                   <button
-                    className="flex items-center gap-2 rounded-2xl border border-line bg-surface px-2.5 py-1.5 text-start hover:bg-surface-raised cursor-pointer transition-colors"
+                    className="flex min-h-[44px] items-center gap-2 rounded-2xl border border-line bg-surface px-2.5 py-1.5 text-start hover:bg-surface-raised cursor-pointer transition-colors"
                     type="button"
                     onClick={() => setProfileOpen(!profileOpen)}
                     aria-label={`نمایه ${state.business.ownerName}`}
@@ -357,7 +350,7 @@ export function BusinessShell({ children }: { children: ReactNode }) {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`flex flex-col items-center gap-1 p-1 text-xs font-medium no-underline transition-colors ${
+                  className={`flex flex-col items-center justify-center min-h-[44px] min-w-[48px] gap-1 p-1 text-xs font-medium no-underline transition-colors ${
                     active ? "text-brand font-bold" : "text-muted hover:text-ink"
                   }`}
                   aria-current={active ? "page" : undefined}
@@ -369,7 +362,7 @@ export function BusinessShell({ children }: { children: ReactNode }) {
             })}
             <button
               type="button"
-              className="flex flex-col items-center gap-1 p-1 text-xs font-medium text-muted hover:text-ink cursor-pointer"
+              className="flex flex-col items-center justify-center min-h-[44px] min-w-[48px] gap-1 p-1 text-xs font-medium text-muted hover:text-ink cursor-pointer"
               onClick={() => setNavOpen(true)}
               aria-label="نمایش بخش‌های بیشتر"
             >

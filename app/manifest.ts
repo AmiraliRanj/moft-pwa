@@ -19,8 +19,9 @@ export default function manifest(): MetadataRoute.Manifest {
     ],
     shortcuts: [
       { name: "کشف جعبه‌ها", short_name: "کشف", url: "/customer/offers", icons: [{ src: "/icons/dibz-ios-default-192-v2.png", sizes: "192x192", type: "image/png" }] },
-      { name: "رزروهای من", short_name: "رزروها", url: "/customer/orders", icons: [{ src: "/icons/dibz-ios-default-192-v2.png", sizes: "192x192", type: "image/png" }] },
-      { name: "پنل کسب‌وکار", short_name: "کسب‌وکار", url: "/business", icons: [{ src: "/icons/dibz-ios-default-192-v2.png", sizes: "192x192", type: "image/png" }] }
+      { name: "رزروهای من", short_name: "رزروها", url: "/customer/orders", icons: [{ src: "/icons/dibz-ios-default-192-v2.png", sizes: "192x192", type: "image/png" }] }
+      // [BUSINESS SHORTCUT TEMPORARILY COMMENTED - SEPARATE APP - DO NOT DELETE]
+      // { name: "پنل کسب‌وکار", short_name: "کسب‌وکار", url: "/business", icons: [{ src: "/icons/dibz-ios-default-192-v2.png", sizes: "192x192", type: "image/png" }] }
     ]
   };
 }

@@ -26,6 +26,27 @@ Create an Apple-inspired experience without copying Apple screens, trademarks, p
 - Support light mode first. Dark mode may be added only when every surface remains readable.
 - Respect `prefers-reduced-motion`.
 
+## Spacing rules
+
+Follow an Apple-inspired 8pt grid with 4px half-steps:
+- **Screen gutters**: 16px (`px-4`) on mobile, expanding up to 24px (`sm:px-6`) on desktop.
+- **Section rhythm**: 16px (`space-y-4` or `gap-4`) between major content blocks.
+- **Card containers**: 12px to 14px (`p-3` or `p-3.5`) inner padding.
+- **Component elements**: 8px (`gap-2`) between related inner elements; 4px–6px (`gap-1` / `gap-1.5`) for badges, icons, and micro-labels.
+- **Structural strictness**: Structural containers, grids, and lists must strictly use standard increments (4, 8, 12, 16, 24, 32px); fine optical adjustments (e.g. 6px or 14px) are allowed only for tags, chips, and micro-interactions.
+
+## Sizing and touch target rules (UX standards)
+
+Follow Apple Human Interface Guidelines and WCAG touch target standards:
+- **Interactive touch targets**: Minimum 44×44px (`min-h-[44px] min-w-[44px]` or 44px tap container) for all primary buttons, icon controls, and navigation triggers.
+- **Header frame height**: Header container height must be at least 56px (`min-h-[56px]`, `py-3`), providing comfortable vertical breathing room above page content.
+- **Header action icons**: Top navigation and primary action icons (e.g. cart, back, profile) use 24×24px (`w-6 h-6`) visual size centered inside a 44×44px touch area.
+- **Header address and titles**: Location selector and tab titles use `text-sm sm:text-base font-black`, with icon sizes between 18px and 20px (`w-4.5 h-4.5` / `w-5 h-5`) and a minimum 44px touch height.
+- **Counter and status badges**: Badges on icons use minimum 18×18px to 20×20px (`w-5 h-5`), with legible bold numbers (`text-[10px]` / `text-[11px] font-black`) and clean separation border against the background.
+- **Search bar inputs**: Form inputs and search bars use a minimum height of 44px to 48px (`h-11` or `h-12`) with rounded-2xl geometry.
+- **Structural borders**: Avoid unnecessary horizontal separator borders underneath floating or sticky glass headers; rely on blur, background contrast, and subtle elevation.
+
+
 ## Technical baseline
 
 - Next.js App Router

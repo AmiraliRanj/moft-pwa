@@ -85,12 +85,12 @@ export function DialogShell({
       >
         <button
           ref={closeRef}
-          className="absolute top-3.5 start-3.5 z-20 w-8 h-8 rounded-full bg-surface/80 border border-line backdrop-blur-md grid place-items-center text-muted hover:text-ink transition-colors"
+          className="absolute top-3 start-3 z-20 min-w-[44px] min-h-[44px] w-11 h-11 rounded-full bg-surface/80 border border-line backdrop-blur-md grid place-items-center text-muted hover:text-ink transition-colors cursor-pointer active:scale-95"
           type="button"
           onClick={onClose}
           aria-label="بستن"
         >
-          <Icon name="close" className="w-4 h-4" />
+          <Icon name="close" className="w-5 h-5" />
         </button>
         {children}
       </section>

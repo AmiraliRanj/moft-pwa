@@ -155,7 +155,6 @@ export function FinancePage() {
       <section className="rounded-2xl bg-surface border border-line shadow-xs overflow-hidden">
         <div className="flex items-center justify-between p-4 border-b border-line bg-canvas/30">
           <div>
-            <p className="text-[11px] font-bold uppercase tracking-wider text-muted">گردش مالی</p>
             <h2 className="text-base font-black text-ink">تراکنش‌ها</h2>
           </div>
           <span className="text-xs text-muted font-medium bg-canvas px-2.5 py-1 rounded-full border border-line">
@@ -235,7 +234,6 @@ export function FinancePage() {
 
       <section className="rounded-2xl bg-surface border border-line shadow-xs overflow-hidden">
         <div className="p-4 border-b border-line bg-canvas/30">
-          <p className="text-[11px] font-bold uppercase tracking-wider text-muted">سابقه تسویه</p>
           <h2 className="text-base font-black text-ink">دوره‌ها</h2>
         </div>
         <div className="divide-y divide-line">
