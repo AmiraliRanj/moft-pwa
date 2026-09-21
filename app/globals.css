@@ -49,7 +49,7 @@
 :root {
   color-scheme: light;
   --font-vazirmatn: "Vazirmatn Variable";
-  --color-primary: #22c55e;
+  --color-primary: #15803d;
   --color-primary-deep: #14532d;
   --color-lime: #84cc16;
   --color-citrus: #fbbf24;
@@ -70,9 +70,9 @@
   --surface-solid: #fbfdfb;
   --surface-raised: #ffffff;
   --brand: var(--color-primary-deep);
-  --brand-2: #197a3e;
-  --brand-3: var(--color-primary);
-  --brand-soft: #dcfce7;
+  --brand-2: #145c32;
+  --brand-3: #15803d;
+  --brand-soft: #e2f7ea;
   --accent: var(--color-coral);
   --accent-soft: #ffe4e9;
   --warning: #925300;
@@ -180,7 +180,6 @@ html {
   background: var(--canvas);
   scroll-behavior: smooth;
   font-family: var(--font-vazirmatn), system-ui, sans-serif !important;
-  touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -193,14 +192,16 @@ body {
   font-weight: 500;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
-  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+button, [role="button"], a {
+  cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
 
 button, input, select, textarea, a, [role="button"] {
   font-family: inherit;
-  touch-action: manipulation;
-  -webkit-tap-highlight-color: transparent;
 }
 
 /* LiquidGlass Lens Styles */

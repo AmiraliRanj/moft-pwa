@@ -19,10 +19,11 @@ export function BottomNavigation({
 }) {
   return (
     <nav
-      className="fixed bottom-3 inset-x-4 z-40 max-w-md mx-auto"
+      className="fixed inset-x-0 bottom-0 z-40 pointer-events-auto bg-surface/95 dark:bg-[#18201a]/95 backdrop-blur-xl border-t border-line"
+      style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 8px)" }}
       aria-label="ناوبری اصلی"
     >
-      <div className="bg-surface dark:bg-[#18201a] border border-line rounded-full shadow-lg p-1.5 flex items-center justify-between gap-1">
+      <div className="flex items-center justify-around pt-1.5 max-w-md mx-auto">
         {items.map((item) => {
           const isActive = value === item.id;
           return (
@@ -30,10 +31,10 @@ export function BottomNavigation({
               key={item.id}
               type="button"
               onClick={() => onChange(item.id)}
-              className={`relative flex-1 min-h-[48px] h-12 rounded-full flex flex-col items-center justify-center gap-0.5 transition-all duration-200 cursor-pointer active:scale-95 ${
+              className={`relative flex-1 min-h-[44px] flex flex-col items-center justify-center gap-0.5 transition-colors duration-200 cursor-pointer active:scale-95 select-none ${
                 isActive
-                  ? "bg-brand-soft/70 text-[#16a34a] font-black dark:bg-emerald-950/60 dark:text-emerald-400 shadow-2xs"
-                  : "text-muted hover:text-ink hover:bg-canvas-soft/40 font-medium"
+                  ? "text-brand-2 font-black dark:text-emerald-400"
+                  : "text-muted hover:text-ink font-medium"
               }`}
               aria-label={item.label}
               aria-current={isActive ? "page" : undefined}

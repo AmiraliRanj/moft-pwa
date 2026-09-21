@@ -20,7 +20,7 @@ export function OfferCard({
     return (
       <article className="relative group rounded-2xl bg-surface border border-line overflow-hidden shadow-xs hover:border-brand-2/40 transition-all w-38 sm:w-44 shrink-0">
         <button
-          className="w-full text-start flex flex-col focus:outline-none"
+          className="w-full text-start flex flex-col focus:outline-none cursor-pointer active:opacity-90"
           type="button"
           onClick={() => onSelect(offer)}
           aria-label={`مشاهده ${offer.title} از ${offer.merchantName}`}
@@ -66,7 +66,7 @@ export function OfferCard({
   return (
     <article className="relative group rounded-2xl sm:rounded-3xl bg-surface border border-line overflow-hidden shadow-xs hover:border-brand-2/40 hover:shadow-sm transition-all w-full">
       <button
-        className="w-full text-start flex flex-col focus:outline-none"
+        className="w-full text-start flex flex-col focus:outline-none cursor-pointer active:opacity-90"
         type="button"
         onClick={() => onSelect(offer)}
         aria-label={`مشاهده ${offer.title} از ${offer.merchantName}`}

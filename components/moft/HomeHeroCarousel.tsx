@@ -87,7 +87,7 @@ export function HomeHeroCarousel({ onDiscover }: { onDiscover: () => void }) {
             role="tab"
             aria-label={`نمایش اسلاید ${index + 1}`}
             aria-selected={selected === index}
-            className="h-8 px-1.5 flex items-center cursor-pointer"
+            className="h-5 px-1 flex items-center cursor-pointer"
             onClick={() => api?.scrollTo(index)}
           >
             <span

@@ -25,7 +25,7 @@ export function SearchBar({
         onBlur={onBlur}
         placeholder={placeholder}
         autoComplete="off"
-        className="w-full bg-transparent text-xs text-ink placeholder:text-muted focus:outline-none"
+        className="w-full bg-transparent text-base sm:text-xs text-ink placeholder:text-muted focus:outline-none"
       />
       {value && (
         <button
