@@ -458,7 +458,7 @@ export default function MoftPreview({
 
   return (
     <div className="min-h-screen bg-canvas text-ink font-sans">
-      <main className={`w-full ${tab === "discover" ? "h-screen overflow-hidden pb-0" : "pb-28 sm:pb-32"}`}>
+      <main className={`w-full ${tab === "discover" ? "h-screen overflow-hidden pb-0" : "pb-20 sm:pb-24"}`}>
         <a
         className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:start-2 focus:z-50 px-3 py-1 bg-surface text-ink rounded-lg border border-line"
         href="#main-content"
