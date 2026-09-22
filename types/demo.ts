@@ -5,6 +5,8 @@ export type Customer = {
   name: string;
   mobile: string;
   joinedAt: string;
+  age?: number | string;
+  gender?: "female" | "male" | "other" | "";
 };
 
 export type Business = {

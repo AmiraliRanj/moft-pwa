@@ -20,10 +20,10 @@ export function BottomNavigation({
   return (
     <nav
       className="fixed inset-x-0 bottom-0 z-40 pointer-events-auto bg-surface/95 dark:bg-[#18201a]/95 backdrop-blur-xl border-t border-line"
-      style={{ paddingBottom: "max(6px, calc(env(safe-area-inset-bottom, 0px) - 14px))" }}
+      style={{ paddingBottom: "max(10px, calc(env(safe-area-inset-bottom, 0px) - 8px))" }}
       aria-label="ناوبری اصلی"
     >
-      <div className="flex items-center justify-around pt-1 max-w-md mx-auto">
+      <div className="flex items-center justify-around pt-1.5 max-w-md mx-auto">
         {items.map((item) => {
           const isActive = value === item.id;
           return (
@@ -31,16 +31,16 @@ export function BottomNavigation({
               key={item.id}
               type="button"
               onClick={() => onChange(item.id)}
-              className={`relative flex-1 py-1 flex flex-col items-center justify-center gap-0.5 transition-colors duration-200 cursor-pointer active:scale-95 select-none ${
+              className={`relative flex-1 min-h-[44px] py-1 flex flex-col items-center justify-center gap-1 transition-colors duration-200 cursor-pointer active:scale-95 select-none ${
                 isActive
                   ? "text-brand-2 font-black dark:text-emerald-400"
-                  : "text-muted hover:text-ink font-medium"
+                  : "text-muted hover:text-ink font-semibold"
               }`}
               aria-label={item.label}
               aria-current={isActive ? "page" : undefined}
             >
-              <Icon name={item.icon} className="w-4.5 h-4.5" />
-              <small className="text-[10px] leading-tight">{item.label}</small>
+              <Icon name={item.icon} className="w-5 h-5" />
+              <small className="text-[10px] leading-tight font-bold">{item.label}</small>
             </button>
           );
         })}

@@ -41,6 +41,7 @@ type DemoContextValue = {
   updateComplaint: (id: string, status: ComplaintStatus, response?: string) => Feedback;
   markNotificationRead: (id: string) => void;
   markAllNotificationsRead: () => void;
+  updateCustomer: (patch: Partial<import("@/types/demo").Customer>) => void;
   updateBusiness: (patch: Partial<Business>) => void;
   updateBranch: (id: string, patch: Partial<Branch>) => Feedback;
   addBranch: (branch: Omit<Branch, "id" | "businessId">) => void;
@@ -235,6 +236,10 @@ export function DemoProvider({ children }: { children: ReactNode }) {
     commit({ ...stateRef.current, business: { ...stateRef.current.business, ...patch } });
   }, [commit]);
 
+  const updateCustomer = useCallback((patch: Partial<import("@/types/demo").Customer>) => {
+    commit({ ...stateRef.current, customer: { ...stateRef.current.customer, ...patch } });
+  }, [commit]);
+
   const updateBranch = useCallback((id: string, patch: Partial<Branch>): Feedback => {
     if (!stateRef.current.branches.some((branch) => branch.id === id)) return { ok: false, message: "شعبه پیدا نشد." };
     commit({ ...stateRef.current, branches: stateRef.current.branches.map((branch) => branch.id === id ? { ...branch, ...patch, id: branch.id } : branch) });
@@ -282,12 +287,12 @@ export function DemoProvider({ children }: { children: ReactNode }) {
     state, hydrated, createOffer, updateOffer, setOfferStatus, adjustStock, duplicateOffer, removeDraft,
     publishTemplate, createTemplate, updateTemplate, duplicateTemplate, deleteTemplate, placeOrder, transitionOrder, verifyPickup,
     submitReview, respondReview, updateComplaint, markNotificationRead, markAllNotificationsRead,
-    updateBusiness, updateBranch, addBranch, removeBranch, updateStaff, addStaff, setActiveStaff, resetDemo,
+    updateBusiness, updateCustomer, updateBranch, addBranch, removeBranch, updateStaff, addStaff, setActiveStaff, resetDemo,
   }), [
     state, hydrated, createOffer, updateOffer, setOfferStatus, adjustStock, duplicateOffer, removeDraft,
     publishTemplate, createTemplate, updateTemplate, duplicateTemplate, deleteTemplate, placeOrder, transitionOrder, verifyPickup,
     submitReview, respondReview, updateComplaint, markNotificationRead, markAllNotificationsRead,
-    updateBusiness, updateBranch, addBranch, removeBranch, updateStaff, addStaff, setActiveStaff, resetDemo,
+    updateBusiness, updateCustomer, updateBranch, addBranch, removeBranch, updateStaff, addStaff, setActiveStaff, resetDemo,
   ]);
 
   return <DemoContext.Provider value={value}>{children}</DemoContext.Provider>;

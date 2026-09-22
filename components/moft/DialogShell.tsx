@@ -60,7 +60,7 @@ export function DialogShell({
     if (event.target === event.currentTarget) onClose();
   };
 
-  const isCentered = size === "center" || size === "detail";
+  const isCentered = size === "center";
 
   return (
     <div
@@ -73,11 +73,15 @@ export function DialogShell({
         ref={dialogRef}
         className={`relative w-full ${
           size === "detail"
-            ? "max-w-md max-h-[92vh]"
+            ? "max-w-md max-h-[92dvh] sm:max-h-[90vh]"
             : size === "center"
-            ? "max-w-sm max-h-[85vh]"
-            : "max-w-md max-h-[85vh]"
-        } overflow-hidden flex flex-col rounded-t-[28px] sm:rounded-3xl bg-surface border border-line shadow-2xl animate-in slide-in-from-bottom duration-200`}
+            ? "max-w-sm max-h-[85dvh] sm:max-h-[85vh]"
+            : "max-w-md max-h-[85dvh] sm:max-h-[85vh]"
+        } overflow-hidden flex flex-col ${
+          isCentered
+            ? "rounded-3xl border border-line"
+            : "rounded-t-[28px] rounded-b-none sm:rounded-3xl border border-line border-b-0 sm:border-b"
+        } bg-surface shadow-2xl animate-in slide-in-from-bottom duration-200`}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
@@ -85,7 +89,7 @@ export function DialogShell({
       >
         <button
           ref={closeRef}
-          className="absolute top-3 start-3 z-20 min-w-[44px] min-h-[44px] w-11 h-11 rounded-full bg-surface/80 border border-line backdrop-blur-md grid place-items-center text-muted hover:text-ink transition-colors cursor-pointer active:scale-95"
+          className="absolute top-3.5 end-3.5 z-20 min-w-[44px] min-h-[44px] w-11 h-11 rounded-full bg-surface/80 border border-line backdrop-blur-md grid place-items-center text-muted hover:text-ink transition-colors cursor-pointer active:scale-95"
           type="button"
           onClick={onClose}
           aria-label="بستن"

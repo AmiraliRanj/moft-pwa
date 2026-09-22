@@ -159,6 +159,7 @@ export default function MoftPreview({
   const [installed, setInstalled] = useState(false);
   const [islandVisible, setIslandVisible] = useState(false);
   const [maxDistance, setMaxDistance] = useState(10);
+  const [minPrice, setMinPrice] = useState(0);
   const [maxPrice, setMaxPrice] = useState(300000);
   const [pickupFilter, setPickupFilter] = useState<"all" | PickupPeriod>("all");
   const [sort, setSort] = useState<SortMode>("nearest");
@@ -292,6 +293,7 @@ export default function MoftPreview({
     const filtered = baseFilteredOffers.filter(
       (offer) =>
         offer.distanceKm <= maxDistance &&
+        offer.price >= minPrice &&
         offer.price <= maxPrice &&
         (pickupFilter === "all" || offer.pickupPeriod === pickupFilter) &&
         (!favoritesOnly || favoriteSet.has(offer.id))
@@ -301,7 +303,7 @@ export default function MoftPreview({
       if (sort === "discount") return discountPercent(b.originalPrice, b.price) - discountPercent(a.originalPrice, a.price);
       return a.distanceKm - b.distanceKm;
     });
-  }, [baseFilteredOffers, favoriteSet, favoritesOnly, maxDistance, maxPrice, pickupFilter, sort]);
+  }, [baseFilteredOffers, favoriteSet, favoritesOnly, maxDistance, minPrice, maxPrice, pickupFilter, sort]);
 
   const toggleFavorite = (id: string) => {
     const next = new Set(favorites);
@@ -660,7 +662,6 @@ export default function MoftPreview({
                 onOpenOffer={openOffer}
                 onAbout={() => setLayer("about")}
                 showToast={showToast}
-                customerName={state.customer.name}
                 onCancel={requestCancel}
                 onReview={requestReview}
                 onDirections={() => showToast("مسیریابی این فروشگاه اکنون در دسترس نیست.")}
@@ -711,12 +712,15 @@ export default function MoftPreview({
         <FilterSheet
           maxDistance={maxDistance}
           setMaxDistance={setMaxDistance}
+          minPrice={minPrice}
+          setMinPrice={setMinPrice}
           maxPrice={maxPrice}
           setMaxPrice={setMaxPrice}
           pickup={pickupFilter}
           setPickup={setPickupFilter}
           onReset={() => {
             setMaxDistance(10);
+            setMinPrice(0);
             setMaxPrice(300000);
             setPickupFilter("all");
           }}
@@ -1028,6 +1032,53 @@ function DiscoverPage({
 }) {
   const [activeOffer, setActiveOffer] = useState<Offer | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<CategoryId>("all");
+  const mapScrollRef = useRef<HTMLDivElement>(null);
+  const isDraggingRef = useRef(false);
+  const dragStartRef = useRef({ x: 0, y: 0, scrollLeft: 0, scrollTop: 0 });
+
+  useEffect(() => {
+    if (mapScrollRef.current) {
+      const el = mapScrollRef.current;
+      // Vanak Square / User location is around 48% left, 52% top
+      const x = el.scrollWidth * 0.48 - el.clientWidth / 2;
+      const y = el.scrollHeight * 0.52 - el.clientHeight / 2;
+      el.scrollLeft = Math.max(0, x);
+      el.scrollTop = Math.max(0, y);
+    }
+  }, []);
+
+  const onMouseDown = (e: React.MouseEvent) => {
+    if (e.button !== 0 || !mapScrollRef.current) return;
+    isDraggingRef.current = true;
+    dragStartRef.current = {
+      x: e.clientX,
+      y: e.clientY,
+      scrollLeft: mapScrollRef.current.scrollLeft,
+      scrollTop: mapScrollRef.current.scrollTop,
+    };
+  };
+
+  const onMouseMove = (e: React.MouseEvent) => {
+    if (!isDraggingRef.current || !mapScrollRef.current) return;
+    const dx = e.clientX - dragStartRef.current.x;
+    const dy = e.clientY - dragStartRef.current.y;
+    mapScrollRef.current.scrollLeft = dragStartRef.current.scrollLeft - dx;
+    mapScrollRef.current.scrollTop = dragStartRef.current.scrollTop - dy;
+  };
+
+  const onMouseUp = () => {
+    isDraggingRef.current = false;
+  };
+
+  const scrollToUserLocation = () => {
+    if (mapScrollRef.current) {
+      const el = mapScrollRef.current;
+      const x = el.scrollWidth * 0.48 - el.clientWidth / 2;
+      const y = el.scrollHeight * 0.52 - el.clientHeight / 2;
+      el.scrollTo({ left: x, top: y, behavior: "smooth" });
+    }
+    showToast("موقعیت شما روی ونک تنظیم شد.");
+  };
 
   const quickCategories: Array<{ id: CategoryId; label: string }> = [
     { id: "all", label: "همه" },
@@ -1162,227 +1213,240 @@ function DiscoverPage({
         </div>
       </div>
 
-      {/* Map Area */}
+      {/* Map Area: ONLY the map is scrollable and pannable */}
       <div className="relative flex-1 w-full overflow-hidden">
-        {/* SVG Imaginary Map Vector Canvas (Google Maps & Fresha inspired) */}
+        {/* Scrollable / Draggable Map Canvas Container */}
         <div
-          className="absolute inset-0 overflow-hidden cursor-grab active:cursor-grabbing"
-          onClick={() => setActiveOffer(null)}
+          ref={mapScrollRef}
+          onMouseDown={onMouseDown}
+          onMouseMove={onMouseMove}
+          onMouseUp={onMouseUp}
+          onMouseLeave={onMouseUp}
+          className="absolute inset-0 overflow-auto scrollbar-none select-none cursor-grab active:cursor-grabbing"
+          style={{ touchAction: "pan-x pan-y", WebkitOverflowScrolling: "touch" }}
         >
-          <svg
-            className="w-full h-full object-cover"
-            viewBox="0 0 800 1000"
-            preserveAspectRatio="xMidYMid slice"
-            aria-hidden="true"
+          <div
+            className="relative w-[1100px] h-[1200px] shrink-0"
+            onClick={() => setActiveOffer(null)}
           >
-            <defs>
-              <pattern id="city-blocks" width="60" height="60" patternUnits="userSpaceOnUse">
-                <rect width="56" height="56" rx="4" fill="none" stroke="currentColor" strokeWidth="0.8" className="text-line/40 dark:text-line/20" />
-              </pattern>
-            </defs>
-
-            {/* Background Street Grid & City Blocks */}
-            <rect width="100%" height="100%" fill="#f4f6f4" className="dark:fill-[#171e19]" />
-            <rect width="100%" height="100%" fill="url(#city-blocks)" />
-
-            {/* Green Park Zones (Mellat, Abo-Atash, Taleghani) */}
-            <path
-              d="M 50 100 C 130 80, 180 200, 130 320 C 80 400, 30 280, 50 100 Z"
-              className="fill-emerald-500/25 dark:fill-emerald-500/15"
-            />
-            <text x="85" y="210" className="text-[13px] fill-emerald-800/70 dark:fill-emerald-400/60 font-black" transform="rotate(-15 85 210)">
-              بوستان ملت
-            </text>
-
-            {/* Abo-o-Atash Park */}
-            <path
-              d="M 570 410 C 690 370, 770 510, 690 630 C 610 690, 530 530, 570 410 Z"
-              className="fill-emerald-500/25 dark:fill-emerald-500/15"
-            />
-            <text x="615" y="510" className="text-[13px] fill-emerald-800/70 dark:fill-emerald-400/60 font-black" transform="rotate(10 615 510)">
-              پارک آب‌و‌آتش
-            </text>
-
-            {/* Taleghani Forest Park */}
-            <path
-              d="M 270 710 C 380 680, 450 790, 370 880 C 290 920, 230 810, 270 710 Z"
-              className="fill-emerald-500/20 dark:fill-emerald-500/15"
-            />
-            <text x="300" y="790" className="text-[13px] fill-emerald-800/60 dark:fill-emerald-400/50 font-black">
-              بوستان طالقانی
-            </text>
-
-            {/* Mirdamad Canal (Waterway Feature) */}
-            <path
-              d="M 0 370 Q 400 375 800 370"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="10"
-              className="text-sky-300/40 dark:text-sky-600/30"
-            />
-
-            {/* Road Network - Google Maps Arterial Styling */}
-            {/* Vali Asr Avenue (خیابان ولی‌عصر) */}
-            <path d="M 210 0 L 250 400 L 310 1000" fill="none" stroke="currentColor" strokeWidth="32" className="text-white dark:text-[#252f28]" />
-            <path d="M 210 0 L 250 400 L 310 1000" fill="none" stroke="currentColor" strokeWidth="20" className="text-[#edf2ee] dark:text-[#323f36]" />
-            <text x="235" y="240" className="text-[12px] fill-muted/80 font-black" transform="rotate(76 235 240)">
-              خیابان ولی‌عصر (عج)
-            </text>
-
-            {/* Nelson Mandela Boulevard / Jordan */}
-            <path d="M 440 40 L 460 520 L 480 960" fill="none" stroke="currentColor" strokeWidth="26" className="text-white dark:text-[#252f28]" />
-            <path d="M 440 40 L 460 520 L 480 960" fill="none" stroke="currentColor" strokeWidth="16" className="text-[#edf2ee] dark:text-[#323f36]" />
-            <text x="445" y="320" className="text-[12px] fill-muted/80 font-black" transform="rotate(84 445 320)">
-              بلوار نلسون ماندلا (جردن)
-            </text>
-
-            {/* Mirdamad Boulevard */}
-            <path d="M 0 350 L 800 350" fill="none" stroke="currentColor" strokeWidth="28" className="text-white dark:text-[#252f28]" />
-            <path d="M 0 350 L 800 350" fill="none" stroke="currentColor" strokeWidth="18" className="text-[#fef3d6] dark:text-[#383324]" />
-            <text x="350" y="345" className="text-[12px] fill-muted/80 font-black">
-              بلوار میرداماد
-            </text>
-
-            {/* Haghani Highway (بزرگراه شهید حقانی) */}
-            <path d="M 110 530 Q 400 510 800 650" fill="none" stroke="currentColor" strokeWidth="34" className="text-white dark:text-[#252f28]" />
-            <path d="M 110 530 Q 400 510 800 650" fill="none" stroke="currentColor" strokeWidth="22" className="text-[#fef3d6] dark:text-[#3c3624]" />
-            <text x="480" y="570" className="text-[12px] fill-muted/80 font-black" transform="rotate(12 480 570)">
-              بزرگراه شهید حقانی
-            </text>
-
-            {/* Tabiat Bridge (پل طبیعت) across Haghani */}
-            <path d="M 590 535 L 610 575" fill="none" stroke="currentColor" strokeWidth="8" strokeLinecap="round" className="text-amber-600/70" />
-            <text x="618" y="555" className="text-[10px] fill-amber-700 dark:fill-amber-400 font-black">
-              پل طبیعت
-            </text>
-
-            {/* Mollasadra Street */}
-            <path d="M 0 530 L 270 520" fill="none" stroke="currentColor" strokeWidth="24" className="text-white dark:text-[#252f28]" />
-            <path d="M 0 530 L 270 520" fill="none" stroke="currentColor" strokeWidth="14" className="text-[#edf2ee] dark:text-[#323f36]" />
-            <text x="110" y="515" className="text-[11px] fill-muted/80 font-black">
-              خیابان ملاصدرا
-            </text>
-
-            {/* Hemmat Highway */}
-            <path d="M 0 780 L 800 780" fill="none" stroke="currentColor" strokeWidth="32" className="text-white dark:text-[#252f28]" />
-            <path d="M 0 780 L 800 780" fill="none" stroke="currentColor" strokeWidth="22" className="text-[#fef3d6] dark:text-[#3c3624]" />
-            <text x="500" y="775" className="text-[12px] fill-muted/80 font-black">
-              بزرگراه شهید همت
-            </text>
-
-            {/* Vanak Square Rotary */}
-            <circle cx="260" cy="525" r="34" fill="none" stroke="currentColor" strokeWidth="20" className="text-white dark:text-[#252f28]" />
-            <circle cx="260" cy="525" r="34" fill="none" stroke="currentColor" strokeWidth="12" className="text-[#edf2ee] dark:text-[#323f36]" />
-            <circle cx="260" cy="525" r="20" className="fill-emerald-500/30" />
-            <text x="260" y="529" textAnchor="middle" className="text-[11px] fill-ink font-black">
-              میدان ونک
-            </text>
-
-            {/* Metro Stations Icons */}
-            <g transform="translate(680, 580)">
-              <circle cx="10" cy="10" r="10" className="fill-blue-500 shadow-sm" />
-              <text x="10" y="14" textAnchor="middle" fill="#ffffff" className="text-[10px] font-black">M</text>
-              <text x="25" y="14" className="text-[10px] fill-muted font-bold">مترو حقانی</text>
-            </g>
-            <g transform="translate(620, 320)">
-              <circle cx="10" cy="10" r="10" className="fill-blue-500 shadow-sm" />
-              <text x="10" y="14" textAnchor="middle" fill="#ffffff" className="text-[10px] font-black">M</text>
-              <text x="25" y="14" className="text-[10px] fill-muted font-bold">مترو میرداماد</text>
-            </g>
-          </svg>
-        </div>
-
-        {/* User Location Radar Marker */}
-        <div
-          className="absolute z-10 flex flex-col items-center pointer-events-none -translate-x-1/2 -translate-y-1/2"
-          style={{ top: "52%", left: "48%" }}
-        >
-          <span className="relative flex h-6 w-6">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-6 w-6 bg-sky-500 border-2 border-white shadow-md"></span>
-          </span>
-          <span className="mt-1 px-2 py-0.5 rounded-full bg-surface/90 backdrop-blur-xs text-[9px] font-black text-ink border border-line shadow-xs">
-            موقعیت شما
-          </span>
-        </div>
-
-        {/* Restaurant Marker Pins: Circular 2D SVG icon pin by default, title card above location when selected */}
-        {filteredOffers.map((offer, index) => {
-          const coords = pinCoordinates[index % pinCoordinates.length];
-          const isSelected = activeOffer?.id === offer.id;
-          const iconName = getCategoryIconName(offer.category);
-
-          return (
-            <div
-              key={offer.id}
-              className="absolute z-20 -translate-x-1/2 -translate-y-1/2"
-              style={{ top: coords.top, left: coords.left }}
+            {/* SVG Imaginary Map Vector Canvas (Google Maps & Fresha inspired) */}
+            <svg
+              className="absolute inset-0 w-full h-full object-cover"
+              viewBox="0 0 800 1000"
+              preserveAspectRatio="none"
+              aria-hidden="true"
             >
-              {/* Selected State: Title card above location with restaurant icon, name and available packs (NO price!) */}
-              {isSelected && (
-                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-30 pointer-events-none flex flex-col items-center animate-in fade-in zoom-in-95 duration-200">
-                  <div className="flex items-center gap-2 p-1.5 pe-3 rounded-full bg-surface border border-line shadow-lg">
-                    <span className="w-8 h-8 rounded-full bg-brand-soft text-brand-2 grid place-items-center shrink-0 border border-line/40 shadow-2xs">
-                      <Icon name={iconName} className="w-4.5 h-4.5" />
-                    </span>
-                    <div className="flex items-center gap-2 text-start whitespace-nowrap">
-                      <strong className="text-xs font-black text-ink">
-                        {offer.merchantName}
-                      </strong>
-                      <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-300">
-                        {numberFa(offer.quantityLeft)} بسته موجود
-                      </span>
-                    </div>
-                  </div>
-                  {/* Pointer triangle pointing down to pin */}
-                  <span
-                    className="w-0 h-0 border-x-[6px] border-x-transparent border-t-[6px] border-t-surface -mt-[1px] drop-shadow-xs"
-                    aria-hidden="true"
-                  />
-                </div>
-              )}
+              <defs>
+                <pattern id="city-blocks" width="60" height="60" patternUnits="userSpaceOnUse">
+                  <rect width="56" height="56" rx="4" fill="none" stroke="currentColor" strokeWidth="0.8" className="text-line/40 dark:text-line/20" />
+                </pattern>
+              </defs>
 
-              {/* Location Marker Pin: 2D SVG Restaurant/Cafe Category Icon */}
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setActiveOffer(offer);
-                }}
-                className={`pointer-events-auto relative w-11 h-11 rounded-full flex items-center justify-center transition-all duration-200 cursor-pointer active:scale-90 focus:outline-none ${
-                  isSelected
-                    ? "bg-surface text-brand-2 ring-3 ring-brand-2 shadow-xl scale-110 z-30"
-                    : "bg-surface text-ink/80 hover:text-brand-2 border border-line/70 shadow-md hover:shadow-lg hover:scale-110"
-                }`}
-                aria-label={`انتخاب ${offer.merchantName} - ${numberFa(offer.quantityLeft)} بسته موجود`}
-              >
-                <Icon name={iconName} className="w-5 h-5" />
-                {/* Pointer tip at bottom of circle */}
-                <span
-                  className={`absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 rotate-45 border-r border-b ${
-                    isSelected
-                      ? "bg-brand-2 border-brand-2"
-                      : "bg-surface border-line/70"
-                  }`}
-                  aria-hidden="true"
-                />
-              </button>
+              {/* Background Street Grid & City Blocks */}
+              <rect width="100%" height="100%" fill="#f4f6f4" className="dark:fill-[#171e19]" />
+              <rect width="100%" height="100%" fill="url(#city-blocks)" />
+
+              {/* Green Park Zones (Mellat, Abo-Atash, Taleghani) */}
+              <path
+                d="M 50 100 C 130 80, 180 200, 130 320 C 80 400, 30 280, 50 100 Z"
+                className="fill-emerald-500/25 dark:fill-emerald-500/15"
+              />
+              <text x="85" y="210" className="text-[13px] fill-emerald-800/70 dark:fill-emerald-400/60 font-black" transform="rotate(-15 85 210)">
+                بوستان ملت
+              </text>
+
+              {/* Abo-o-Atash Park */}
+              <path
+                d="M 570 410 C 690 370, 770 510, 690 630 C 610 690, 530 530, 570 410 Z"
+                className="fill-emerald-500/25 dark:fill-emerald-500/15"
+              />
+              <text x="615" y="510" className="text-[13px] fill-emerald-800/70 dark:fill-emerald-400/60 font-black" transform="rotate(10 615 510)">
+                پارک آب‌و‌آتش
+              </text>
+
+              {/* Taleghani Forest Park */}
+              <path
+                d="M 270 710 C 380 680, 450 790, 370 880 C 290 920, 230 810, 270 710 Z"
+                className="fill-emerald-500/20 dark:fill-emerald-500/15"
+              />
+              <text x="300" y="790" className="text-[13px] fill-emerald-800/60 dark:fill-emerald-400/50 font-black">
+                بوستان طالقانی
+              </text>
+
+              {/* Mirdamad Canal (Waterway Feature) */}
+              <path
+                d="M 0 370 Q 400 375 800 370"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="10"
+                className="text-sky-300/40 dark:text-sky-600/30"
+              />
+
+              {/* Road Network - Google Maps Arterial Styling */}
+              {/* Vali Asr Avenue (خیابان ولی‌عصر) */}
+              <path d="M 210 0 L 250 400 L 310 1000" fill="none" stroke="currentColor" strokeWidth="32" className="text-white dark:text-[#252f28]" />
+              <path d="M 210 0 L 250 400 L 310 1000" fill="none" stroke="currentColor" strokeWidth="20" className="text-[#edf2ee] dark:text-[#323f36]" />
+              <text x="235" y="240" className="text-[12px] fill-muted/80 font-black" transform="rotate(76 235 240)">
+                خیابان ولی‌عصر (عج)
+              </text>
+
+              {/* Nelson Mandela Boulevard / Jordan */}
+              <path d="M 440 40 L 460 520 L 480 960" fill="none" stroke="currentColor" strokeWidth="26" className="text-white dark:text-[#252f28]" />
+              <path d="M 440 40 L 460 520 L 480 960" fill="none" stroke="currentColor" strokeWidth="16" className="text-[#edf2ee] dark:text-[#323f36]" />
+              <text x="445" y="320" className="text-[12px] fill-muted/80 font-black" transform="rotate(84 445 320)">
+                بلوار نلسون ماندلا (جردن)
+              </text>
+
+              {/* Mirdamad Boulevard */}
+              <path d="M 0 350 L 800 350" fill="none" stroke="currentColor" strokeWidth="28" className="text-white dark:text-[#252f28]" />
+              <path d="M 0 350 L 800 350" fill="none" stroke="currentColor" strokeWidth="18" className="text-[#fef3d6] dark:text-[#383324]" />
+              <text x="350" y="345" className="text-[12px] fill-muted/80 font-black">
+                بلوار میرداماد
+              </text>
+
+              {/* Haghani Highway (بزرگراه شهید حقانی) */}
+              <path d="M 110 530 Q 400 510 800 650" fill="none" stroke="currentColor" strokeWidth="34" className="text-white dark:text-[#252f28]" />
+              <path d="M 110 530 Q 400 510 800 650" fill="none" stroke="currentColor" strokeWidth="22" className="text-[#fef3d6] dark:text-[#3c3624]" />
+              <text x="480" y="570" className="text-[12px] fill-muted/80 font-black" transform="rotate(12 480 570)">
+                بزرگراه شهید حقانی
+              </text>
+
+              {/* Tabiat Bridge (پل طبیعت) across Haghani */}
+              <path d="M 590 535 L 610 575" fill="none" stroke="currentColor" strokeWidth="8" strokeLinecap="round" className="text-amber-600/70" />
+              <text x="618" y="555" className="text-[10px] fill-amber-700 dark:fill-amber-400 font-black">
+                پل طبیعت
+              </text>
+
+              {/* Mollasadra Street */}
+              <path d="M 0 530 L 270 520" fill="none" stroke="currentColor" strokeWidth="24" className="text-white dark:text-[#252f28]" />
+              <path d="M 0 530 L 270 520" fill="none" stroke="currentColor" strokeWidth="14" className="text-[#edf2ee] dark:text-[#323f36]" />
+              <text x="110" y="515" className="text-[11px] fill-muted/80 font-black">
+                خیابان ملاصدرا
+              </text>
+
+              {/* Hemmat Highway */}
+              <path d="M 0 780 L 800 780" fill="none" stroke="currentColor" strokeWidth="32" className="text-white dark:text-[#252f28]" />
+              <path d="M 0 780 L 800 780" fill="none" stroke="currentColor" strokeWidth="22" className="text-[#fef3d6] dark:text-[#3c3624]" />
+              <text x="500" y="775" className="text-[12px] fill-muted/80 font-black">
+                بزرگراه شهید همت
+              </text>
+
+              {/* Vanak Square Rotary */}
+              <circle cx="260" cy="525" r="34" fill="none" stroke="currentColor" strokeWidth="20" className="text-white dark:text-[#252f28]" />
+              <circle cx="260" cy="525" r="34" fill="none" stroke="currentColor" strokeWidth="12" className="text-[#edf2ee] dark:text-[#323f36]" />
+              <circle cx="260" cy="525" r="20" className="fill-emerald-500/30" />
+              <text x="260" y="529" textAnchor="middle" className="text-[11px] fill-ink font-black">
+                میدان ونک
+              </text>
+
+              {/* Metro Stations Icons */}
+              <g transform="translate(680, 580)">
+                <circle cx="10" cy="10" r="10" className="fill-blue-500 shadow-sm" />
+                <text x="10" y="14" textAnchor="middle" fill="#ffffff" className="text-[10px] font-black">M</text>
+                <text x="25" y="14" className="text-[10px] fill-muted font-bold">مترو حقانی</text>
+              </g>
+              <g transform="translate(620, 320)">
+                <circle cx="10" cy="10" r="10" className="fill-blue-500 shadow-sm" />
+                <text x="10" y="14" textAnchor="middle" fill="#ffffff" className="text-[10px] font-black">M</text>
+                <text x="25" y="14" className="text-[10px] fill-muted font-bold">مترو میرداماد</text>
+              </g>
+            </svg>
+
+            {/* User Location Radar Marker */}
+            <div
+              className="absolute z-10 flex flex-col items-center pointer-events-none -translate-x-1/2 -translate-y-1/2"
+              style={{ top: "52%", left: "48%" }}
+            >
+              <span className="relative flex h-6 w-6">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-6 w-6 bg-sky-500 border-2 border-white shadow-md"></span>
+              </span>
+              <span className="mt-1 px-2 py-0.5 rounded-full bg-surface/90 backdrop-blur-xs text-[9px] font-black text-ink border border-line shadow-xs">
+                موقعیت شما
+              </span>
             </div>
-          );
-        })}
+
+            {/* Restaurant Marker Pins: Circular Restaurant Logo pin, title card with category icon above location when selected */}
+            {filteredOffers.map((offer, index) => {
+              const coords = pinCoordinates[index % pinCoordinates.length];
+              const isSelected = activeOffer?.id === offer.id;
+              const iconName = getCategoryIconName(offer.category);
+
+              return (
+                <div
+                  key={offer.id}
+                  className="absolute z-20 -translate-x-1/2 -translate-y-1/2"
+                  style={{ top: coords.top, left: coords.left }}
+                >
+                  {/* Selected State: Title card above location with category icon, restaurant name and available packs (NO background behind title/badge!) */}
+                  {isSelected && (
+                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-30 pointer-events-none flex flex-col items-center animate-in fade-in zoom-in-95 duration-200">
+                      <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface/95 dark:bg-[#18201a]/95 backdrop-blur-md border border-line shadow-lg text-start whitespace-nowrap">
+                        <Icon name={iconName} className="w-4 h-4 text-brand-2 shrink-0" />
+                        <strong className="text-xs font-black text-ink">
+                          {offer.merchantName}
+                        </strong>
+                        <span className="text-[11px] font-bold text-emerald-700 dark:text-emerald-300">
+                          • {numberFa(offer.quantityLeft)} بسته موجود
+                        </span>
+                      </div>
+                      {/* Pointer triangle pointing down to pin */}
+                      <span
+                        className="w-0 h-0 border-x-[6px] border-x-transparent border-t-[6px] border-t-surface -mt-[1px] drop-shadow-xs"
+                        aria-hidden="true"
+                      />
+                    </div>
+                  )}
+
+                  {/* Location Marker Pin: Circular Restaurant/Cafe Logo */}
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setActiveOffer(offer);
+                    }}
+                    className={`pointer-events-auto relative w-11 h-11 rounded-full flex items-center justify-center transition-all duration-200 cursor-pointer active:scale-90 focus:outline-none ${
+                      isSelected
+                        ? "bg-surface ring-3 ring-brand-2 shadow-xl scale-115 z-30"
+                        : "bg-surface border-2 border-white dark:border-[#2a342c] shadow-md hover:shadow-lg hover:scale-110"
+                    }`}
+                    aria-label={`انتخاب ${offer.merchantName} - ${numberFa(offer.quantityLeft)} بسته موجود`}
+                  >
+                    <div className="w-8 h-8 rounded-full overflow-hidden bg-canvas-soft shrink-0">
+                      <Image
+                        src={offer.image}
+                        alt={offer.merchantName}
+                        width={32}
+                        height={32}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    {/* Pointer tip at bottom of circle */}
+                    <span
+                      className={`absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 rotate-45 border-r border-b ${
+                        isSelected
+                          ? "bg-brand-2 border-brand-2"
+                          : "bg-surface border-line/70"
+                      }`}
+                      aria-hidden="true"
+                    />
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </div>
 
         {/* Bottom Floating Controls: Strictly on the RIGHT side, My Location above Nearest, dark green circular buttons with icons only */}
         <div
-          className={`absolute bottom-24 right-4 z-30 flex flex-col items-end gap-2.5 transition-all duration-300 ${
+          className={`absolute bottom-20 right-4 z-30 flex flex-col items-end gap-2.5 transition-all duration-300 ${
             activeOffer ? "opacity-0 translate-y-4 pointer-events-none" : "opacity-100 translate-y-0 pointer-events-auto"
           }`}
         >
           {/* My Location Button (Above) - Dark green, icon only */}
           <button
             type="button"
-            onClick={() => {
-              showToast("موقعیت شما روی ونک تنظیم شد.");
-            }}
+            onClick={scrollToUserLocation}
             className="pointer-events-auto w-11 h-11 min-h-[44px] min-w-[44px] rounded-full bg-[#14532d] hover:bg-[#0f3d21] text-white shadow-lg flex items-center justify-center border border-white/10 active:scale-90 transition-all cursor-pointer"
             aria-label="موقعیت من"
           >
@@ -1714,7 +1778,6 @@ function ProfilePage({
   onOpenOffer,
   onAbout,
   showToast,
-  customerName,
   onCancel,
   onReview,
   onDirections,
@@ -1729,11 +1792,12 @@ function ProfilePage({
   onOpenOffer: (offer: Offer) => void;
   onAbout: () => void;
   showToast: (message: string) => void;
-  customerName: string;
   onCancel: (id: string) => void;
   onReview: (id: string) => void;
   onDirections: () => void;
 }) {
+  const { state, updateCustomer } = useDemo();
+  const [editProfileOpen, setEditProfileOpen] = useState(false);
   const [profileSubpage, setProfileSubpage] = useState<"main" | "history">("main");
   const { theme, setTheme } = useMoftTheme();
   const preventedWaste = savedMeals * 0.78;
@@ -1791,36 +1855,33 @@ function ProfilePage({
 
   return (
     <div className="space-y-4">
-      {/* 1. Profile Info Card */}
-      <div className="flex items-center gap-3.5 p-4 rounded-3xl bg-surface border border-line shadow-xs">
-        <div className="w-12 h-12 rounded-2xl bg-brand-soft text-brand-2 font-black text-lg grid place-items-center shrink-0">
-          {customerName[0]}
+      {/* 1. Profile Info Card (Clickable with chevron to edit personal info) */}
+      <button
+        type="button"
+        onClick={() => setEditProfileOpen(true)}
+        className="w-full flex items-center justify-between p-4 rounded-3xl bg-surface border border-line shadow-xs hover:bg-surface-raised transition-colors cursor-pointer text-start active:scale-[0.99]"
+        aria-label="ویرایش اطلاعات شخصی"
+      >
+        <div className="flex items-center gap-3">
+          <Icon name="user" className="w-6 h-6 text-brand-2 shrink-0" />
+          <h1 className="text-base font-black text-ink">{state.customer.name}</h1>
         </div>
-        <div>
-          <h1 className="text-base font-black text-ink">{customerName}</h1>
-        </div>
-      </div>
+        <Icon name="chevron" className="w-4 h-4 text-muted rtl:rotate-180" />
+      </button>
 
-      {/* 2. Primary Options & Settings Group (First section after Profile Card) */}
+      {/* 2. Group 1: Activity & Orders */}
       <div className="rounded-3xl bg-surface border border-line shadow-xs divide-y divide-line overflow-hidden">
         {/* Order History */}
         <button
           type="button"
           onClick={() => setProfileSubpage("history")}
-          className="w-full flex items-center justify-between p-3.5 text-start hover:bg-canvas/40 transition-colors cursor-pointer min-h-[52px]"
+          className="w-full flex items-center justify-between p-3.5 text-start hover:bg-canvas/40 transition-colors cursor-pointer min-h-[48px]"
         >
           <div className="flex items-center gap-3">
             <span className="w-7 h-7 flex items-center justify-center text-muted shrink-0">
               <Icon name="clock" className="w-5 h-5" />
             </span>
-            <div>
-              <strong className="block text-xs font-bold text-ink">تاریخچهٔ سفارش‌ها</strong>
-              <small className="block text-[11px] text-muted mt-0.5">
-                {historyReservations.length
-                  ? `${numberFa(historyReservations.length)} سفارش گذشته`
-                  : "سفارش‌های قبلی و تحویل‌شده"}
-              </small>
-            </div>
+            <strong className="text-xs font-bold text-ink">تاریخچهٔ سفارش‌ها</strong>
           </div>
           <div className="flex items-center gap-2">
             {historyReservations.length > 0 && (
@@ -1832,23 +1893,34 @@ function ProfilePage({
           </div>
         </button>
 
-        {/* Dark/Light Mode Button - integrated like other option buttons */}
+        {/* Allergies & Preferences */}
+        <button
+          type="button"
+          onClick={() => showToast("هشدار آلرژی هر جعبه را پیش از رزرو بررسی کن.")}
+          className="w-full flex items-center justify-between p-3.5 text-start hover:bg-canvas/40 transition-colors min-h-[48px] cursor-pointer"
+        >
+          <div className="flex items-center gap-3">
+            <span className="w-7 h-7 flex items-center justify-center text-muted shrink-0 text-base">⚠️</span>
+            <strong className="text-xs font-bold text-ink">آلرژی‌ها و ترجیحات</strong>
+          </div>
+          <Icon name="chevron" className="w-4 h-4 text-muted rtl:rotate-180" />
+        </button>
+      </div>
+
+      {/* 3. Group 2: App Preferences & Notifications */}
+      <div className="rounded-3xl bg-surface border border-line shadow-xs divide-y divide-line overflow-hidden">
+        {/* Dark/Light Mode Button */}
         <button
           type="button"
           onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-          className="w-full flex items-center justify-between p-3.5 text-start hover:bg-canvas/40 transition-colors cursor-pointer min-h-[52px]"
+          className="w-full flex items-center justify-between p-3.5 text-start hover:bg-canvas/40 transition-colors cursor-pointer min-h-[48px]"
           aria-label={`تغییر پوسته برنامه به حالت ${theme === "dark" ? "روشن" : "تاریک"}`}
         >
           <div className="flex items-center gap-3">
             <span className="w-7 h-7 flex items-center justify-center text-brand-2 shrink-0">
               <Icon name={theme === "dark" ? "moon" : "sun"} className="w-5 h-5" />
             </span>
-            <div>
-              <strong className="block text-xs font-bold text-ink">حالت شب و روز</strong>
-              <small className="block text-[11px] text-muted mt-0.5">
-                {theme === "dark" ? "پوستهٔ تاریک فعال است" : "پوستهٔ روشن فعال است"}
-              </small>
-            </div>
+            <strong className="text-xs font-bold text-ink">حالت شب و روز</strong>
           </div>
           <div className="flex items-center gap-2">
             <span className="px-2.5 py-1 rounded-full bg-canvas border border-line text-[11px] font-bold text-ink inline-flex items-center gap-1.5">
@@ -1860,100 +1932,53 @@ function ProfilePage({
         </button>
 
         {/* Pickup Reminders Toggle */}
-        <div className="flex items-center justify-between p-3.5 min-h-[52px]">
+        <div className="flex items-center justify-between p-3.5 min-h-[48px]">
           <div className="flex items-center gap-3">
             <span className="w-7 h-7 flex items-center justify-center text-muted shrink-0">
               <Icon name="bell" className="w-5 h-5" />
             </span>
-            <div>
-              <strong className="block text-xs font-bold text-ink">یادآوری زمان دریافت</strong>
-              <small className="block text-[11px] text-muted mt-0.5">{notifications ? "یادآوری فعال است" : "یادآوری غیرفعال است"}</small>
-            </div>
+            <strong className="text-xs font-bold text-ink">یادآوری زمان دریافت</strong>
           </div>
           <GlassToggle checked={notifications} onCheckedChange={setNotifications} label="یادآوری زمان دریافت" />
         </div>
 
         {/* PWA Install */}
-        <button type="button" onClick={onInstall} className="w-full flex items-center justify-between p-3.5 text-start hover:bg-canvas/40 transition-colors min-h-[52px]">
+        <button
+          type="button"
+          onClick={onInstall}
+          className="w-full flex items-center justify-between p-3.5 text-start hover:bg-canvas/40 transition-colors min-h-[48px] cursor-pointer"
+        >
           <div className="flex items-center gap-3">
             <span className="w-7 h-7 flex items-center justify-center text-muted shrink-0">
               <Icon name="share" className="w-5 h-5" />
             </span>
-            <div>
-              <strong className="block text-xs font-bold text-ink">{installed ? "دیبز روی دستگاه نصب است" : "نصب برنامه"}</strong>
-              <small className="block text-[11px] text-muted mt-0.5">{installed ? "اجرای مستقل فعال است" : "افزودن به صفحهٔ اصلی"}</small>
-            </div>
+            <strong className="text-xs font-bold text-ink">{installed ? "دیبز روی دستگاه نصب است" : "نصب برنامه"}</strong>
           </div>
           <Icon name="chevron" className="w-4 h-4 text-muted rtl:rotate-180" />
         </button>
+      </div>
 
-        {/* Allergies & Preferences */}
-        <button type="button" onClick={() => showToast("هشدار آلرژی هر جعبه را پیش از رزرو بررسی کن.")} className="w-full flex items-center justify-between p-3.5 text-start hover:bg-canvas/40 transition-colors min-h-[52px]">
-          <div className="flex items-center gap-3">
-            <span className="w-7 h-7 flex items-center justify-center text-muted shrink-0 text-base">⚠️</span>
-            <div>
-              <strong className="block text-xs font-bold text-ink">آلرژی‌ها و ترجیحات</strong>
-              <small className="block text-[11px] text-muted mt-0.5">هشدارهای هر جعبه را بررسی کن</small>
-            </div>
-          </div>
-          <Icon name="chevron" className="w-4 h-4 text-muted rtl:rotate-180" />
-        </button>
-
+      {/* 4. Group 3: About & Support */}
+      <div className="rounded-3xl bg-surface border border-line shadow-xs divide-y divide-line overflow-hidden">
         {/* About Moft */}
-        <button type="button" onClick={onAbout} className="w-full flex items-center justify-between p-3.5 text-start hover:bg-canvas/40 transition-colors min-h-[52px]">
+        <button type="button" onClick={onAbout} className="w-full flex items-center justify-between p-3.5 text-start hover:bg-canvas/40 transition-colors min-h-[48px] cursor-pointer">
           <div className="flex items-center gap-3">
             <span className="w-7 h-7 flex items-center justify-center text-muted shrink-0">
               <Icon name="info" className="w-5 h-5" />
             </span>
-            <div>
-              <strong className="block text-xs font-bold text-ink">دربارهٔ دیبز</strong>
-              <small className="block text-[11px] text-muted mt-0.5">ماموریت، ایمنی و نحوهٔ کار</small>
-            </div>
+            <strong className="text-xs font-bold text-ink">دربارهٔ دیبز</strong>
           </div>
           <Icon name="chevron" className="w-4 h-4 text-muted rtl:rotate-180" />
         </button>
 
         {/* Help & Support */}
-        <Link href="/customer/support" className="flex items-center justify-between p-3.5 hover:bg-canvas/40 transition-colors min-h-[52px]">
+        <Link href="/customer/support" className="flex items-center justify-between p-3.5 hover:bg-canvas/40 transition-colors min-h-[48px]">
           <div className="flex items-center gap-3">
             <span className="w-7 h-7 flex items-center justify-center text-muted shrink-0 font-bold text-sm">؟</span>
-            <div>
-              <strong className="block text-xs font-bold text-ink">راهنما و پشتیبانی</strong>
-              <small className="block text-[11px] text-muted mt-0.5">پرسش‌های رایج و پیگیری درخواست‌ها</small>
-            </div>
+            <strong className="text-xs font-bold text-ink">راهنما و پشتیبانی</strong>
           </div>
           <Icon name="chevron" className="w-4 h-4 text-muted rtl:rotate-180" />
         </Link>
-
-        {/* [BUSINESS LINK HIDDEN FOR SEPARATE BUSINESS APP - DO NOT DELETE]
-        <Link href="/business" className="flex items-center justify-between p-3.5 hover:bg-canvas/40 transition-colors">
-          <div className="flex items-center gap-3">
-            <span className="w-7 h-7 flex items-center justify-center text-brand-2 shrink-0">
-              <Icon name="store" className="w-5 h-5" />
-            </span>
-            <div>
-              <strong className="block text-xs font-bold text-ink">رفتن به پنل کسب‌وکار</strong>
-              <small className="block text-[11px] text-muted mt-0.5">مدیریت پیشنهادها و سفارش‌ها</small>
-            </div>
-          </div>
-          <Icon name="chevron" className="w-4 h-4 text-muted rtl:rotate-180" />
-        </Link>
-        */}
-
-        {/* [ROLE SELECTOR LINK HIDDEN FOR USER-ONLY APP - DO NOT DELETE]
-        <Link href="/" className="flex items-center justify-between p-3.5 hover:bg-canvas/40 transition-colors">
-          <div className="flex items-center gap-3">
-            <span className="w-7 h-7 flex items-center justify-center text-muted shrink-0">
-              <Icon name="home" className="w-5 h-5" />
-            </span>
-            <div>
-              <strong className="block text-xs font-bold text-ink">انتخاب نوع ورود</strong>
-              <small className="block text-[11px] text-muted mt-0.5">بازگشت به صفحه آغاز</small>
-            </div>
-          </div>
-          <Icon name="chevron" className="w-4 h-4 text-muted rtl:rotate-180" />
-        </Link>
-        */}
       </div>
 
       {/* 3. Impact Stats Card */}
@@ -2042,22 +2067,166 @@ function ProfilePage({
         <p className="text-[11px] font-bold text-muted">دیبز • پیش‌نمایش دانشگاهی</p>
         <p className="text-[10px] text-muted/70">{numberFa(reservations.length)} سفارش در حافظهٔ این دستگاه</p>
       </div>
+
+      {editProfileOpen && (
+        <EditProfileDialog
+          customer={state.customer}
+          onSave={(patch) => {
+            updateCustomer(patch);
+            showToast("اطلاعات شخصی با موفقیت ذخیره شد.");
+          }}
+          onClose={() => setEditProfileOpen(false)}
+        />
+      )}
     </div>
+  );
+}
+
+function EditProfileDialog({
+  customer,
+  onSave,
+  onClose,
+}: {
+  customer: import("@/types/demo").Customer;
+  onSave: (patch: Partial<import("@/types/demo").Customer>) => void;
+  onClose: () => void;
+}) {
+  const [name, setName] = useState(customer.name);
+  const [mobile, setMobile] = useState(customer.mobile);
+  const [age, setAge] = useState(customer.age ? String(customer.age) : "");
+  const [gender, setGender] = useState<"female" | "male" | "other">(
+    (customer.gender as "female" | "male" | "other") || "female"
+  );
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name.trim()) return;
+    onSave({
+      name: name.trim(),
+      mobile: mobile.trim(),
+      age: age ? Number(age) : undefined,
+      gender,
+    });
+    onClose();
+  };
+
+  return (
+    <DialogShell titleId="edit-profile-title" onClose={onClose}>
+      <form onSubmit={handleSubmit} className="p-5 space-y-4 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+        <div className="flex items-center justify-between pb-3 border-b border-line pe-12">
+          <h2 id="edit-profile-title" className="text-base font-black text-ink">
+            ویرایش اطلاعات شخصی
+          </h2>
+        </div>
+
+        {/* Name */}
+        <div className="space-y-1.5">
+          <label htmlFor="user-name" className="text-xs font-bold text-muted">
+            نام و نام خانوادگی
+          </label>
+          <input
+            id="user-name"
+            type="text"
+            required
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="w-full h-11 px-3.5 rounded-xl bg-canvas border border-line text-sm font-bold text-ink focus:border-brand-2 outline-none transition-colors"
+            placeholder="نام شما"
+          />
+        </div>
+
+        {/* Mobile */}
+        <div className="space-y-1.5">
+          <label htmlFor="user-mobile" className="text-xs font-bold text-muted">
+            شماره همراه
+          </label>
+          <input
+            id="user-mobile"
+            type="tel"
+            dir="ltr"
+            value={mobile}
+            onChange={(e) => setMobile(e.target.value)}
+            className="w-full h-11 px-3.5 rounded-xl bg-canvas border border-line text-sm font-mono text-ink text-left focus:border-brand-2 outline-none transition-colors"
+            placeholder="۰۹۱۲۰۰۰۰۰۰۰"
+          />
+        </div>
+
+        {/* Age */}
+        <div className="space-y-1.5">
+          <label htmlFor="user-age" className="text-xs font-bold text-muted">
+            سن
+          </label>
+          <input
+            id="user-age"
+            type="number"
+            min="10"
+            max="120"
+            value={age}
+            onChange={(e) => setAge(e.target.value)}
+            className="w-full h-11 px-3.5 rounded-xl bg-canvas border border-line text-sm font-bold text-ink focus:border-brand-2 outline-none transition-colors"
+            placeholder="مثال: ۲۴"
+          />
+        </div>
+
+        {/* Gender */}
+        <div className="space-y-1.5">
+          <label className="text-xs font-bold text-muted">
+            جنسیت
+          </label>
+          <div className="grid grid-cols-3 gap-2">
+            {[
+              { id: "female", label: "خانم" },
+              { id: "male", label: "آقا" },
+              { id: "other", label: "سایر" },
+            ].map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => setGender(item.id as "female" | "male" | "other")}
+                className={`h-10 rounded-xl text-xs font-bold transition-all cursor-pointer active:scale-95 border ${
+                  gender === item.id
+                    ? "bg-brand-soft text-brand-2 border-brand-2 font-black shadow-2xs"
+                    : "bg-canvas text-ink border-line hover:bg-surface-raised"
+                }`}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Actions */}
+        <div className="flex items-center justify-between gap-3 pt-3 border-t border-line">
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-xs font-bold text-muted hover:text-ink px-3 py-2 min-h-[44px] cursor-pointer"
+          >
+            انصراف
+          </button>
+          <button
+            type="submit"
+            className="h-11 min-h-[44px] px-6 inline-flex items-center justify-center text-xs font-bold rounded-2xl bg-brand-2 text-white hover:opacity-90 shadow-sm transition-all cursor-pointer active:scale-95"
+          >
+            ذخیره تغییرات
+          </button>
+        </div>
+      </form>
+    </DialogShell>
   );
 }
 
 function OfferDetails({
   offer,
-  favorite,
-  onFavorite,
   onClose,
   onReserve,
   related,
   onSelect,
   favorites,
+  onFavorite,
 }: {
   offer: Offer;
-  favorite: boolean;
+  favorite?: boolean;
   onFavorite: (id: string) => void;
   onClose: () => void;
   onReserve: () => void;
@@ -2076,19 +2245,6 @@ function OfferDetails({
 
   return (
     <DialogShell titleId="offer-title" onClose={onClose} size="detail">
-      <button
-        className={`absolute top-3 end-3 z-20 min-w-[44px] min-h-[44px] w-11 h-11 rounded-full border backdrop-blur-md grid place-items-center transition-colors ${
-          favorite
-            ? "bg-rose-500 text-white border-rose-500 shadow-xs"
-            : "bg-surface/80 text-muted border-line hover:text-rose-500 hover:bg-surface"
-        }`}
-        type="button"
-        onClick={() => onFavorite(offer.id)}
-        aria-label={favorite ? "حذف از علاقه‌مندی‌ها" : "افزودن به علاقه‌مندی‌ها"}
-      >
-        <Icon name="heart" filled={favorite} className="w-5 h-5" />
-      </button>
-
       <div ref={detailScrollRef} className="overflow-y-auto max-h-[75vh] flex-1">
         <div className="relative w-full h-56 bg-canvas overflow-hidden">
           <FoodImage
@@ -2099,12 +2255,8 @@ function OfferDetails({
             className="w-full h-full object-cover"
           />
           <div className="absolute inset-x-0 bottom-0 p-4 bg-gradient-to-t from-black/80 to-transparent text-white">
-            <small className="block text-[11px] font-bold text-emerald-300">{offer.categoryLabel}</small>
-            <strong className="block text-sm font-black mt-0.5">{offer.title}</strong>
+            <strong className="block text-sm font-black">{offer.title}</strong>
           </div>
-          <span className="absolute top-3.5 start-14 px-2 py-0.5 rounded-lg bg-rose-600 text-white text-[11px] font-black shadow-xs">
-            {discountPercent(offer.originalPrice, offer.price)}٪ کمتر
-          </span>
         </div>
 
         <div className="p-5 space-y-4">
@@ -2125,7 +2277,7 @@ function OfferDetails({
             <p className="text-xs text-muted mt-1 leading-relaxed">{offer.description}</p>
           </div>
 
-          <div className="grid grid-cols-2 gap-2.5 p-3 rounded-2xl bg-canvas border border-line">
+          <div className="grid grid-cols-2 gap-2.5 py-1">
             <div className="flex items-center gap-2">
               <Icon name="clock" className="w-4 h-4 text-brand-2 shrink-0" />
               <div>
@@ -2141,16 +2293,6 @@ function OfferDetails({
               </div>
             </div>
           </div>
-
-          <section className="flex items-start gap-3 p-3.5 rounded-2xl bg-brand-soft text-brand-2">
-            <Icon name="spark" className="w-5 h-5 shrink-0 mt-0.5" />
-            <div className="text-xs space-y-0.5">
-              <strong className="block font-bold">داخل جعبه غافلگیر می‌شوی</strong>
-              <p className="opacity-90 leading-relaxed text-[11px]">
-                ترکیب جعبه در همان روز آماده می‌شود؛ تصویر فقط حال‌وهوای بسته را نشان می‌دهد.
-              </p>
-            </div>
-          </section>
 
           <section className="flex items-start gap-3 p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-800 dark:text-amber-300">
             <span className="w-5 h-5 rounded-full bg-amber-500 text-white font-bold text-xs grid place-items-center shrink-0">!</span>
@@ -2194,14 +2336,14 @@ function OfferDetails({
         </div>
       </div>
 
-      <div className="sticky bottom-0 p-4 border-t border-line bg-surface/90 backdrop-blur-md flex items-center justify-between gap-4">
+      <div className="sticky bottom-0 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] border-t border-line bg-surface/95 backdrop-blur-md flex items-center justify-between gap-4">
         <div>
           <del className="block text-xs text-muted line-through">{money(offer.originalPrice)}</del>
           <strong className="block text-sm font-black text-ink">{money(offer.price)}</strong>
           <small className="block text-[10px] text-muted">برای هر جعبه</small>
         </div>
         <button
-          className="inline-flex items-center justify-center px-6 py-2.5 text-xs font-bold rounded-xl bg-brand-2 text-white hover:opacity-90 shadow-xs transition-opacity disabled:opacity-50"
+          className="inline-flex items-center justify-center px-6 py-2.5 text-xs font-bold rounded-xl bg-brand-2 text-white hover:opacity-90 shadow-xs transition-opacity disabled:opacity-50 min-h-[44px] active:scale-[0.98]"
           type="button"
           disabled={offer.quantityLeft < 1}
           onClick={onReserve}
@@ -2363,7 +2505,7 @@ function ReservationFlow({
       </div>
 
       {step < 3 && (
-        <div className="p-4 border-t border-line flex items-center justify-end gap-2 bg-surface">
+        <div className="p-4 pb-[max(1rem,env(safe-area-inset-bottom))] border-t border-line flex items-center justify-end gap-2 bg-surface">
           {step > 1 && (
             <button
               className="px-4 h-11 min-h-[44px] text-xs font-semibold rounded-xl bg-canvas border border-line text-ink hover:bg-surface-raised transition-colors"
@@ -2466,6 +2608,8 @@ function SuccessState({
 function FilterSheet({
   maxDistance,
   setMaxDistance,
+  minPrice,
+  setMinPrice,
   maxPrice,
   setMaxPrice,
   pickup,
@@ -2476,6 +2620,8 @@ function FilterSheet({
 }: {
   maxDistance: number;
   setMaxDistance: (value: number) => void;
+  minPrice: number;
+  setMinPrice: (value: number) => void;
   maxPrice: number;
   setMaxPrice: (value: number) => void;
   pickup: "all" | PickupPeriod;
@@ -2484,16 +2630,30 @@ function FilterSheet({
   onClose: () => void;
   resultCount: number;
 }) {
+  const handleMinPriceChange = (val: number) => {
+    if (val > maxPrice) {
+      setMaxPrice(val);
+    }
+    setMinPrice(val);
+  };
+
+  const handleMaxPriceChange = (val: number) => {
+    if (val < minPrice) {
+      setMinPrice(val);
+    }
+    setMaxPrice(val);
+  };
+
   return (
     <DialogShell titleId="filters-title" onClose={onClose}>
-      <div className="p-5 space-y-5">
-        <div>
+      <div className="p-5 space-y-5 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+        <div className="flex items-center justify-between pb-3 border-b border-line pe-12">
           <h2 id="filters-title" className="text-base font-black text-ink">فیلتر پیشنهادها</h2>
         </div>
 
         <div className="space-y-2">
           <div className="flex items-center justify-between text-xs">
-            <label htmlFor="distance-range" className="text-muted">حداکثر فاصله</label>
+            <label htmlFor="distance-range" className="text-muted font-medium">حداکثر فاصله</label>
             <strong className="font-bold text-ink">{numberFa(maxDistance)} کیلومتر</strong>
           </div>
           <input
@@ -2504,29 +2664,55 @@ function FilterSheet({
             step="1"
             value={maxDistance}
             onChange={(event) => setMaxDistance(Number(event.target.value))}
-            className="w-full accent-brand-2"
+            className="w-full h-2 bg-line rounded-lg appearance-none cursor-pointer accent-brand-2"
           />
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-3">
           <div className="flex items-center justify-between text-xs">
-            <label htmlFor="price-range" className="text-muted">حداکثر قیمت هر جعبه</label>
-            <strong className="font-bold text-ink">{money(maxPrice)}</strong>
+            <span className="text-muted font-medium">محدودهٔ قیمت هر جعبه</span>
+            <span className="px-2.5 py-1 rounded-full bg-brand-soft text-brand-2 text-xs font-bold">
+              از {money(minPrice)} تا {money(maxPrice)}
+            </span>
           </div>
-          <input
-            id="price-range"
-            type="range"
-            min="90000"
-            max="300000"
-            step="10000"
-            value={maxPrice}
-            onChange={(event) => setMaxPrice(Number(event.target.value))}
-            className="w-full accent-brand-2"
-          />
+
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between text-[11px]">
+              <label htmlFor="min-price-range" className="text-muted font-medium">حداقل قیمت</label>
+              <strong className="font-bold text-ink">{money(minPrice)}</strong>
+            </div>
+            <input
+              id="min-price-range"
+              type="range"
+              min="0"
+              max="350000"
+              step="10000"
+              value={minPrice}
+              onChange={(event) => handleMinPriceChange(Number(event.target.value))}
+              className="w-full h-2 bg-line rounded-lg appearance-none cursor-pointer accent-brand-2"
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between text-[11px]">
+              <label htmlFor="max-price-range" className="text-muted font-medium">حداکثر قیمت</label>
+              <strong className="font-bold text-ink">{money(maxPrice)}</strong>
+            </div>
+            <input
+              id="max-price-range"
+              type="range"
+              min="0"
+              max="350000"
+              step="10000"
+              value={maxPrice}
+              onChange={(event) => handleMaxPriceChange(Number(event.target.value))}
+              className="w-full h-2 bg-line rounded-lg appearance-none cursor-pointer accent-brand-2"
+            />
+          </div>
         </div>
 
         <fieldset className="space-y-2">
-          <legend className="text-xs text-muted mb-1">زمان دریافت</legend>
+          <legend className="text-xs text-muted mb-1 font-medium">زمان دریافت</legend>
           <GlassSegmentedControl
             value={pickup}
             onChange={setPickup}
@@ -2541,12 +2727,16 @@ function FilterSheet({
           />
         </fieldset>
 
-        <div className="flex items-center justify-between gap-3 pt-3 border-t border-line">
-          <button className="text-xs font-semibold text-muted hover:text-ink px-3 py-2 min-h-[44px] inline-flex items-center cursor-pointer" type="button" onClick={onReset}>
+        <div className="flex items-center justify-end gap-3 pt-3 border-t border-line">
+          <button
+            className="text-xs font-bold text-brand-2 hover:opacity-80 px-3 py-2 min-h-[44px] inline-flex items-center cursor-pointer active:opacity-75 transition-opacity"
+            type="button"
+            onClick={onReset}
+          >
             پاک کردن همه
           </button>
           <button
-            className="h-11 min-h-[44px] px-5 inline-flex items-center justify-center text-xs font-bold rounded-xl bg-brand-2 text-white hover:opacity-90 shadow-xs transition-opacity cursor-pointer"
+            className="h-11 min-h-[44px] px-6 inline-flex items-center justify-center text-xs font-bold rounded-2xl bg-brand-2 text-white hover:opacity-90 shadow-sm transition-all cursor-pointer active:scale-95"
             type="button"
             onClick={onClose}
           >

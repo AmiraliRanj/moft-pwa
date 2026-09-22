@@ -118,7 +118,7 @@ export function OfferCard({
         </div>
 
         {/* Bottom: Dedicated price row below information with prices together */}
-        <div className="flex items-center justify-between px-3 py-2 border-t border-line/60 bg-surface-subtle/30">
+        <div className="flex items-center justify-between px-3 py-2 border-t border-line/60 bg-canvas/80 dark:bg-canvas-soft/60">
           {discountPercent > 0 ? (
             <span className="text-[11px] font-black text-rose-600">
               {numberFa(discountPercent)}٪ تخفیف
