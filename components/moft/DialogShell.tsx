@@ -89,7 +89,11 @@ export function DialogShell({
       >
         <button
           ref={closeRef}
-          className="absolute top-3.5 end-3.5 z-20 min-w-[44px] min-h-[44px] w-11 h-11 rounded-full bg-surface/80 border border-line backdrop-blur-md grid place-items-center text-muted hover:text-ink transition-colors cursor-pointer active:scale-95"
+          className={`absolute top-3.5 end-3.5 z-20 min-w-[44px] min-h-[44px] w-11 h-11 rounded-full grid place-items-center transition-colors cursor-pointer active:scale-95 ${
+            size === "detail"
+              ? "bg-surface/80 border border-line backdrop-blur-md text-muted hover:text-ink"
+              : "text-muted hover:text-ink hover:bg-canvas"
+          }`}
           type="button"
           onClick={onClose}
           aria-label="بستن"

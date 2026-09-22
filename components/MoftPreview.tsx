@@ -21,7 +21,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Toaster, toast as toastManager } from "@/components/ui/toast";
 import { useDemo } from "@/demo/DemoProvider";
 import { orderStatusLabel, remainingQuantity } from "@/lib/demo-format";
-import { decimalFa, discountPercent, distanceFa, money, moneyCompact, numberFa } from "@/lib/moft-format";
+import { decimalFa, discountPercent, distanceFa, formatMerchantWithCategory, money, moneyCompact, numberFa } from "@/lib/moft-format";
 import type { MarketplaceOffer, Order } from "@/types/demo";
 import type { AppTab, CategoryId, Offer, PickupPeriod, Reservation } from "@/types/moft";
 
@@ -1032,9 +1032,85 @@ function DiscoverPage({
 }) {
   const [activeOffer, setActiveOffer] = useState<Offer | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<CategoryId>("all");
+  const [zoom, setZoom] = useState(0.85);
   const mapScrollRef = useRef<HTMLDivElement>(null);
   const isDraggingRef = useRef(false);
   const dragStartRef = useRef({ x: 0, y: 0, scrollLeft: 0, scrollTop: 0 });
+  const touchDistRef = useRef<number | null>(null);
+
+  const changeZoom = (delta: number) => {
+    if (!mapScrollRef.current) return;
+    const el = mapScrollRef.current;
+    const currentCenterX = el.scrollLeft + el.clientWidth / 2;
+    const currentCenterY = el.scrollTop + el.clientHeight / 2;
+    const ratioX = el.scrollWidth > 0 ? currentCenterX / el.scrollWidth : 0.5;
+    const ratioY = el.scrollHeight > 0 ? currentCenterY / el.scrollHeight : 0.5;
+
+    setZoom((prev) => {
+      // Zoom out to 0.3 allows seeing the entire city at a glance
+      const next = Math.max(0.3, Math.min(2.0, Number((prev + delta).toFixed(2))));
+      if (next === prev) return prev;
+
+      window.requestAnimationFrame(() => {
+        if (mapScrollRef.current) {
+          const newEl = mapScrollRef.current;
+          newEl.scrollLeft = ratioX * newEl.scrollWidth - newEl.clientWidth / 2;
+          newEl.scrollTop = ratioY * newEl.scrollHeight - newEl.clientHeight / 2;
+        }
+      });
+      return next;
+    });
+  };
+
+  const onWheel = (e: React.WheelEvent) => {
+    if (e.ctrlKey) {
+      // Trackpad pinch-to-zoom
+      const delta = -e.deltaY * 0.006;
+      changeZoom(delta);
+    } else if (Math.abs(e.deltaY) > 10) {
+      // Mouse wheel zoom
+      const delta = e.deltaY < 0 ? 0.1 : -0.1;
+      changeZoom(delta);
+    }
+  };
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length === 2) {
+      const t1 = e.touches[0];
+      const t2 = e.touches[1];
+      touchDistRef.current = Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
+    } else {
+      touchDistRef.current = null;
+    }
+  };
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    if (e.touches.length === 2 && touchDistRef.current !== null) {
+      const t1 = e.touches[0];
+      const t2 = e.touches[1];
+      const dist = Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
+      const deltaDist = dist - touchDistRef.current;
+      if (Math.abs(deltaDist) > 5) {
+        const delta = deltaDist > 0 ? 0.05 : -0.05;
+        changeZoom(delta);
+        touchDistRef.current = dist;
+      }
+    }
+  };
+
+  const onTouchEnd = () => {
+    touchDistRef.current = null;
+  };
+
+  const onDoubleClick = () => {
+    if (zoom <= 0.45) {
+      changeZoom(0.55);
+    } else if (zoom >= 1.4) {
+      changeZoom(-0.8);
+    } else {
+      changeZoom(0.35);
+    }
+  };
 
   useEffect(() => {
     if (mapScrollRef.current) {
@@ -1091,27 +1167,29 @@ function DiscoverPage({
     { id: "grocery", label: "سوپرمارکت" },
   ];
 
-  const filteredOffers = useMemo(() => {
-    if (selectedCategory === "all") return offers;
-    return offers.filter((o) => o.category === selectedCategory);
+  const mapOffers = useMemo(() => {
+    const list = selectedCategory === "all" ? offers : offers.filter((o) => o.category === selectedCategory);
+    // Deduplicate by merchant name so each restaurant has only one pin
+    const seenMerchants = new Set<string>();
+    const distinct: Offer[] = [];
+    for (const o of list) {
+      if (!seenMerchants.has(o.merchantName)) {
+        seenMerchants.add(o.merchantName);
+        distinct.push(o);
+      }
+    }
+    // Lower frequency/density on the map: max 5 well-spaced spots across the city when "all", or 3-4 when filtered
+    const maxCount = selectedCategory === "all" ? 5 : 4;
+    return distinct.slice(0, maxCount);
   }, [offers, selectedCategory]);
 
   // Spaced coordinates for restaurants across Vanak, Jordan, Mirdamad & Vali Asr
   const pinCoordinates = [
-    { top: "18%", left: "30%" }, // Vali Asr North
-    { top: "22%", left: "68%" }, // Mirdamad East
-    { top: "36%", left: "54%" }, // Jordan Central
-    { top: "38%", left: "20%" }, // Mollasadra West
-    { top: "48%", left: "76%" }, // Haghani East
-    { top: "54%", left: "34%" }, // Vanak Central
-    { top: "66%", left: "60%" }, // Jordan South
-    { top: "68%", left: "18%" }, // Shiraz South
-    { top: "76%", left: "44%" }, // Kordestan
-    { top: "82%", left: "68%" }, // Hemmat East
-    { top: "28%", left: "38%" }, // Dastgerdi
-    { top: "44%", left: "38%" }, // Khoddami
-    { top: "60%", left: "78%" }, // Ghandi
-    { top: "84%", left: "26%" }, // Shiraz West
+    { top: "24%", left: "64%" }, // Mirdamad East
+    { top: "35%", left: "26%" }, // Vali Asr North / Mollasadra
+    { top: "52%", left: "70%" }, // Haghani East / Abo-o-Atash Park
+    { top: "66%", left: "34%" }, // Vanak South / Shiraz
+    { top: "78%", left: "56%" }, // Hemmat / Taleghani Park
   ];
 
   const activeOfferPacks = useMemo(() => {
@@ -1171,7 +1249,7 @@ function DiscoverPage({
                 <div className="flex items-center gap-2">
                   <h2 className="text-sm font-black text-ink tracking-tight">کشف جعبه‌های اطراف</h2>
                   <span className="text-[10px] font-bold text-brand-2 bg-brand-soft px-2 py-0.5 rounded-full">
-                    {numberFa(filteredOffers.length)} فروشگاه
+                    {numberFa(mapOffers.length)} فروشگاه
                   </span>
                 </div>
                 <p className="text-[11px] text-muted">محدودهٔ ونک، جردن و میرداماد</p>
@@ -1222,12 +1300,21 @@ function DiscoverPage({
           onMouseMove={onMouseMove}
           onMouseUp={onMouseUp}
           onMouseLeave={onMouseUp}
-          className="absolute inset-0 overflow-auto scrollbar-none select-none cursor-grab active:cursor-grabbing"
+          onTouchStart={onTouchStart}
+          onTouchMove={onTouchMove}
+          onTouchEnd={onTouchEnd}
+          onWheel={onWheel}
+          className="absolute inset-0 overflow-auto scrollbar-none select-none cursor-grab active:cursor-grabbing flex"
           style={{ touchAction: "pan-x pan-y", WebkitOverflowScrolling: "touch" }}
         >
           <div
-            className="relative w-[1100px] h-[1200px] shrink-0"
+            className="relative shrink-0 transition-all duration-200 ease-out origin-center m-auto"
+            style={{
+              width: `${Math.round(1100 * zoom)}px`,
+              height: `${Math.round(1200 * zoom)}px`,
+            }}
             onClick={() => setActiveOffer(null)}
+            onDoubleClick={onDoubleClick}
           >
             {/* SVG Imaginary Map Vector Canvas (Google Maps & Fresha inspired) */}
             <svg
@@ -1367,7 +1454,7 @@ function DiscoverPage({
             </div>
 
             {/* Restaurant Marker Pins: Circular Restaurant Logo pin, title card with category icon above location when selected */}
-            {filteredOffers.map((offer, index) => {
+            {mapOffers.map((offer, index) => {
               const coords = pinCoordinates[index % pinCoordinates.length];
               const isSelected = activeOffer?.id === offer.id;
               const iconName = getCategoryIconName(offer.category);
@@ -1384,7 +1471,7 @@ function DiscoverPage({
                       <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface/95 dark:bg-[#18201a]/95 backdrop-blur-md border border-line shadow-lg text-start whitespace-nowrap">
                         <Icon name={iconName} className="w-4 h-4 text-brand-2 shrink-0" />
                         <strong className="text-xs font-black text-ink">
-                          {offer.merchantName}
+                          {formatMerchantWithCategory(offer.merchantName, offer.categoryLabel)}
                         </strong>
                         <span className="text-[11px] font-bold text-emerald-700 dark:text-emerald-300">
                           • {numberFa(offer.quantityLeft)} بسته موجود
@@ -1437,7 +1524,7 @@ function DiscoverPage({
           </div>
         </div>
 
-        {/* Bottom Floating Controls: Strictly on the RIGHT side, My Location above Nearest, dark green circular buttons with icons only */}
+        {/* Bottom Floating Controls: Strictly on the RIGHT side, My Location, Nearest */}
         <div
           className={`absolute bottom-20 right-4 z-30 flex flex-col items-end gap-2.5 transition-all duration-300 ${
             activeOffer ? "opacity-0 translate-y-4 pointer-events-none" : "opacity-100 translate-y-0 pointer-events-auto"
@@ -1457,8 +1544,8 @@ function DiscoverPage({
           <button
             type="button"
             onClick={() => {
-              if (filteredOffers.length) {
-                setActiveOffer(filteredOffers[0]);
+              if (mapOffers.length) {
+                setActiveOffer(mapOffers[0]);
               }
             }}
             className="pointer-events-auto w-11 h-11 min-h-[44px] min-w-[44px] rounded-full bg-[#14532d] hover:bg-[#0f3d21] text-white shadow-lg flex items-center justify-center border border-white/10 active:scale-90 transition-all cursor-pointer"
@@ -1480,11 +1567,8 @@ function DiscoverPage({
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 flex-wrap">
                       <h2 className="text-sm sm:text-base font-black text-ink leading-snug">
-                        {activeOffer.merchantName}
+                        {formatMerchantWithCategory(activeOffer.merchantName, activeOffer.categoryLabel)}
                       </h2>
-                      <span className="text-[10px] font-bold text-brand-2 bg-brand-soft px-2 py-0.5 rounded-full shrink-0">
-                        {activeOffer.categoryLabel}
-                      </span>
                     </div>
                     <div className="flex items-center gap-1.5 text-[11px] sm:text-xs text-muted font-medium mt-0.5">
                       <Icon name="pin" className="w-3.5 h-3.5 text-brand-2 shrink-0" />
@@ -1547,7 +1631,7 @@ function DiscoverPage({
                                 {pack.title}
                               </h3>
                               <p className="text-[11px] font-medium text-muted truncate mt-0.5">
-                                {pack.merchantName}
+                                {formatMerchantWithCategory(pack.merchantName, pack.categoryLabel)}
                               </p>
                             </div>
                             <div className="inline-flex items-center gap-1 shrink-0 text-xs font-black text-ink pt-0.5">
@@ -2273,7 +2357,9 @@ function OfferDetails({
           </div>
 
           <div>
-            <h2 id="offer-title" className="text-base font-black text-ink">{offer.merchantName}</h2>
+            <h2 id="offer-title" className="text-base font-black text-ink">
+              {formatMerchantWithCategory(offer.merchantName, offer.categoryLabel)}
+            </h2>
             <p className="text-xs text-muted mt-1 leading-relaxed">{offer.description}</p>
           </div>
 

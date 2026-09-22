@@ -1,6 +1,6 @@
 import { FoodImage } from "@/components/moft/FoodImage";
 import { Icon } from "@/components/moft/Icon";
-import { decimalFa, distanceFa, moneyCompact, numberFa } from "@/lib/moft-format";
+import { decimalFa, distanceFa, formatMerchantWithCategory, moneyCompact, numberFa } from "@/lib/moft-format";
 import type { Offer } from "@/types/moft";
 
 export function OfferCard({
@@ -41,7 +41,9 @@ export function OfferCard({
 
           <div className="p-2.5 flex flex-col gap-0.5">
             <h3 className="text-xs font-black text-ink truncate">{offer.title}</h3>
-            <p className="text-[10px] font-medium text-muted truncate">{offer.merchantName}</p>
+            <p className="text-[10px] font-medium text-muted truncate">
+              {formatMerchantWithCategory(offer.merchantName, offer.categoryLabel)}
+            </p>
 
             <div className="flex items-center justify-between pt-1 mt-1 border-t border-line/50">
               <span className="inline-flex items-center gap-1 text-[11px] font-black text-ink">
@@ -96,7 +98,7 @@ export function OfferCard({
                   {offer.title}
                 </h3>
                 <p className="text-[11px] font-medium text-muted truncate mt-0.5">
-                  {offer.merchantName}
+                  {formatMerchantWithCategory(offer.merchantName, offer.categoryLabel)}
                 </p>
               </div>
 
@@ -118,7 +120,7 @@ export function OfferCard({
         </div>
 
         {/* Bottom: Dedicated price row below information with prices together */}
-        <div className="flex items-center justify-between px-3 py-2 border-t border-line/60 bg-canvas/80 dark:bg-canvas-soft/60">
+        <div className="flex items-center justify-between px-3 py-2 border-t border-line/70 bg-[#e8ece5] dark:bg-[#19221b]">
           {discountPercent > 0 ? (
             <span className="text-[11px] font-black text-rose-600">
               {numberFa(discountPercent)}٪ تخفیف
