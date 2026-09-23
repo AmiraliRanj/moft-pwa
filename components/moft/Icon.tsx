@@ -5,7 +5,8 @@ export type IconName =
   | "clock" | "star" | "sliders" | "list" | "map" | "close" | "minus" | "plus"
   | "check" | "leaf" | "calendar" | "route" | "bell" | "moon" | "sun" | "info"
   | "wifi" | "chevron" | "trash" | "store" | "share"
-  | "grid" | "coffee" | "utensils" | "pizza" | "bread" | "cake" | "apple" | "cart" | "camera";
+  | "grid" | "coffee" | "utensils" | "pizza" | "bread" | "cake" | "apple" | "cart" | "camera"
+  | "pencil" | "edit";
 
 const paths: Record<IconName, ReactNode> = {
   home: <><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10.5V20h13v-9.5"/><path d="M9.5 20v-6h5v6"/></>,
@@ -45,7 +46,9 @@ const paths: Record<IconName, ReactNode> = {
   cake: <><path d="M5 10h14v10H5V10Z"/><path d="M4 10c2-3 4 1 6-2 2 3 4-1 6 2 1-2 3-1 4 0M12 4v4M10 4h4"/></>,
   apple: <><path d="M12 7c-5-4-9 0-8 6 1 5 4 8 8 6 4 2 7-1 8-6 1-6-3-10-8-6Z"/><path d="M12 7c0-3 2-5 5-5M12 7c-2-2-4-2-6-1"/></>,
   cart: <><path d="M3 4h2l2.2 10.5h9.8l2-7H6"/><circle cx="9" cy="19" r="1.5"/><circle cx="17" cy="19" r="1.5"/></>,
-  camera: <><rect x="3" y="6" width="18" height="13" rx="3"/><path d="m8 6 1.5-2h5L16 6"/><circle cx="12" cy="12.5" r="3.5"/></>
+  camera: <><rect x="3" y="6" width="18" height="13" rx="3"/><path d="m8 6 1.5-2h5L16 6"/><circle cx="12" cy="12.5" r="3.5"/></>,
+  pencil: <><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></>,
+  edit: <><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></>
 };
 
 export function Icon({ name, filled = false, className = "" }: { name: IconName; filled?: boolean; className?: string }) {

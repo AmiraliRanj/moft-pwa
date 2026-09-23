@@ -8,6 +8,7 @@ import { CategorySelector } from "@/components/moft/CategorySelector";
 import { DialogShell } from "@/components/moft/DialogShell";
 import { EmptyState } from "@/components/moft/EmptyState";
 import { FoodImage } from "@/components/moft/FoodImage";
+import { MerchantLogo } from "@/components/moft/MerchantLogo";
 import { HomeHeroCarousel } from "@/components/moft/HomeHeroCarousel";
 import { AnimatedNumber } from "@/components/moft/AnimatedNumber";
 import { GlassSegmentedControl } from "@/components/glass/GlassSegmentedControl";
@@ -955,9 +956,7 @@ function HomePage({
                   onClick={() => onSelect(offer)}
                 >
                   <div className="flex items-center gap-3">
-                    <span className="relative block w-11 h-11 rounded-xl overflow-hidden bg-canvas shrink-0">
-                      <FoodImage src={offer.image} sizes="48px" className="w-full h-full object-cover" />
-                    </span>
+                    <MerchantLogo name={offer.merchantName} category={offer.category} size="md" />
                     <div>
                       <strong className="block text-xs font-bold text-ink">{offer.merchantName}</strong>
                       <small className="block text-[11px] text-muted mt-0.5">{offer.neighborhood} · امتیاز {decimalFa(offer.rating)}</small>
@@ -1032,6 +1031,7 @@ function DiscoverPage({
 }) {
   const [activeOffer, setActiveOffer] = useState<Offer | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<CategoryId>("all");
+  const [peekIndex, setPeekIndex] = useState(0);
   const [zoom, setZoom] = useState(0.85);
   const mapScrollRef = useRef<HTMLDivElement>(null);
   const isDraggingRef = useRef(false);
@@ -1192,6 +1192,25 @@ function DiscoverPage({
     { top: "78%", left: "56%" }, // Hemmat / Taleghani Park
   ];
 
+  const currentPeekOffer = mapOffers.length > 0 ? mapOffers[peekIndex % mapOffers.length] : null;
+
+  const cycleToNextOffer = () => {
+    if (!mapOffers.length) return;
+    const nextIndex = (peekIndex + 1) % mapOffers.length;
+    setPeekIndex(nextIndex);
+    const nextOffer = mapOffers[nextIndex];
+    const pinIdx = offers.findIndex((o) => o.merchantName === nextOffer.merchantName);
+    const coord = pinCoordinates[(pinIdx >= 0 ? pinIdx : nextIndex) % pinCoordinates.length];
+    if (mapScrollRef.current && coord) {
+      const topPct = parseFloat(coord.top) / 100;
+      const leftPct = parseFloat(coord.left) / 100;
+      const el = mapScrollRef.current;
+      const x = el.scrollWidth * leftPct - el.clientWidth / 2;
+      const y = el.scrollHeight * topPct - el.clientHeight / 2;
+      el.scrollTo({ left: Math.max(0, x), top: Math.max(0, y), behavior: "smooth" });
+    }
+  };
+
   const activeOfferPacks = useMemo(() => {
     if (!activeOffer) return [];
 
@@ -1239,19 +1258,12 @@ function DiscoverPage({
       {/* Top Header Panel: Below the header, with a clear background behind itself */}
       <div className="w-full bg-canvas/95 dark:bg-canvas/95 backdrop-blur-xl border-b border-line shadow-xs px-4 py-2.5 z-20 shrink-0">
         <div className="max-w-md mx-auto space-y-2">
-          {/* Row 1: Discover Box Title, Store Count & Toggle Filter Button */}
+          {/* Row 1: Discover Box Title & Toggle Filter Button */}
           <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <span className="w-8 h-8 rounded-xl bg-brand-2/10 text-brand-2 grid place-items-center shrink-0 shadow-xs">
-                <Icon name="map" className="w-4.5 h-4.5" />
-              </span>
+            <div className="flex items-center gap-2.5">
+              <Icon name="map" className="w-5 h-5 text-brand-2 shrink-0" />
               <div>
-                <div className="flex items-center gap-2">
-                  <h2 className="text-sm font-black text-ink tracking-tight">کشف جعبه‌های اطراف</h2>
-                  <span className="text-[10px] font-bold text-brand-2 bg-brand-soft px-2 py-0.5 rounded-full">
-                    {numberFa(mapOffers.length)} فروشگاه
-                  </span>
-                </div>
+                <h2 className="text-sm font-black text-ink tracking-tight">کشف جعبه‌های اطراف</h2>
                 <p className="text-[11px] text-muted">محدودهٔ ونک، جردن و میرداماد</p>
               </div>
             </div>
@@ -1499,15 +1511,12 @@ function DiscoverPage({
                     }`}
                     aria-label={`انتخاب ${offer.merchantName} - ${numberFa(offer.quantityLeft)} بسته موجود`}
                   >
-                    <div className="w-8 h-8 rounded-full overflow-hidden bg-canvas-soft shrink-0">
-                      <Image
-                        src={offer.image}
-                        alt={offer.merchantName}
-                        width={32}
-                        height={32}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
+                    <MerchantLogo
+                      name={offer.merchantName}
+                      category={offer.category}
+                      size="sm"
+                      className="rounded-full shadow-none border-0"
+                    />
                     {/* Pointer tip at bottom of circle */}
                     <span
                       className={`absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 rotate-45 border-r border-b ${
@@ -1524,35 +1533,100 @@ function DiscoverPage({
           </div>
         </div>
 
-        {/* Bottom Floating Controls: Strictly on the RIGHT side, My Location, Nearest */}
+        {/* Bottom Floating Bar: Action buttons on Right, Nearest Box Preview Card on Left */}
         <div
-          className={`absolute bottom-20 right-4 z-30 flex flex-col items-end gap-2.5 transition-all duration-300 ${
-            activeOffer ? "opacity-0 translate-y-4 pointer-events-none" : "opacity-100 translate-y-0 pointer-events-auto"
+          className={`absolute bottom-20 inset-x-3 sm:inset-x-4 max-w-lg mx-auto z-30 flex items-end justify-between gap-2.5 pointer-events-none transition-all duration-300 ${
+            activeOffer ? "opacity-0 translate-y-4 pointer-events-none" : "opacity-100 translate-y-0"
           }`}
         >
-          {/* My Location Button (Above) - Dark green, icon only */}
-          <button
-            type="button"
-            onClick={scrollToUserLocation}
-            className="pointer-events-auto w-11 h-11 min-h-[44px] min-w-[44px] rounded-full bg-[#14532d] hover:bg-[#0f3d21] text-white shadow-lg flex items-center justify-center border border-white/10 active:scale-90 transition-all cursor-pointer"
-            aria-label="موقعیت من"
-          >
-            <Icon name="pin" className="w-5 h-5 text-white" />
-          </button>
+          {/* Right side (start in RTL): The 2 Green Action Buttons */}
+          <div className="flex flex-col items-end gap-2 shrink-0 pointer-events-auto">
+            {/* My Location Button (Above) */}
+            <button
+              type="button"
+              onClick={scrollToUserLocation}
+              className="w-11 h-11 min-h-[44px] min-w-[44px] rounded-full bg-[#14532d] hover:bg-[#0f3d21] text-white shadow-lg flex items-center justify-center border border-white/10 active:scale-90 transition-all cursor-pointer"
+              aria-label="موقعیت من"
+            >
+              <Icon name="pin" className="w-5 h-5 text-white" />
+            </button>
 
-          {/* Nearest Box Button (Below) - Dark green, icon only */}
-          <button
-            type="button"
-            onClick={() => {
-              if (mapOffers.length) {
-                setActiveOffer(mapOffers[0]);
-              }
-            }}
-            className="pointer-events-auto w-11 h-11 min-h-[44px] min-w-[44px] rounded-full bg-[#14532d] hover:bg-[#0f3d21] text-white shadow-lg flex items-center justify-center border border-white/10 active:scale-90 transition-all cursor-pointer"
-            aria-label="نزدیک‌ترین جعبه"
-          >
-            <Icon name="spark" className="w-5 h-5 text-white" />
-          </button>
+            {/* Nearest Box Cycle Button (Below) */}
+            <button
+              type="button"
+              onClick={cycleToNextOffer}
+              className="w-11 h-11 min-h-[44px] min-w-[44px] rounded-full bg-[#14532d] hover:bg-[#0f3d21] text-white shadow-lg flex items-center justify-center border border-white/10 active:scale-90 transition-all cursor-pointer"
+              aria-label="جعبه بعدی روی نقشه"
+            >
+              <Icon name="spark" className="w-5 h-5 text-white" />
+            </button>
+          </div>
+
+          {/* Left side (end in RTL): Nearest Box Preview Card */}
+          {currentPeekOffer ? (
+            <button
+              type="button"
+              onClick={() => setActiveOffer(currentPeekOffer)}
+              className="pointer-events-auto flex-1 min-w-0 flex items-center gap-2.5 p-2 sm:p-2.5 rounded-2xl bg-surface/95 dark:bg-[#18201a]/95 backdrop-blur-xl border border-line shadow-lg hover:shadow-xl hover:border-brand-2/40 transition-all text-start cursor-pointer active:scale-[0.98] group"
+              aria-label={`مشاهده ${currentPeekOffer.title} از ${currentPeekOffer.merchantName}`}
+            >
+              {/* Store / Food Image Thumbnail */}
+              <div className="relative w-12 h-12 sm:w-13 sm:h-13 rounded-xl overflow-hidden bg-canvas shrink-0 shadow-2xs border border-line/40">
+                <FoodImage
+                  src={currentPeekOffer.image}
+                  sizes="56px"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                />
+                {currentPeekOffer.quantityLeft > 0 && currentPeekOffer.quantityLeft <= 3 && (
+                  <span className="absolute bottom-0.5 start-0.5 px-1 py-0.2 rounded text-[8px] font-black bg-black/75 text-white">
+                    {numberFa(currentPeekOffer.quantityLeft)} عدد
+                  </span>
+                )}
+              </div>
+
+              {/* Info Column */}
+              <div className="min-w-0 flex-1 flex flex-col justify-center">
+                <div className="flex items-center justify-between gap-1">
+                  <h3 className="text-xs sm:text-sm font-black text-ink truncate leading-tight">
+                    {currentPeekOffer.merchantName}
+                  </h3>
+                  {mapOffers.length > 1 && (
+                    <span className="text-[10px] font-bold text-muted/70 shrink-0">
+                      {numberFa(peekIndex + 1)}/{numberFa(mapOffers.length)}
+                    </span>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-1.5 text-[10px] sm:text-[11px] text-muted truncate mt-0.5">
+                  <span className="truncate">{currentPeekOffer.pickup}</span>
+                  <span className="text-muted/40">•</span>
+                  <span className="shrink-0">{distanceFa(currentPeekOffer.distanceKm)}</span>
+                </div>
+
+                {/* Price & Discount */}
+                <div className="flex items-baseline gap-1.5 mt-0.5">
+                  <strong className="text-xs font-black text-ink">
+                    {moneyCompact(currentPeekOffer.price)}
+                  </strong>
+                  {currentPeekOffer.originalPrice > currentPeekOffer.price && (
+                    <span className="text-[10px] font-black text-rose-600 bg-rose-50 dark:bg-rose-950/40 px-1.5 py-0.2 rounded-md">
+                      {numberFa(discountPercent(currentPeekOffer.originalPrice, currentPeekOffer.price))}٪ تخفیف
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Chevron open indicator */}
+              <span className="w-7 h-7 rounded-full bg-brand-soft/80 text-brand-2 flex items-center justify-center shrink-0 group-hover:bg-brand-2 group-hover:text-white transition-colors">
+                <Icon name="chevron" className="w-3.5 h-3.5 rtl:rotate-180" />
+              </span>
+            </button>
+          ) : (
+            <div className="pointer-events-auto flex-1 min-w-0 flex items-center gap-2 p-2.5 rounded-2xl bg-surface/95 dark:bg-[#18201a]/95 backdrop-blur-xl border border-line shadow-lg text-xs text-muted">
+              <Icon name="info" className="w-4 h-4 text-brand-2 shrink-0" />
+              <span className="truncate">جعبه‌ای در این دسته‌بندی نیست</span>
+            </div>
+          )}
         </div>
 
         {/* Slide-Up Popup from Bottom: Overlays the Bottom Navigation bar with fixed z-50 */}
@@ -1564,15 +1638,20 @@ function DiscoverPage({
               {/* Header with Restaurant Name, Address, pack count, distance and close button */}
               <div className="pb-2.5 border-b border-line/40 space-y-1.5">
                 <div className="flex items-start justify-between gap-2.5">
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <h2 className="text-sm sm:text-base font-black text-ink leading-snug">
+                  <div className="min-w-0 flex-1 flex items-center gap-2.5">
+                    <MerchantLogo
+                      name={activeOffer.merchantName}
+                      category={activeOffer.category}
+                      size="lg"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <h2 className="text-sm sm:text-base font-black text-ink leading-snug truncate">
                         {formatMerchantWithCategory(activeOffer.merchantName, activeOffer.categoryLabel)}
                       </h2>
-                    </div>
-                    <div className="flex items-center gap-1.5 text-[11px] sm:text-xs text-muted font-medium mt-0.5">
-                      <Icon name="pin" className="w-3.5 h-3.5 text-brand-2 shrink-0" />
-                      <span className="truncate">{activeOffer.address}</span>
+                      <div className="flex items-center gap-1.5 text-[11px] sm:text-xs text-muted font-medium mt-0.5">
+                        <Icon name="pin" className="w-3.5 h-3.5 text-brand-2 shrink-0" />
+                        <span className="truncate">{activeOffer.address}</span>
+                      </div>
                     </div>
                   </div>
 
@@ -1939,7 +2018,7 @@ function ProfilePage({
 
   return (
     <div className="space-y-4">
-      {/* 1. Profile Info Card (Clickable with chevron to edit personal info) */}
+      {/* 1. Profile Info Card (Clickable with edit icon to edit personal info) */}
       <button
         type="button"
         onClick={() => setEditProfileOpen(true)}
@@ -1950,7 +2029,7 @@ function ProfilePage({
           <Icon name="user" className="w-6 h-6 text-brand-2 shrink-0" />
           <h1 className="text-base font-black text-ink">{state.customer.name}</h1>
         </div>
-        <Icon name="chevron" className="w-4 h-4 text-muted rtl:rotate-180" />
+        <Icon name="pencil" className="w-4 h-4 text-muted shrink-0" />
       </button>
 
       {/* 2. Group 1: Activity & Orders */}
@@ -2131,9 +2210,12 @@ function ProfilePage({
                 key={offer.id}
                 className="flex flex-col items-center gap-1.5 p-2 rounded-2xl shrink-0 hover:bg-canvas transition-colors group cursor-pointer"
               >
-                <span className="relative block w-13 h-13 rounded-2xl overflow-hidden bg-canvas border border-line shadow-2xs shrink-0 group-hover:scale-105 transition-transform">
-                  <FoodImage src={offer.image} sizes="56px" className="w-full h-full object-cover" />
-                </span>
+                <MerchantLogo
+                  name={offer.merchantName}
+                  category={offer.category}
+                  size="lg"
+                  className="group-hover:scale-105 transition-transform"
+                />
                 <small className="text-[11px] font-bold text-ink truncate max-w-[84px] text-center">{offer.merchantName}</small>
               </button>
             ))}
@@ -2356,11 +2438,14 @@ function OfferDetails({
             </span>
           </div>
 
-          <div>
-            <h2 id="offer-title" className="text-base font-black text-ink">
-              {formatMerchantWithCategory(offer.merchantName, offer.categoryLabel)}
-            </h2>
-            <p className="text-xs text-muted mt-1 leading-relaxed">{offer.description}</p>
+          <div className="flex items-center gap-3">
+            <MerchantLogo name={offer.merchantName} category={offer.category} size="md" />
+            <div className="min-w-0 flex-1">
+              <h2 id="offer-title" className="text-base font-black text-ink">
+                {formatMerchantWithCategory(offer.merchantName, offer.categoryLabel)}
+              </h2>
+              <p className="text-xs text-muted mt-0.5 leading-relaxed">{offer.description}</p>
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-2.5 py-1">
