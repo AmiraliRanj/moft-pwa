@@ -1956,14 +1956,17 @@ function ReservationCard({
     <article className="rounded-3xl bg-surface border border-line p-4 sm:p-5 shadow-xs space-y-3.5 transition-all hover:shadow-sm">
       {/* 1. Header: Merchant circular avatar + Info (name, time, address) | Status badge */}
       <div className="flex items-start justify-between gap-3">
-        {/* Right side: Circular Merchant Logo + Store & Pickup Info */}
+        {/* Right side (RTL start): Circular Merchant Logo + Store & Pickup Info */}
         <div className="flex items-start gap-3 min-w-0 flex-1">
-          <MerchantLogo
-            name={reservation.merchantName}
-            category={reservation.category}
-            size="md"
-            className="rounded-full shadow-2xs border border-line/60 shrink-0 mt-0.5"
-          />
+          {/* Wrap MerchantLogo in circular container to avoid class conflict with component's rounded-2xl */}
+          <div className="w-11 h-11 rounded-full overflow-hidden shrink-0 mt-0.5 border border-line/60 shadow-2xs">
+            <MerchantLogo
+              name={reservation.merchantName}
+              category={reservation.category}
+              size="md"
+              className="!rounded-none !border-0"
+            />
+          </div>
           <div className="min-w-0 flex-1 space-y-0.5">
             <h2 className="text-sm sm:text-base font-black text-ink truncate leading-tight">
               {reservation.merchantName}
@@ -1979,7 +1982,7 @@ function ReservationCard({
           </div>
         </div>
 
-        {/* Left side: Status badge & countdown */}
+        {/* Left side (RTL end): Status badge & countdown */}
         <div className="flex flex-col items-end gap-1 shrink-0">
           <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border shadow-2xs ${statusTone}`}>
             <span className="w-1.5 h-1.5 rounded-full bg-current" />
@@ -1997,17 +2000,20 @@ function ReservationCard({
       <div className="flex items-center justify-between gap-3 pt-3 border-t border-line/60">
         <div className="flex items-center gap-3 min-w-0">
           {/* Food Cutout with Quantity Circle Badge */}
-          <div className="relative w-14 h-14 sm:w-16 sm:h-16 shrink-0 rounded-2xl bg-canvas border border-line/60 flex items-center justify-center p-1.5">
-            <div className="relative w-full h-full">
-              <Image
-                src={reservation.image || "/images/products/dibz-dessert-box-cutout.png"}
-                alt={reservation.title}
-                fill
-                sizes="64px"
-                className="object-contain"
-              />
+          <div className="relative w-14 h-14 sm:w-16 sm:h-16 shrink-0 rounded-2xl bg-canvas border border-line/60 overflow-visible">
+            <div className="relative w-full h-full p-1.5">
+              <div className="relative w-full h-full">
+                <Image
+                  src={reservation.image || "/images/products/dibz-dessert-box-cutout.png"}
+                  alt={reservation.title}
+                  fill
+                  sizes="64px"
+                  className="object-contain"
+                />
+              </div>
             </div>
-            <span className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-surface border border-line/80 shadow-2xs flex items-center justify-center text-[10px] font-black text-ink">
+            {/* RTL-aware quantity badge: use end/top for correct positioning in both LTR and RTL */}
+            <span className="absolute -top-1.5 -end-1.5 w-5 h-5 rounded-full bg-surface border border-line/80 shadow-2xs flex items-center justify-center text-[10px] font-black text-ink z-10">
               {numberFa(reservation.quantity || 1)}
             </span>
           </div>
@@ -2021,18 +2027,18 @@ function ReservationCard({
               type="button"
               onClick={() => setShowQr((prev) => !prev)}
               className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-canvas hover:bg-surface-raised border border-line/80 text-xs transition-colors cursor-pointer group"
-              title="برای مشاهده یا پنهان‌سازی بارکد کلیک کنید"
+              aria-label={`نمایش بارکد تحویل ${reservation.code}`}
             >
+              <Icon name="receipt" className="w-3 h-3 text-muted group-hover:text-brand-2 transition-colors shrink-0" />
               <span className="text-muted text-[11px] font-medium">کد تحویل:</span>
               <span className="font-mono font-black text-brand-2 tracking-wider">{reservation.code}</span>
-              <Icon name="grid" className="w-3 h-3 text-muted group-hover:text-ink transition-colors" />
             </button>
           </div>
         </div>
 
         {/* Total Price */}
-        <div className="text-start sm:text-end shrink-0">
-          <span className="text-base sm:text-lg font-black text-ink">
+        <div className="shrink-0">
+          <span className="text-base sm:text-lg font-black text-ink whitespace-nowrap">
             {money(reservation.total)}
           </span>
         </div>
@@ -2059,7 +2065,7 @@ function ReservationCard({
         </blockquote>
       )}
 
-      {/* 3. Bottom Row: Balanced Action Bar (Apple/SnappFood inspired) */}
+      {/* 3. Bottom Row: Balanced Action Bar */}
       <div className="pt-2 border-t border-line/60 space-y-2">
         <div className="flex items-center gap-2.5">
           {reservation.status === "active" ? (
@@ -2078,6 +2084,7 @@ function ReservationCard({
               <button
                 type="button"
                 onClick={onDirections}
+                aria-label="مسیریابی به فروشگاه"
                 className="flex-1 min-h-[44px] inline-flex items-center justify-center gap-2 px-3 py-2 text-xs font-bold rounded-2xl bg-canvas hover:bg-surface-raised border border-line text-ink transition-all cursor-pointer active:scale-[0.98]"
               >
                 <Icon name="route" className="w-4 h-4 text-brand-2" />
