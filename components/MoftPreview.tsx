@@ -464,8 +464,8 @@ export default function MoftPreview({
     .reduce((sum, item) => sum + item.quantity, 0);
 
   return (
-    <div className="min-h-screen bg-canvas text-ink font-sans">
-      <main className={`w-full ${tab === "discover" ? "h-dvh max-h-dvh overflow-hidden pb-0 overscroll-none select-none" : "pb-20 sm:pb-24"}`}>
+    <div className="min-h-screen bg-canvas text-ink font-sans w-full max-w-full overflow-x-hidden">
+      <main className={`w-full max-w-full overflow-x-hidden ${tab === "discover" ? "h-dvh max-h-dvh overflow-hidden pb-0 overscroll-none select-none" : "pb-28 sm:pb-32"}`}>
         <a
         className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:start-2 focus:z-50 px-3 py-1 bg-surface text-ink rounded-lg border border-line"
         href="#main-content"
@@ -508,7 +508,7 @@ export default function MoftPreview({
         <div className="max-w-md mx-auto px-4">
           <header className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 min-h-[56px] sm:min-h-[60px] py-3">
             <div className="flex items-center justify-start">
-              {tab === "reservations" ? (
+              {tab === "reservations" || tab === "cart" ? (
                 <button
                   type="button"
                   onClick={handleBackFromReservations}
@@ -541,9 +541,14 @@ export default function MoftPreview({
               )}
             </div>
 
-            {tab === "reservations" ? (
+            {tab === "reservations" || tab === "orders" ? (
               <div className="flex flex-col items-center justify-center min-h-[44px]">
-                <strong className="text-sm sm:text-base font-black text-ink tracking-tight">رزروهای من</strong>
+                <strong className="text-sm sm:text-base font-black text-ink tracking-tight">سفارش‌های من</strong>
+                <div className="w-10 h-[3px] bg-brand-2 rounded-full mt-1.5" aria-hidden="true" />
+              </div>
+            ) : tab === "cart" ? (
+              <div className="flex flex-col items-center justify-center min-h-[44px]">
+                <strong className="text-sm sm:text-base font-black text-ink tracking-tight">پیگیری مراحل سفارش</strong>
                 <div className="w-10 h-[3px] bg-brand-2 rounded-full mt-1.5" aria-hidden="true" />
               </div>
             ) : (
@@ -565,7 +570,7 @@ export default function MoftPreview({
             )}
 
             <div className="flex justify-end">
-              {tab !== "reservations" ? (
+              {tab !== "reservations" && tab !== "cart" ? (
                 <button
                   className="relative w-11 h-11 rounded-2xl transition-all active:scale-95 cursor-pointer grid place-items-center bg-transparent text-ink hover:text-brand-2 hover:bg-surface/60"
                   type="button"
@@ -623,7 +628,7 @@ export default function MoftPreview({
           />
         </div>
       ) : (
-        <section className="max-w-md mx-auto px-4 pt-3 space-y-4">
+        <section className="w-full max-w-md mx-auto px-4 pt-3 space-y-4">
           <div id="main-content" tabIndex={-1} className="space-y-4">
             {tab === "home" && (
               <HomePage
@@ -1841,28 +1846,28 @@ function OrdersPage({
   return (
     <div className="space-y-4">
       {/* Sub-tab segmented control */}
-      <div className="flex items-center p-1 rounded-2xl bg-surface border border-line">
+      <div className="flex items-center p-1 rounded-2xl bg-surface border border-line overflow-hidden">
         <button
           type="button"
           onClick={() => setSubTab("active")}
-          className={`flex-1 min-h-[38px] rounded-xl text-xs font-bold transition-all cursor-pointer ${
+          className={`flex-1 min-w-0 min-h-[38px] rounded-xl text-xs font-bold transition-all cursor-pointer text-center truncate px-2 ${
             subTab === "active"
               ? "bg-brand-soft text-brand-2 font-black shadow-2xs"
               : "text-muted hover:text-ink"
           }`}
         >
-          <span>سفارش‌های جاری ({numberFa(active.length)})</span>
+          سفارش‌های جاری ({numberFa(active.length)})
         </button>
         <button
           type="button"
           onClick={() => setSubTab("history")}
-          className={`flex-1 min-h-[38px] rounded-xl text-xs font-bold transition-all cursor-pointer ${
+          className={`flex-1 min-w-0 min-h-[38px] rounded-xl text-xs font-bold transition-all cursor-pointer text-center truncate px-2 ${
             subTab === "history"
               ? "bg-brand-soft text-brand-2 font-black shadow-2xs"
               : "text-muted hover:text-ink"
           }`}
         >
-          <span>تاریخچه ({numberFa(pastOrders.length)})</span>
+          تاریخچه ({numberFa(pastOrders.length)})
         </button>
       </div>
 
@@ -1998,7 +2003,7 @@ function ReservationCard({
 
       {/* 2. Middle Row: Product Cutout with Quantity Badge + Title & Compact Code Chip | Price */}
       <div className="flex items-center justify-between gap-3 pt-3 border-t border-line/60">
-        <div className="flex items-center gap-3 min-w-0">
+        <div className="flex items-center gap-3 min-w-0 flex-1">
           {/* Food Cutout with Quantity Circle Badge */}
           <div className="relative w-14 h-14 sm:w-16 sm:h-16 shrink-0 rounded-2xl bg-canvas border border-line/60 overflow-visible">
             <div className="relative w-full h-full p-1.5">
@@ -2019,19 +2024,19 @@ function ReservationCard({
           </div>
 
           {/* Title & Pickup Code Chip */}
-          <div className="min-w-0 space-y-1">
+          <div className="min-w-0 flex-1 space-y-1">
             <h3 className="text-xs sm:text-sm font-black text-ink truncate leading-tight">
               {reservation.title}
             </h3>
             <button
               type="button"
               onClick={() => setShowQr((prev) => !prev)}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-canvas hover:bg-surface-raised border border-line/80 text-xs transition-colors cursor-pointer group"
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-canvas hover:bg-surface-raised border border-line/80 text-xs transition-colors cursor-pointer group max-w-full"
               aria-label={`نمایش بارکد تحویل ${reservation.code}`}
             >
               <Icon name="receipt" className="w-3 h-3 text-muted group-hover:text-brand-2 transition-colors shrink-0" />
-              <span className="text-muted text-[11px] font-medium">کد تحویل:</span>
-              <span className="font-mono font-black text-brand-2 tracking-wider">{reservation.code}</span>
+              <span className="text-muted text-[11px] font-medium shrink-0">کد تحویل:</span>
+              <span className="font-mono font-black text-brand-2 tracking-wider truncate">{reservation.code}</span>
             </button>
           </div>
         </div>
@@ -2074,10 +2079,10 @@ function ReservationCard({
                 <button
                   type="button"
                   onClick={() => onTrackPipeline(reservation.id)}
-                  className="flex-1 min-h-[44px] inline-flex items-center justify-center gap-2 px-3 py-2 text-xs font-bold rounded-2xl bg-brand-2 text-white hover:bg-brand-2/95 transition-all shadow-xs cursor-pointer active:scale-[0.98]"
+                  className="flex-1 min-w-0 min-h-[44px] inline-flex items-center justify-center gap-2 px-3 py-2 text-xs font-bold rounded-2xl bg-brand-2 text-white hover:bg-brand-2/95 transition-all shadow-xs cursor-pointer active:scale-[0.98]"
                 >
-                  <span>پیگیری مراحل</span>
-                  <Icon name="arrow" className="w-3.5 h-3.5 rtl:rotate-180" />
+                  <span className="truncate">پیگیری مراحل</span>
+                  <Icon name="arrow" className="w-3.5 h-3.5 rtl:rotate-180 shrink-0" />
                 </button>
               ) : null}
 
@@ -2085,10 +2090,10 @@ function ReservationCard({
                 type="button"
                 onClick={onDirections}
                 aria-label="مسیریابی به فروشگاه"
-                className="flex-1 min-h-[44px] inline-flex items-center justify-center gap-2 px-3 py-2 text-xs font-bold rounded-2xl bg-canvas hover:bg-surface-raised border border-line text-ink transition-all cursor-pointer active:scale-[0.98]"
+                className="flex-1 min-w-0 min-h-[44px] inline-flex items-center justify-center gap-2 px-3 py-2 text-xs font-bold rounded-2xl bg-canvas hover:bg-surface-raised border border-line text-ink transition-all cursor-pointer active:scale-[0.98]"
               >
-                <Icon name="route" className="w-4 h-4 text-brand-2" />
-                <span>مسیریابی</span>
+                <Icon name="route" className="w-4 h-4 text-brand-2 shrink-0" />
+                <span className="truncate">مسیریابی</span>
               </button>
             </>
           ) : reservation.status === "collected" ? (
@@ -2097,25 +2102,25 @@ function ReservationCard({
                 <button
                   type="button"
                   onClick={() => onReview(reservation.id)}
-                  className="flex-1 min-h-[44px] inline-flex items-center justify-center gap-2 px-3 py-2 text-xs font-bold rounded-2xl bg-brand-2 text-white hover:opacity-95 transition-opacity cursor-pointer active:scale-[0.98] shadow-xs"
+                  className="flex-1 min-w-0 min-h-[44px] inline-flex items-center justify-center gap-2 px-3 py-2 text-xs font-bold rounded-2xl bg-brand-2 text-white hover:opacity-95 transition-opacity cursor-pointer active:scale-[0.98] shadow-xs"
                 >
-                  <Icon name="star" className="w-4 h-4" />
-                  <span>ثبت نظر</span>
+                  <Icon name="star" className="w-4 h-4 shrink-0" />
+                  <span className="truncate">ثبت نظر</span>
                 </button>
               ) : (
-                <span className="flex-1 min-h-[44px] inline-flex items-center justify-center gap-2 px-3 py-2 text-xs font-bold text-emerald-600 bg-emerald-500/10 rounded-2xl border border-emerald-500/20">
-                  <Icon name="check" className="w-4 h-4" />
-                  <span>نظر ثبت شده</span>
+                <span className="flex-1 min-w-0 min-h-[44px] inline-flex items-center justify-center gap-2 px-3 py-2 text-xs font-bold text-emerald-600 bg-emerald-500/10 rounded-2xl border border-emerald-500/20">
+                  <Icon name="check" className="w-4 h-4 shrink-0" />
+                  <span className="truncate">نظر ثبت شده</span>
                 </span>
               )}
 
               <button
                 type="button"
                 onClick={onDirections}
-                className="flex-1 min-h-[44px] inline-flex items-center justify-center gap-2 px-3 py-2 text-xs font-bold rounded-2xl bg-canvas hover:bg-surface-raised border border-line text-ink transition-all cursor-pointer active:scale-[0.98]"
+                className="flex-1 min-w-0 min-h-[44px] inline-flex items-center justify-center gap-2 px-3 py-2 text-xs font-bold rounded-2xl bg-canvas hover:bg-surface-raised border border-line text-ink transition-all cursor-pointer active:scale-[0.98]"
               >
-                <Icon name="store" className="w-4 h-4 text-muted" />
-                <span>مشاهده فروشگاه</span>
+                <Icon name="store" className="w-4 h-4 text-muted shrink-0" />
+                <span className="truncate">مشاهده فروشگاه</span>
               </button>
             </>
           ) : (
