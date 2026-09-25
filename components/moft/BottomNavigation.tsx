@@ -13,11 +13,9 @@ const items: Array<{ id: AppTab; label: string; icon: IconName }> = [
 export function BottomNavigation({
   value,
   onChange,
-  reservationCount,
 }: {
   value: AppTab;
   onChange: (tab: AppTab) => void;
-  reservationCount?: number;
 }) {
   return (
     <nav
@@ -50,11 +48,6 @@ export function BottomNavigation({
               )}
               <div className="relative z-10">
                 <Icon name={item.icon} className="w-5 h-5" />
-                {item.id === "orders" && typeof reservationCount === "number" && reservationCount > 0 && (
-                  <span className="absolute -top-1 -end-1.5 min-w-[15px] h-[15px] px-0.5 rounded-full bg-brand-2 text-white text-[9px] font-black grid place-items-center border border-surface shadow-2xs">
-                    {reservationCount}
-                  </span>
-                )}
               </div>
               <small className="text-[10px] leading-tight font-black z-10 truncate max-w-full">{item.label}</small>
             </button>
