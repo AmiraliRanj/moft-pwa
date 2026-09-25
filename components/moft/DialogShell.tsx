@@ -14,7 +14,7 @@ export function DialogShell({
   label?: string;
   onClose: () => void;
   children: ReactNode;
-  size?: "sheet" | "center" | "detail";
+  size?: "sheet" | "center" | "detail" | "fullscreen";
 }) {
   const dialogRef = useRef<HTMLElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
@@ -61,24 +61,33 @@ export function DialogShell({
   };
 
   const isCentered = size === "center";
+  const isFullscreen = size === "fullscreen";
 
   return (
     <div
       className={`fixed inset-0 z-50 flex ${
-        isCentered ? "items-center" : "items-end sm:items-center"
-      } justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-sm`}
+        isFullscreen
+          ? "items-stretch sm:items-center justify-center p-0 sm:p-4 bg-black/70 backdrop-blur-sm"
+          : isCentered
+          ? "items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-sm"
+          : "items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-sm"
+      }`}
       onMouseDown={onBackdrop}
     >
       <section
         ref={dialogRef}
         className={`relative w-full ${
-          size === "detail"
+          isFullscreen
+            ? "max-w-none sm:max-w-lg h-dvh max-h-dvh sm:max-h-[92vh] sm:h-[92vh]"
+            : size === "detail"
             ? "max-w-md max-h-[92dvh] sm:max-h-[90vh]"
-            : size === "center"
+            : isCentered
             ? "max-w-sm max-h-[85dvh] sm:max-h-[85vh]"
             : "max-w-md max-h-[85dvh] sm:max-h-[85vh]"
         } overflow-hidden flex flex-col ${
-          isCentered
+          isFullscreen
+            ? "rounded-none sm:rounded-3xl border-0 sm:border sm:border-line"
+            : isCentered
             ? "rounded-3xl border border-line"
             : "rounded-t-[28px] rounded-b-none sm:rounded-3xl border border-line border-b-0 sm:border-b"
         } bg-surface shadow-2xl animate-in slide-in-from-bottom duration-200`}
@@ -89,8 +98,10 @@ export function DialogShell({
       >
         <button
           ref={closeRef}
-          className={`absolute top-3.5 end-3.5 z-20 min-w-[44px] min-h-[44px] w-11 h-11 rounded-full grid place-items-center transition-colors cursor-pointer active:scale-95 ${
-            size === "detail"
+          className={`absolute top-[max(0.875rem,env(safe-area-inset-top))] end-3.5 z-20 min-w-[44px] min-h-[44px] w-11 h-11 rounded-full grid place-items-center transition-colors cursor-pointer active:scale-95 ${
+            isFullscreen
+              ? "bg-black/50 hover:bg-black/70 text-white backdrop-blur-md border border-white/20 shadow-md"
+              : size === "detail"
               ? "bg-surface/80 border border-line backdrop-blur-md text-muted hover:text-ink"
               : "text-muted hover:text-ink hover:bg-canvas"
           }`}

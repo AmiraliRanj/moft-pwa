@@ -50,27 +50,27 @@ export function HomeHeroCarousel({ onDiscover }: { onDiscover: () => void }) {
         <CarouselContent>
           {slides.map((slide, index) => (
             <CarouselItem key={slide.title} aria-label={`${index + 1} از ${slides.length}`}>
-              <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-800 to-teal-950 text-white p-4 sm:p-5 shadow-sm h-[160px] sm:h-[170px] max-h-[170px] flex items-center justify-between gap-3">
-                <div className="space-y-1.5 z-10 max-w-[65%] flex flex-col justify-center min-w-0">
-                  <p className="text-[10px] uppercase font-bold tracking-wider text-emerald-200">دیبز برای امروز</p>
-                  <h1 className="text-sm sm:text-base font-black leading-snug">{slide.title}</h1>
-                  <p className="text-[11px] sm:text-xs text-emerald-100/80 line-clamp-2 leading-relaxed">{slide.text}</p>
+              <section className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-emerald-800 to-teal-950 text-white p-3 sm:p-3.5 shadow-sm h-[120px] sm:h-[128px] max-h-[128px] flex items-center justify-between gap-2.5">
+                <div className="space-y-1 z-10 max-w-[66%] flex flex-col justify-center min-w-0">
+                  <p className="text-[9px] uppercase font-bold tracking-wider text-emerald-200">دیبز برای امروز</p>
+                  <h1 className="text-xs sm:text-sm font-black leading-tight truncate">{slide.title}</h1>
+                  <p className="text-[10px] text-emerald-100/80 line-clamp-1 leading-normal">{slide.text}</p>
                   <button
                     type="button"
                     onClick={onDiscover}
-                    className="inline-flex items-center gap-1.5 min-h-[44px] px-4 py-2 text-xs font-bold rounded-xl bg-white text-emerald-900 hover:bg-emerald-50 transition-colors shadow-xs w-fit mt-1 cursor-pointer active:scale-95"
+                    className="inline-flex items-center gap-1 min-h-[36px] px-3 py-1 text-[11px] font-bold rounded-lg bg-white text-emerald-900 hover:bg-emerald-50 transition-colors shadow-2xs w-fit cursor-pointer active:scale-95 mt-0.5"
                   >
                     <span>{slide.action}</span>
-                    <Icon name="arrow" className="w-3.5 h-3.5 rtl:rotate-180" />
+                    <Icon name="arrow" className="w-3 h-3 rtl:rotate-180" />
                   </button>
                 </div>
-                <div className="w-24 h-24 sm:w-28 sm:h-28 shrink-0 relative flex items-center justify-center overflow-hidden">
+                <div className="w-18 h-18 sm:w-20 sm:h-20 shrink-0 relative flex items-center justify-center overflow-hidden">
                   <Image
                     src={slide.image}
                     alt={slide.title}
-                    width={112}
-                    height={112}
-                    className="w-full h-full max-w-[112px] max-h-[112px] object-contain drop-shadow-md select-none pointer-events-none"
+                    width={84}
+                    height={84}
+                    className="w-full h-full max-w-[84px] max-h-[84px] object-contain drop-shadow-md select-none pointer-events-none"
                     priority={index === 0}
                   />
                 </div>

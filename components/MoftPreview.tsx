@@ -17,6 +17,9 @@ import { SuccessCheck } from "@/components/motion/SuccessCheck";
 import { Icon, type IconName } from "@/components/moft/Icon";
 import { OfferCard, OfferList } from "@/components/moft/OfferCard";
 import { SearchBar } from "@/components/moft/SearchBar";
+import { EndingSoonBannerCard } from "@/components/moft/EndingSoonBannerCard";
+import { MerchantProfileModal } from "@/components/moft/MerchantProfileModal";
+import { CartPipelinePage } from "@/components/moft/CartPipelinePage";
 import { useMoftTheme } from "@/components/shared/ThemeToggle";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Toaster, toast as toastManager } from "@/components/ui/toast";
@@ -31,7 +34,7 @@ type InstallPromptEvent = Event & {
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 };
 
-type Layer = "detail" | "reserve" | "filters" | "location" | "about" | "cancel" | "review" | null;
+type Layer = "detail" | "reserve" | "filters" | "location" | "about" | "cancel" | "review" | "merchant" | null;
 type SortMode = "nearest" | "popular" | "discount";
 
 const productCutoutByOffer: Record<string, string> = {
@@ -102,6 +105,8 @@ function customerReservation(order: Order, offers: MarketplaceOffer[], reviews: 
     id: order.id,
     offerId: order.items[0].offerId,
     merchantName: offer?.merchantName ?? "کافه ویونا",
+    category: offer?.category ?? "cafe",
+    image: offer ? (productCutoutByOffer[offer.id] ?? offer.image) : "/images/offers/offer-01.webp",
     title: order.items[0].title,
     pickup: `${faDigits(order.pickupDate)}، ${faDigits(order.pickupStart)} تا ${faDigits(order.pickupEnd)}`,
     address: offer?.address ?? "شعبه انتخاب‌شده",
@@ -146,6 +151,8 @@ export default function MoftPreview({
     [state.customer.id, state.offers, state.orders, state.reviews]
   );
   const [selected, setSelected] = useState<Offer | null>(null);
+  const [selectedMerchant, setSelectedMerchant] = useState<Offer | null>(null);
+  const [pendingCartOffer, setPendingCartOffer] = useState<Offer | null>(null);
   const [layer, setLayer] = useState<Layer>(null);
   const [reservationStep, setReservationStep] = useState(1);
   const [quantity, setQuantity] = useState(1);
@@ -240,8 +247,10 @@ export default function MoftPreview({
 
     const handlePopState = () => {
       const path = window.location.pathname;
-      if (path.includes("/orders") || path.includes("/cart")) {
-        setTab("reservations");
+      if (path.includes("/cart")) {
+        setTab("cart");
+      } else if (path.includes("/orders") || path.includes("/reservations")) {
+        setTab("orders");
       } else if (path.includes("/offers") || path.includes("/discover") || path.includes("/favorites")) {
         setTab("discover");
       } else if (path.includes("/profile")) {
@@ -319,7 +328,9 @@ export default function MoftPreview({
   const paths: Record<AppTab, string> = {
     home: "/customer",
     discover: "/customer/offers",
+    orders: "/customer/orders",
     reservations: "/customer/orders",
+    cart: "/customer/cart",
     profile: "/customer/profile",
   };
 
@@ -327,7 +338,7 @@ export default function MoftPreview({
     if (cartClosing) return;
     setCartClosing(true);
     window.setTimeout(() => {
-      const target = previousTab === "reservations" ? "home" : previousTab;
+      const target = previousTab === "reservations" || previousTab === "orders" || previousTab === "cart" ? "home" : previousTab;
       setTab(target);
       setCartClosing(false);
       window.history.pushState({}, "", paths[target]);
@@ -336,27 +347,16 @@ export default function MoftPreview({
   };
 
   const toggleReservations = () => {
-    if (tab === "reservations") {
-      handleBackFromReservations();
+    if (tab === "cart") {
+      switchTab(previousTab === "cart" ? "home" : previousTab);
     } else {
-      setPreviousTab(tab);
-      setCartClosing(false);
-      setTab("reservations");
-      window.history.pushState({}, "", paths.reservations);
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      switchTab("cart");
     }
   };
 
   const switchTab = (nextTab: AppTab) => {
     if (nextTab === tab) return;
-    if (tab === "reservations" && nextTab !== "reservations") {
-      handleBackFromReservations();
-      return;
-    }
-    if (nextTab === "reservations") {
-      setPreviousTab(tab);
-      setCartClosing(false);
-    }
+    setPreviousTab(tab);
     setTab(nextTab);
     if (nextTab === "home") {
       setSearchVisible(true);
@@ -373,13 +373,17 @@ export default function MoftPreview({
 
   const closeOffer = () => {
     setLayer(null);
-    const paths: Record<AppTab, string> = {
-      home: "/customer",
-      discover: "/customer/offers",
-      reservations: "/customer/orders",
-      profile: "/customer/profile",
-    };
     window.history.replaceState({}, "", paths[tab]);
+  };
+
+  const openMerchant = (offer: Offer) => {
+    setSelectedMerchant(offer);
+    setLayer("merchant");
+  };
+
+  const closeMerchant = () => {
+    setLayer(null);
+    setSelectedMerchant(null);
   };
 
   const openReservation = () => {
@@ -388,10 +392,10 @@ export default function MoftPreview({
       showToast("برای ثبت رزرو دوباره آنلاین شو.");
       return;
     }
+    setPendingCartOffer(selected);
     setQuantity(1);
-    setReservationStep(1);
-    setSuccessReservation(null);
-    setLayer("reserve");
+    setLayer(null);
+    switchTab("cart");
   };
 
   const completeReservation = () => {
@@ -461,7 +465,7 @@ export default function MoftPreview({
 
   return (
     <div className="min-h-screen bg-canvas text-ink font-sans">
-      <main className={`w-full ${tab === "discover" ? "h-screen overflow-hidden pb-0" : "pb-20 sm:pb-24"}`}>
+      <main className={`w-full ${tab === "discover" ? "h-dvh max-h-dvh overflow-hidden pb-0 overscroll-none select-none" : "pb-20 sm:pb-24"}`}>
         <a
         className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:start-2 focus:z-50 px-3 py-1 bg-surface text-ink rounded-lg border border-line"
         href="#main-content"
@@ -608,7 +612,7 @@ export default function MoftPreview({
       </div>
 
       {tab === "discover" ? (
-        <div id="main-content" tabIndex={-1} className="w-full h-[calc(100dvh-56px)] sm:h-[calc(100vh-60px)] relative overflow-hidden">
+        <div id="main-content" tabIndex={-1} className="w-full h-[calc(100dvh-56px-64px)] sm:h-[calc(100vh-60px-70px)] relative overflow-hidden overscroll-none touch-none select-none">
           <DiscoverPage
             offers={offers}
             favorites={favorites}
@@ -631,6 +635,7 @@ export default function MoftPreview({
                 favorites={favorites}
                 onFavorite={toggleFavorite}
                 onSelect={openOffer}
+                onOpenMerchant={openMerchant}
                 onDiscover={() => switchTab("discover")}
                 savedMeals={savedMeals}
                 onFilters={() => setLayer("filters")}
@@ -640,16 +645,40 @@ export default function MoftPreview({
                 setSort={setSort}
               />
             )}
-            {tab === "reservations" && (
-              <div className={cartClosing ? "animate-cart-slide-out" : "animate-cart-slide-in"}>
-                <ReservationsPage
-                  active={activeReservations}
-                  onCancel={requestCancel}
-                  onReview={requestReview}
-                  onDiscover={() => switchTab("discover")}
-                  onDirections={() => showToast("مسیریابی این فروشگاه اکنون در دسترس نیست.")}
-                />
-              </div>
+            {(tab === "orders" || tab === "reservations") && (
+              <OrdersPage
+                active={activeReservations}
+                reservations={reservations}
+                onCancel={requestCancel}
+                onReview={requestReview}
+                onDiscover={() => switchTab("discover")}
+                onDirections={() => showToast("مسیریابی این فروشگاه اکنون در دسترس نیست.")}
+                onTrackPipeline={() => switchTab("cart")}
+              />
+            )}
+            {tab === "cart" && (
+              <CartPipelinePage
+                pendingOffer={pendingCartOffer}
+                activeReservations={activeReservations}
+                quantity={quantity}
+                setQuantity={setQuantity}
+                onConfirmOrder={(offer, qty) => {
+                  const result = placeOrder(offer.id, qty);
+                  if (!result.ok) {
+                    showToast(result.error, "error");
+                    return;
+                  }
+                  setPendingCartOffer(null);
+                }}
+                onTransitionOrder={(orderId, status) => {
+                  transitionOrder(orderId, status);
+                }}
+                onDirections={() => showToast("مسیریابی این فروشگاه اکنون در دسترس نیست.")}
+                onDiscover={() => switchTab("discover")}
+                onGoToOrders={() => switchTab("orders")}
+                onClearPending={() => setPendingCartOffer(null)}
+                showToast={showToast}
+              />
             )}
             {tab === "profile" && (
               <ProfilePage
@@ -661,6 +690,7 @@ export default function MoftPreview({
                 installed={installed}
                 onInstall={install}
                 onOpenOffer={openOffer}
+                onOpenMerchant={openMerchant}
                 onAbout={() => setLayer("about")}
                 showToast={showToast}
                 onCancel={requestCancel}
@@ -673,9 +703,11 @@ export default function MoftPreview({
       )}
       </main>
 
-      {tab !== "reservations" && (
-        <BottomNavigation value={tab} onChange={switchTab} reservationCount={activeReservations.length} />
-      )}
+      <BottomNavigation
+        value={tab === "reservations" ? "orders" : tab}
+        onChange={switchTab}
+        reservationCount={activeReservations.length}
+      />
 
       {/* Sheets & Dialogs */}
       {layer === "detail" && selected && (
@@ -685,6 +717,7 @@ export default function MoftPreview({
           onFavorite={toggleFavorite}
           onClose={closeOffer}
           onReserve={openReservation}
+          onOpenMerchant={openMerchant}
           related={offers.filter((offer) => offer.category === selected.category && offer.id !== selected.id).slice(0, 2)}
           onSelect={openOffer}
           favorites={favorites}
@@ -762,6 +795,15 @@ export default function MoftPreview({
           }}
         />
       )}
+      {layer === "merchant" && selectedMerchant && (
+        <MerchantProfileModal
+          merchant={selectedMerchant}
+          allOffers={offers}
+          onClose={closeMerchant}
+          onSelectOffer={openOffer}
+          onDirections={() => showToast("مسیریابی این فروشگاه اکنون در دسترس نیست.")}
+        />
+      )}
       <Toaster timeout={3400} limit={3} />
     </div>
   );
@@ -776,6 +818,7 @@ function HomePage({
   favorites,
   onFavorite,
   onSelect,
+  onOpenMerchant,
   onDiscover,
   savedMeals,
   onFilters,
@@ -792,6 +835,7 @@ function HomePage({
   favorites: Set<string>;
   onFavorite: (id: string) => void;
   onSelect: (offer: Offer) => void;
+  onOpenMerchant?: (offer: Offer) => void;
   onDiscover: () => void;
   savedMeals: number;
   onFilters: () => void;
@@ -917,7 +961,7 @@ function HomePage({
           )}
         </section>
       ) : (
-        <>
+        <div className="space-y-6 sm:space-y-8 pt-2">
           <section className="space-y-3" aria-labelledby="near-title">
             <div className="space-y-2">
               <SectionHeading title="انتخاب‌های تازهٔ امروز" id="near-title" />
@@ -938,7 +982,8 @@ function HomePage({
 
           <section className="space-y-3" aria-labelledby="ending-title">
             <SectionHeading title="داره تموم می‌شه" id="ending-title" />
-            <div className="flex items-center gap-3 overflow-x-auto py-1 scrollbar-none" style={{ scrollbarWidth: "none" }}>
+            <div className="flex items-stretch gap-3 overflow-x-auto py-1 scrollbar-none" style={{ scrollbarWidth: "none" }}>
+              <EndingSoonBannerCard onAction={onDiscover} />
               {ending.map((offer) => (
                 <OfferCard compact key={offer.id} offer={offer} favorite={favorites.has(offer.id)} onFavorite={onFavorite} onSelect={onSelect} />
               ))}
@@ -950,10 +995,11 @@ function HomePage({
             <div className="grid gap-2">
               {popular.map((offer) => (
                 <button
-                  className="flex items-center justify-between gap-3 p-3 rounded-2xl bg-surface border border-line shadow-xs hover:border-brand-2/30 transition-colors text-start"
+                  className="flex items-center justify-between gap-3 p-3 rounded-2xl bg-surface border border-line shadow-xs hover:border-brand-2/30 transition-colors text-start cursor-pointer active:scale-[0.99]"
                   type="button"
                   key={offer.id}
-                  onClick={() => onSelect(offer)}
+                  onClick={() => (onOpenMerchant ? onOpenMerchant(offer) : onSelect(offer))}
+                  aria-label={`مشاهده پروفایل ${offer.merchantName}`}
                 >
                   <div className="flex items-center gap-3">
                     <MerchantLogo name={offer.merchantName} category={offer.category} size="md" />
@@ -989,7 +1035,7 @@ function HomePage({
               </small>
             </div>
           </section>
-        </>
+        </div>
       )}
     </div>
   );
@@ -1535,7 +1581,7 @@ function DiscoverPage({
 
         {/* Bottom Floating Bar: Action buttons on Right, Nearest Box Preview Card on Left */}
         <div
-          className={`absolute bottom-20 inset-x-3 sm:inset-x-4 max-w-lg mx-auto z-30 flex items-end justify-between gap-2.5 pointer-events-none transition-all duration-300 ${
+          className={`absolute bottom-3 sm:bottom-4 inset-x-3 sm:inset-x-4 max-w-lg mx-auto z-30 flex items-end justify-between gap-2.5 pointer-events-none transition-all duration-300 ${
             activeOffer ? "opacity-0 translate-y-4 pointer-events-none" : "opacity-100 translate-y-0"
           }`}
         >
@@ -1769,24 +1815,83 @@ function DiscoverPage({
   );
 }
 
-function ReservationsPage({
+function OrdersPage({
   active,
+  reservations,
   onCancel,
   onReview,
   onDiscover,
   onDirections,
+  onTrackPipeline,
 }: {
   active: Reservation[];
+  reservations: Reservation[];
   onCancel: (id: string) => void;
   onReview: (id: string) => void;
   onDiscover: () => void;
   onDirections: () => void;
+  onTrackPipeline?: (reservationId: string) => void;
 }) {
+  const [subTab, setSubTab] = useState<"active" | "history">("active");
+  const pastOrders = useMemo(
+    () => reservations.filter((item) => item.status !== "active"),
+    [reservations]
+  );
+
   return (
     <div className="space-y-4">
-      {active.length ? (
+      {/* Sub-tab segmented control */}
+      <div className="flex items-center p-1 rounded-2xl bg-surface border border-line">
+        <button
+          type="button"
+          onClick={() => setSubTab("active")}
+          className={`flex-1 min-h-[38px] rounded-xl text-xs font-bold transition-all cursor-pointer ${
+            subTab === "active"
+              ? "bg-brand-soft text-brand-2 font-black shadow-2xs"
+              : "text-muted hover:text-ink"
+          }`}
+        >
+          <span>سفارش‌های جاری ({numberFa(active.length)})</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setSubTab("history")}
+          className={`flex-1 min-h-[38px] rounded-xl text-xs font-bold transition-all cursor-pointer ${
+            subTab === "history"
+              ? "bg-brand-soft text-brand-2 font-black shadow-2xs"
+              : "text-muted hover:text-ink"
+          }`}
+        >
+          <span>تاریخچه ({numberFa(pastOrders.length)})</span>
+        </button>
+      </div>
+
+      {subTab === "active" ? (
+        active.length ? (
+          <div className="grid gap-3.5">
+            {active.map((reservation) => (
+              <ReservationCard
+                key={reservation.id}
+                reservation={reservation}
+                onCancel={onCancel}
+                onReview={onReview}
+                onDirections={onDirections}
+                onTrackPipeline={onTrackPipeline}
+              />
+            ))}
+          </div>
+        ) : (
+          <EmptyState
+            icon="bag"
+            title="سفارش جاری نداری"
+            text="یک جعبهٔ نزدیک پیدا کن و برای امشب رزرو کن."
+            action="کشف جعبه‌ها"
+            onAction={onDiscover}
+          />
+        )
+      ) : pastOrders.length ? (
         <div className="grid gap-3.5">
-          {active.map((reservation) => (
+          {pastOrders.map((reservation) => (
             <ReservationCard
               key={reservation.id}
               reservation={reservation}
@@ -1798,9 +1903,9 @@ function ReservationsPage({
         </div>
       ) : (
         <EmptyState
-          icon="bag"
-          title="رزرو فعالی نداری"
-          text="یک جعبهٔ نزدیک پیدا کن و برای امشب رزرو کن."
+          icon="clock"
+          title="هنوز سفارشی تکمیل نشده"
+          text="سفارش‌های قبلی شما پس از دریافت حضوری در این قسمت قرار می‌گیرند."
           action="کشف جعبه‌ها"
           onAction={onDiscover}
         />
@@ -1814,18 +1919,22 @@ function ReservationCard({
   onCancel,
   onReview,
   onDirections,
+  onTrackPipeline,
 }: {
   reservation: Reservation;
   onCancel: (id: string) => void;
   onReview: (id: string) => void;
   onDirections: () => void;
+  onTrackPipeline?: (reservationId: string) => void;
 }) {
+  const [showQr, setShowQr] = useState(false);
+
   const status = reservation.orderStatus
     ? orderStatusLabel[reservation.orderStatus]
     : reservation.status === "active"
     ? "فعال"
     : reservation.status === "collected"
-    ? "دریافت شد"
+    ? "تحویل شد"
     : reservation.status === "cancelled"
     ? "لغو شد"
     : "زمان دریافت گذشته";
@@ -1835,95 +1944,195 @@ function ReservationCard({
     : reservation.status === "active";
 
   const statusTone =
-    reservation.status === "collected"
+    reservation.status === "collected" || reservation.orderStatus === "completed"
       ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"
-      : reservation.status === "cancelled"
+      : reservation.status === "cancelled" || reservation.orderStatus === "cancelled"
       ? "bg-rose-500/10 text-rose-600 border-rose-500/20"
+      : reservation.orderStatus === "ready_for_pickup"
+      ? "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/25"
       : "bg-brand-soft text-brand-2 border-brand-2/20";
 
   return (
-    <article className="rounded-3xl bg-surface border border-line p-4 sm:p-5 shadow-xs space-y-3">
-      <div className="flex items-center justify-between">
-        <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${statusTone}`}>
-          <span className="w-1.5 h-1.5 rounded-full bg-current" />
-          {status}
-        </span>
-        <span className="text-[11px] font-mono text-muted">{reservation.id}</span>
+    <article className="rounded-3xl bg-surface border border-line p-4 sm:p-5 shadow-xs space-y-3.5 transition-all hover:shadow-sm">
+      {/* 1. Header: Merchant circular avatar + Info (name, time, address) | Status badge */}
+      <div className="flex items-start justify-between gap-3">
+        {/* Right side: Circular Merchant Logo + Store & Pickup Info */}
+        <div className="flex items-start gap-3 min-w-0 flex-1">
+          <MerchantLogo
+            name={reservation.merchantName}
+            category={reservation.category}
+            size="md"
+            className="rounded-full shadow-2xs border border-line/60 shrink-0 mt-0.5"
+          />
+          <div className="min-w-0 flex-1 space-y-0.5">
+            <h2 className="text-sm sm:text-base font-black text-ink truncate leading-tight">
+              {reservation.merchantName}
+            </h2>
+            <p className="text-xs text-muted font-medium flex items-center gap-1.5 mt-0.5">
+              <Icon name="clock" className="w-3.5 h-3.5 text-muted shrink-0" />
+              <span className="truncate">{reservation.pickup}</span>
+            </p>
+            <p className="text-xs text-muted/90 flex items-center gap-1 truncate">
+              <Icon name="pin" className="w-3.5 h-3.5 text-muted shrink-0" />
+              <span className="truncate">دریافت حضوری · {reservation.address}</span>
+            </p>
+          </div>
+        </div>
+
+        {/* Left side: Status badge & countdown */}
+        <div className="flex flex-col items-end gap-1 shrink-0">
+          <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border shadow-2xs ${statusTone}`}>
+            <span className="w-1.5 h-1.5 rounded-full bg-current" />
+            {status}
+          </span>
+          {reservation.status === "active" && (
+            <span className="text-[10px] font-bold text-brand-2 bg-brand-soft px-2 py-0.5 rounded-full">
+              ۲ ساعت مانده
+            </span>
+          )}
+        </div>
       </div>
 
-      <div>
-        <h2 className="text-sm font-black text-ink">{reservation.merchantName}</h2>
-        <p className="text-xs text-muted mt-0.5">{reservation.title} · {numberFa(reservation.quantity)} جعبه</p>
+      {/* 2. Middle Row: Product Cutout with Quantity Badge + Title & Compact Code Chip | Price */}
+      <div className="flex items-center justify-between gap-3 pt-3 border-t border-line/60">
+        <div className="flex items-center gap-3 min-w-0">
+          {/* Food Cutout with Quantity Circle Badge */}
+          <div className="relative w-14 h-14 sm:w-16 sm:h-16 shrink-0 rounded-2xl bg-canvas border border-line/60 flex items-center justify-center p-1.5">
+            <div className="relative w-full h-full">
+              <Image
+                src={reservation.image || "/images/products/dibz-dessert-box-cutout.png"}
+                alt={reservation.title}
+                fill
+                sizes="64px"
+                className="object-contain"
+              />
+            </div>
+            <span className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-surface border border-line/80 shadow-2xs flex items-center justify-center text-[10px] font-black text-ink">
+              {numberFa(reservation.quantity || 1)}
+            </span>
+          </div>
+
+          {/* Title & Pickup Code Chip */}
+          <div className="min-w-0 space-y-1">
+            <h3 className="text-xs sm:text-sm font-black text-ink truncate leading-tight">
+              {reservation.title}
+            </h3>
+            <button
+              type="button"
+              onClick={() => setShowQr((prev) => !prev)}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-canvas hover:bg-surface-raised border border-line/80 text-xs transition-colors cursor-pointer group"
+              title="برای مشاهده یا پنهان‌سازی بارکد کلیک کنید"
+            >
+              <span className="text-muted text-[11px] font-medium">کد تحویل:</span>
+              <span className="font-mono font-black text-brand-2 tracking-wider">{reservation.code}</span>
+              <Icon name="grid" className="w-3 h-3 text-muted group-hover:text-ink transition-colors" />
+            </button>
+          </div>
+        </div>
+
+        {/* Total Price */}
+        <div className="text-start sm:text-end shrink-0">
+          <span className="text-base sm:text-lg font-black text-ink">
+            {money(reservation.total)}
+          </span>
+        </div>
       </div>
 
-      <div className="flex flex-col gap-1 text-xs text-muted bg-canvas/40 p-2.5 rounded-xl border border-line">
-        <span className="flex items-center gap-1.5">
-          <Icon name="clock" className="w-3.5 h-3.5 text-muted shrink-0" />
-          <span>{reservation.pickup}</span>
-        </span>
-        <span className="flex items-center gap-1.5">
-          <Icon name="pin" className="w-3.5 h-3.5 text-muted shrink-0" />
-          <span>{reservation.address}</span>
-        </span>
-      </div>
-
-      {reservation.status === "active" && (
-        <div className="flex items-center justify-between p-2.5 rounded-xl bg-brand-soft text-brand-2 text-xs font-bold">
-          <span>زمان باقی‌مانده تا شروع دریافت</span>
-          <span>۲ ساعت و ۱۲ دقیقه</span>
+      {/* Expandable QR Preview (Clean & Non-cluttered) */}
+      {showQr && (
+        <div className="flex items-center justify-between gap-3 p-3 rounded-2xl bg-canvas/90 border border-line/70 animate-in fade-in duration-200">
+          <div className="space-y-0.5">
+            <span className="text-[10px] font-bold text-muted">بارکد دریافت بسته</span>
+            <span className="block font-mono font-black text-base text-ink tracking-widest">{reservation.code}</span>
+            <span className="text-[10px] text-muted">این کد را به فروشگاه نشان دهید</span>
+          </div>
+          <div className="p-1 rounded-xl bg-surface border border-line shadow-2xs shrink-0">
+            <MiniQr code={reservation.code} />
+          </div>
         </div>
       )}
 
-      <div className="flex items-center justify-between p-3 rounded-2xl bg-canvas border border-line">
-        <div>
-          <small className="block text-[10px] text-muted">کد دریافت</small>
-          <strong className="block text-lg font-mono font-black text-ink tracking-widest">{reservation.code}</strong>
-        </div>
-        <MiniQr code={reservation.code} />
-      </div>
-
       {reservation.reviewResponse && (
-        <blockquote className="p-3 rounded-xl bg-brand-soft border-s-2 border-brand-2 text-xs text-ink space-y-1">
+        <blockquote className="p-3 rounded-2xl bg-brand-soft/60 border-s-2 border-brand-2 text-xs text-ink space-y-1">
           <strong className="block font-bold text-brand-2">پاسخ فروشگاه</strong>
           <p className="opacity-90">{reservation.reviewResponse}</p>
         </blockquote>
       )}
 
-      <div className="flex flex-wrap gap-2 pt-1 border-t border-line">
-        {reservation.status === "active" && (
-          <button
-            type="button"
-            onClick={onDirections}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 min-h-[44px] text-xs font-semibold rounded-xl bg-surface border border-line text-ink hover:bg-surface-raised transition-colors"
-          >
-            <Icon name="route" className="w-4 h-4 text-muted" />
-            <span>مسیریابی</span>
-          </button>
-        )}
+      {/* 3. Bottom Row: Balanced Action Bar (Apple/SnappFood inspired) */}
+      <div className="pt-2 border-t border-line/60 space-y-2">
+        <div className="flex items-center gap-2.5">
+          {reservation.status === "active" ? (
+            <>
+              {onTrackPipeline ? (
+                <button
+                  type="button"
+                  onClick={() => onTrackPipeline(reservation.id)}
+                  className="flex-1 min-h-[44px] inline-flex items-center justify-center gap-2 px-3 py-2 text-xs font-bold rounded-2xl bg-brand-2 text-white hover:bg-brand-2/95 transition-all shadow-xs cursor-pointer active:scale-[0.98]"
+                >
+                  <span>پیگیری مراحل</span>
+                  <Icon name="arrow" className="w-3.5 h-3.5 rtl:rotate-180" />
+                </button>
+              ) : null}
+
+              <button
+                type="button"
+                onClick={onDirections}
+                className="flex-1 min-h-[44px] inline-flex items-center justify-center gap-2 px-3 py-2 text-xs font-bold rounded-2xl bg-canvas hover:bg-surface-raised border border-line text-ink transition-all cursor-pointer active:scale-[0.98]"
+              >
+                <Icon name="route" className="w-4 h-4 text-brand-2" />
+                <span>مسیریابی</span>
+              </button>
+            </>
+          ) : reservation.status === "collected" ? (
+            <>
+              {!reservation.hasReview ? (
+                <button
+                  type="button"
+                  onClick={() => onReview(reservation.id)}
+                  className="flex-1 min-h-[44px] inline-flex items-center justify-center gap-2 px-3 py-2 text-xs font-bold rounded-2xl bg-brand-2 text-white hover:opacity-95 transition-opacity cursor-pointer active:scale-[0.98] shadow-xs"
+                >
+                  <Icon name="star" className="w-4 h-4" />
+                  <span>ثبت نظر</span>
+                </button>
+              ) : (
+                <span className="flex-1 min-h-[44px] inline-flex items-center justify-center gap-2 px-3 py-2 text-xs font-bold text-emerald-600 bg-emerald-500/10 rounded-2xl border border-emerald-500/20">
+                  <Icon name="check" className="w-4 h-4" />
+                  <span>نظر ثبت شده</span>
+                </span>
+              )}
+
+              <button
+                type="button"
+                onClick={onDirections}
+                className="flex-1 min-h-[44px] inline-flex items-center justify-center gap-2 px-3 py-2 text-xs font-bold rounded-2xl bg-canvas hover:bg-surface-raised border border-line text-ink transition-all cursor-pointer active:scale-[0.98]"
+              >
+                <Icon name="store" className="w-4 h-4 text-muted" />
+                <span>مشاهده فروشگاه</span>
+              </button>
+            </>
+          ) : (
+            <button
+              type="button"
+              onClick={onDirections}
+              className="w-full min-h-[44px] inline-flex items-center justify-center gap-2 px-3 py-2 text-xs font-bold rounded-2xl bg-canvas hover:bg-surface-raised border border-line text-ink transition-all cursor-pointer active:scale-[0.98]"
+            >
+              <Icon name="store" className="w-4 h-4 text-muted" />
+              <span>مشاهده فروشگاه</span>
+            </button>
+          )}
+        </div>
+
         {cancellable && (
-          <button
-            type="button"
-            onClick={() => onCancel(reservation.id)}
-            className="inline-flex items-center px-3.5 py-2 min-h-[44px] text-xs font-semibold rounded-xl text-rose-600 hover:bg-rose-500/10 transition-colors"
-          >
-            لغو رزرو
-          </button>
-        )}
-        {reservation.status === "collected" && !reservation.hasReview && (
-          <button
-            type="button"
-            onClick={() => onReview(reservation.id)}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 min-h-[44px] text-xs font-semibold rounded-xl bg-brand-2 text-white hover:opacity-90 transition-opacity"
-          >
-            <Icon name="star" className="w-4 h-4" />
-            <span>ثبت نظر</span>
-          </button>
-        )}
-        {reservation.status === "collected" && reservation.hasReview && (
-          <span className="inline-flex items-center gap-1.5 px-3.5 py-2 min-h-[44px] text-xs font-semibold text-emerald-600 bg-emerald-500/10 rounded-xl">
-            <Icon name="check" className="w-4 h-4" />
-            <span>نظر ثبت شده</span>
-          </span>
+          <div className="flex justify-center pt-0.5">
+            <button
+              type="button"
+              onClick={() => onCancel(reservation.id)}
+              className="text-xs font-semibold text-rose-500 hover:text-rose-600 transition-colors py-1 px-3 cursor-pointer"
+            >
+              لغو رزرو
+            </button>
+          </div>
         )}
       </div>
     </article>
@@ -1939,6 +2148,7 @@ function ProfilePage({
   installed,
   onInstall,
   onOpenOffer,
+  onOpenMerchant,
   onAbout,
   showToast,
   onCancel,
@@ -1953,6 +2163,7 @@ function ProfilePage({
   installed: boolean;
   onInstall: () => void;
   onOpenOffer: (offer: Offer) => void;
+  onOpenMerchant?: (offer: Offer) => void;
   onAbout: () => void;
   showToast: (message: string) => void;
   onCancel: (id: string) => void;
@@ -2206,7 +2417,7 @@ function ProfilePage({
             {favoriteOffers.slice(0, 8).map((offer) => (
               <button
                 type="button"
-                onClick={() => onOpenOffer(offer)}
+                onClick={() => (onOpenMerchant ? onOpenMerchant(offer) : onOpenOffer(offer))}
                 key={offer.id}
                 className="flex flex-col items-center gap-1.5 p-2 rounded-2xl shrink-0 hover:bg-canvas transition-colors group cursor-pointer"
               >
@@ -2386,6 +2597,7 @@ function OfferDetails({
   offer,
   onClose,
   onReserve,
+  onOpenMerchant,
   related,
   onSelect,
   favorites,
@@ -2396,6 +2608,7 @@ function OfferDetails({
   onFavorite: (id: string) => void;
   onClose: () => void;
   onReserve: () => void;
+  onOpenMerchant?: (offer: Offer) => void;
   related: Offer[];
   onSelect: (offer: Offer) => void;
   favorites: Set<string>;
@@ -2410,9 +2623,9 @@ function OfferDetails({
   }, [offer.id]);
 
   return (
-    <DialogShell titleId="offer-title" onClose={onClose} size="detail">
-      <div ref={detailScrollRef} className="overflow-y-auto max-h-[75vh] flex-1">
-        <div className="relative w-full h-56 bg-canvas overflow-hidden">
+    <DialogShell titleId="offer-title" onClose={onClose} size="fullscreen">
+      <div ref={detailScrollRef} className="overflow-y-auto flex-1 h-full">
+        <div className="relative w-full h-64 sm:h-72 bg-canvas overflow-hidden">
           <FoodImage
             src={offer.image}
             alt={`تصویر ${offer.title}`}
@@ -2420,12 +2633,12 @@ function OfferDetails({
             priority
             className="w-full h-full object-cover"
           />
-          <div className="absolute inset-x-0 bottom-0 p-4 bg-gradient-to-t from-black/80 to-transparent text-white">
-            <strong className="block text-sm font-black">{offer.title}</strong>
+          <div className="absolute inset-x-0 bottom-0 p-4 bg-gradient-to-t from-black/85 via-black/40 to-transparent text-white">
+            <strong className="block text-base sm:text-lg font-black">{offer.title}</strong>
           </div>
         </div>
 
-        <div className="p-5 space-y-4">
+        <div className="p-4 sm:p-5 space-y-4">
           <div className="flex items-center justify-between text-xs text-muted">
             <span className="flex items-center gap-1 font-bold text-ink">
               <Icon name="star" filled className="w-3.5 h-3.5 text-amber-500" />
@@ -2438,32 +2651,71 @@ function OfferDetails({
             </span>
           </div>
 
-          <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => onOpenMerchant && onOpenMerchant(offer)}
+            className="flex items-center gap-3 text-start w-full p-2.5 -m-2.5 rounded-2xl hover:bg-canvas/80 active:bg-canvas transition-colors cursor-pointer group"
+            aria-label={`مشاهده صفحه اختصاصی ${offer.merchantName}`}
+          >
             <MerchantLogo name={offer.merchantName} category={offer.category} size="md" />
             <div className="min-w-0 flex-1">
-              <h2 id="offer-title" className="text-base font-black text-ink">
-                {formatMerchantWithCategory(offer.merchantName, offer.categoryLabel)}
-              </h2>
-              <p className="text-xs text-muted mt-0.5 leading-relaxed">{offer.description}</p>
+              <div className="flex items-center justify-between">
+                <h2 id="offer-title" className="text-base font-black text-ink group-hover:text-brand-2 transition-colors">
+                  {formatMerchantWithCategory(offer.merchantName, offer.categoryLabel)}
+                </h2>
+                {onOpenMerchant && (
+                  <span className="text-[11px] font-bold text-brand-2 inline-flex items-center gap-0.5 shrink-0">
+                    <span>پروفایل</span>
+                    <Icon name="chevron" className="w-3.5 h-3.5 rtl:rotate-180" />
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-muted mt-0.5 leading-relaxed line-clamp-1">{offer.description}</p>
             </div>
-          </div>
+          </button>
 
-          <div className="grid grid-cols-2 gap-2.5 py-1">
-            <div className="flex items-center gap-2">
-              <Icon name="clock" className="w-4 h-4 text-brand-2 shrink-0" />
-              <div>
-                <small className="block text-[10px] text-muted">زمان دریافت حضوری</small>
-                <strong className="block text-xs font-bold text-ink">{offer.pickup}</strong>
+          {/* 3 Key Elements: Pickup Time, Remaining Quantity & Pickup Address */}
+          <section className="p-3.5 rounded-2xl bg-canvas border border-line space-y-3">
+            <div className="grid grid-cols-2 gap-3 pb-3 border-b border-line/60">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-surface border border-line text-brand-2 grid place-items-center shrink-0">
+                  <Icon name="clock" className="w-4 h-4 text-brand-2" />
+                </div>
+                <div className="min-w-0">
+                  <small className="block text-[10px] text-muted font-bold">زمان دریافت حضوری</small>
+                  <strong className="block text-xs font-black text-ink truncate mt-0.5">{offer.pickup}</strong>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-surface border border-line text-brand-2 grid place-items-center shrink-0">
+                  <Icon name="bag" className="w-4 h-4 text-brand-2" />
+                </div>
+                <div className="min-w-0">
+                  <small className="block text-[10px] text-muted font-bold">موجودی این لحظه</small>
+                  <strong className="block text-xs font-black text-ink truncate mt-0.5">
+                    {numberFa(offer.quantityLeft)} جعبه
+                    {offer.quantityLeft <= 3 && (
+                      <span className="text-[10px] text-rose-500 font-bold ms-1">(پایان نزدیک)</span>
+                    )}
+                  </strong>
+                </div>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <Icon name="bag" className="w-4 h-4 text-brand-2 shrink-0" />
-              <div>
-                <small className="block text-[10px] text-muted">موجودی این لحظه</small>
-                <strong className="block text-xs font-bold text-ink">{numberFa(offer.quantityLeft)} جعبه</strong>
+
+            <div className="flex items-start gap-2.5 pt-0.5">
+              <div className="w-8 h-8 rounded-xl bg-surface border border-line text-brand-2 grid place-items-center shrink-0 mt-0.5">
+                <Icon name="pin" className="w-4 h-4 text-brand-2" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <small className="block text-[10px] text-muted font-bold">آدرس دریافت حضوری</small>
+                <strong className="block text-xs font-bold text-ink leading-snug mt-0.5">{offer.address}</strong>
+                <span className="block text-[10.5px] text-muted mt-0.5">
+                  تحویل فقط به‌صورت حضوری و در بازهٔ مشخص‌شده است.
+                </span>
               </div>
             </div>
-          </div>
+          </section>
 
           <section className="flex items-start gap-3 p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-800 dark:text-amber-300">
             <span className="w-5 h-5 rounded-full bg-amber-500 text-white font-bold text-xs grid place-items-center shrink-0">!</span>
@@ -2480,11 +2732,6 @@ function OfferDetails({
                 ))}
               </div>
             </div>
-          </section>
-
-          <section className="p-3.5 rounded-2xl bg-canvas border border-line space-y-1">
-            <h3 className="text-xs font-bold text-ink">{offer.address}</h3>
-            <small className="block text-[11px] text-muted">دریافت فقط حضوری و در بازهٔ مشخص‌شده است.</small>
           </section>
 
           {related.length > 0 && (
@@ -3111,6 +3358,7 @@ function ReviewDialog({
 }
 
 function SectionHeading({
+  eyebrow,
   title,
   id,
   action,
@@ -3125,7 +3373,8 @@ function SectionHeading({
   return (
     <div className="flex items-end justify-between gap-3">
       <div>
-        <h2 id={id} className="text-sm font-black text-ink">{title}</h2>
+        {eyebrow && <span className="block text-[10px] sm:text-xs font-bold text-muted uppercase tracking-wider mb-0.5">{eyebrow}</span>}
+        <h2 id={id} className="text-lg sm:text-xl font-black text-ink tracking-tight">{title}</h2>
       </div>
       {action && (
         <button

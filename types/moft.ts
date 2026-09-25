@@ -41,6 +41,8 @@ export type Reservation = {
   id: string;
   offerId: string;
   merchantName: string;
+  category?: OfferCategory;
+  image?: string;
   title: string;
   pickup: string;
   address: string;
@@ -55,4 +57,4 @@ export type Reservation = {
 };
 
 export type ThemePreference = "light" | "dark";
-export type AppTab = "home" | "discover" | "reservations" | "profile";
+export type AppTab = "home" | "discover" | "orders" | "reservations" | "cart" | "profile";
