@@ -1,19 +1,18 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import Image from "next/image";
 import { MerchantLogo } from "@/components/moft/MerchantLogo";
 import { Icon } from "@/components/moft/Icon";
 import { AnimatedNumber } from "@/components/moft/AnimatedNumber";
 import { Checkbox } from "@/components/ui/checkbox";
 import { discountPercent, formatPickupDate, money, numberFa } from "@/lib/moft-format";
-import { orderStatusLabel } from "@/lib/demo-format";
 import type { Offer, Reservation } from "@/types/moft";
 import type { OrderStatus } from "@/types/demo";
 
 interface CartPipelinePageProps {
   pendingOffer: Offer | null;
-  activeReservations: Reservation[];
+  activeReservations?: Reservation[];
   reservations?: Reservation[];
   quantity: number;
   setQuantity: (q: number) => void;
@@ -30,8 +29,6 @@ type CheckoutPhase = "cart" | "payment_method" | "confirm" | "success";
 
 export function CartPipelinePage({
   pendingOffer,
-  activeReservations,
-  reservations = [],
   quantity,
   setQuantity,
   onConfirmOrder,
@@ -50,9 +47,6 @@ export function CartPipelinePage({
   // Selected reservation to track if user taps track from the active orders list
   const [trackingReservation, setTrackingReservation] = useState<Reservation | null>(null);
 
-  const allOrdersList = useMemo(() => {
-    return activeReservations.length > 0 ? activeReservations : reservations.slice(0, 3);
-  }, [activeReservations, reservations]);
 
   // Calculations
   const totalAmount = pendingOffer ? pendingOffer.price * quantity : 0;
@@ -581,90 +575,35 @@ export function CartPipelinePage({
             <Icon name="arrow" className="w-4 h-4 rtl:rotate-180 shrink-0" />
           </button>
         </section>
-      ) : null}
-
-      {/* SECTION 2: List of Orders (Minimal & Clean) */}
-      <section className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h2 className="text-sm font-black text-ink">
-            {pendingOffer ? "سفارش‌های قبلی شما" : "لیست سفارش‌های شما"}
-          </h2>
-          {allOrdersList.length > 0 && (
-            <button
-              type="button"
-              onClick={onGoToOrders}
-              className="text-xs font-bold text-brand-2 hover:underline cursor-pointer"
-            >
-              مشاهده همه
-            </button>
-          )}
-        </div>
-
-        {allOrdersList.length > 0 ? (
-          <div className="space-y-2.5">
-            {allOrdersList.map((ord) => (
-              <div
-                key={ord.id}
-                className="p-3.5 rounded-2xl bg-surface border border-line shadow-2xs space-y-2.5 transition-all hover:shadow-xs"
-              >
-                <div className="flex items-center justify-between gap-2 min-w-0">
-                  <div className="flex items-center gap-2 min-w-0 flex-1">
-                    <div className="w-8 h-8 rounded-full overflow-hidden border border-line/60 shrink-0">
-                      <MerchantLogo name={ord.merchantName} category={ord.category} size="sm" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <h3 className="text-xs font-bold text-ink truncate">{ord.merchantName}</h3>
-                      <p className="text-[10.5px] text-muted truncate">{ord.title}</p>
-                    </div>
-                  </div>
-
-                  {/* Status pill */}
-                  <span className="text-[10px] font-bold text-brand-2 bg-brand-soft px-2 py-0.5 rounded-full shrink-0">
-                    {ord.orderStatus ? orderStatusLabel[ord.orderStatus] : "در جریان"}
-                  </span>
-                </div>
-
-                <div className="flex items-center justify-between pt-1 border-t border-line/50 text-[11px]">
-                  <div className="flex items-center gap-1.5 text-muted">
-                    <span>کد تحویل:</span>
-                    <span className="font-[family-name:var(--font-vazirmatn)] font-black text-brand-2 text-xs">
-                      {ord.code}
-                    </span>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => setTrackingReservation(ord)}
-                    className="text-xs font-bold text-brand-2 hover:underline flex items-center gap-1 cursor-pointer"
-                  >
-                    <span>پیگیری مراحل</span>
-                    <Icon name="chevron" className="w-3 h-3 rtl:rotate-180" />
-                  </button>
-                </div>
-              </div>
-            ))}
+      ) : (
+        /* Empty State when no pending item in cart */
+        <div className="p-8 rounded-3xl bg-surface border border-line text-center space-y-3">
+          <div className="w-14 h-14 rounded-full bg-canvas text-muted grid place-items-center mx-auto border border-line">
+            <Icon name="bag" className="w-6 h-6" />
           </div>
-        ) : !pendingOffer ? (
-          /* Empty State when no pending item and no orders */
-          <div className="p-8 rounded-3xl bg-surface border border-line text-center space-y-3">
-            <div className="w-14 h-14 rounded-full bg-canvas text-muted grid place-items-center mx-auto border border-line">
-              <Icon name="bag" className="w-6 h-6" />
-            </div>
-            <div className="space-y-1">
-              <h3 className="text-sm font-bold text-ink">سبد خرید شما خالی است</h3>
-              <p className="text-xs text-muted">جعبه‌های پایان روز را با تخفیف ویژه رزرو کنید.</p>
-            </div>
+          <div className="space-y-1">
+            <h3 className="text-sm font-bold text-ink">سبد خرید شما خالی است</h3>
+            <p className="text-xs text-muted">جعبه‌های پایان روز را با تخفیف ویژه رزرو کنید.</p>
+          </div>
+          <div className="flex flex-col gap-2 pt-2">
             <button
               type="button"
               onClick={onDiscover}
-              className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-2xl bg-brand-2 text-white text-xs font-bold hover:bg-brand-2/95 transition-all shadow-xs cursor-pointer mt-1"
+              className="w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-2xl bg-brand-2 text-white text-xs font-bold hover:bg-brand-2/95 transition-all shadow-xs cursor-pointer"
             >
               <span>مشاهده پیشنهادها</span>
               <Icon name="arrow" className="w-3.5 h-3.5 rtl:rotate-180" />
             </button>
+            <button
+              type="button"
+              onClick={onGoToOrders}
+              className="w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-2xl bg-canvas border border-line text-ink text-xs font-bold hover:bg-surface transition-all cursor-pointer"
+            >
+              <span>مشاهده سفارش‌های من</span>
+            </button>
           </div>
-        ) : null}
-      </section>
+        </div>
+      )}
     </div>
   );
 }
