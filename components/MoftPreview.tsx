@@ -2320,10 +2320,21 @@ function OrdersPage({
   onDirections: () => void;
   onTrackPipeline?: (reservationId: string) => void;
 }) {
+  const [timelineReservation, setTimelineReservation] = useState<Reservation | null>(null);
+
   const pastOrders = useMemo(
     () => reservations.filter((item) => item.status !== "active"),
     [reservations]
   );
+
+  const handleTrack = (id: string) => {
+    const target = reservations.find((r) => r.id === id);
+    if (target) {
+      setTimelineReservation(target);
+    } else if (onTrackPipeline) {
+      onTrackPipeline(id);
+    }
+  };
 
   return (
     <div className="space-y-4">
@@ -2338,7 +2349,7 @@ function OrdersPage({
                 onReview={onReview}
                 onReceipt={onReceipt}
                 onDirections={onDirections}
-                onTrackPipeline={onTrackPipeline}
+                onTrackPipeline={handleTrack}
               />
             ))}
           </div>
@@ -2373,7 +2384,190 @@ function OrdersPage({
           onAction={onDiscover}
         />
       )}
+
+      {/* Order Stage Timeline Popup */}
+      {timelineReservation && (
+        <OrderTimelineDialog
+          reservation={timelineReservation}
+          onClose={() => setTimelineReservation(null)}
+        />
+      )}
     </div>
+  );
+}
+
+function OrderTimelineDialog({
+  reservation,
+  onClose,
+}: {
+  reservation: Reservation;
+  onClose: () => void;
+}) {
+  const isCollected = reservation.status === "collected";
+
+  const copyCode = () => {
+    navigator.clipboard?.writeText(reservation.code);
+    toastManager.add({ title: "کد تحویل کپی شد.", type: "success" });
+  };
+
+  return (
+    <DialogShell titleId="order-timeline-title" onClose={onClose}>
+      <div className="p-4 sm:p-5 space-y-4 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+        {/* Header */}
+        <div className="flex items-center justify-between pb-3 border-b border-line pe-12">
+          <div>
+            <h2 id="order-timeline-title" className="text-base font-black text-ink">
+              پیگیری مراحل سفارش
+            </h2>
+            <p className="text-xs text-muted mt-0.5">وضعیت و مراحل دریافت بستهٔ نجات غذا</p>
+          </div>
+        </div>
+
+        {/* Order Brief Info */}
+        <div className="flex items-center gap-3 p-3 rounded-2xl bg-canvas border border-line">
+          <div className="relative w-12 h-12 rounded-xl bg-surface border border-line/60 overflow-hidden shrink-0">
+            <Image
+              src={reservation.image || "/images/products/dibz-dessert-box-cutout.png"}
+              alt={reservation.title}
+              fill
+              sizes="48px"
+              className="object-contain p-1"
+            />
+          </div>
+          <div className="min-w-0 flex-1">
+            <strong className="text-xs font-bold text-ink block truncate">{reservation.merchantName}</strong>
+            <h3 className="text-xs sm:text-sm font-black text-ink truncate leading-tight mt-0.5">
+              {reservation.title}
+            </h3>
+            <div className="flex items-center gap-2 text-[11px] text-muted mt-1 truncate">
+              <span className="flex items-center gap-1 shrink-0">
+                <Icon name="clock" className="w-3.5 h-3.5 text-muted" />
+                <span>{reservation.pickup}</span>
+              </span>
+              <span>•</span>
+              <strong className="text-brand-2 font-bold shrink-0">{money(reservation.total)}</strong>
+            </div>
+          </div>
+        </div>
+
+        {/* Two-Step Timeline */}
+        <div className="p-4 rounded-3xl bg-surface border border-line space-y-4 shadow-2xs">
+          <h4 className="text-xs font-black text-ink">مراحل تکمیل سفارش</h4>
+
+          <div className="relative space-y-6 ps-1">
+            {/* Step 1: پرداخت غذا */}
+            <div className="relative flex items-start gap-3">
+              {/* Connecting Line between Step 1 and Step 2 */}
+              <div className="absolute top-8 start-4 -translate-x-1/2 w-0.5 h-12 bg-brand-2" aria-hidden="true" />
+
+              <div className="w-8 h-8 rounded-full bg-brand-2 text-white grid place-items-center shrink-0 shadow-xs z-10">
+                <Icon name="check" className="w-4 h-4 stroke-[3]" />
+              </div>
+
+              <div className="min-w-0 flex-1 pt-0.5">
+                <div className="flex items-center justify-between gap-2">
+                  <strong className="text-xs sm:text-sm font-black text-ink">۱. پرداخت غذا</strong>
+                  <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-500/10 px-2 py-0.5 rounded-full">
+                    انجام شد
+                  </span>
+                </div>
+                <p className="text-[11px] text-muted mt-1 leading-relaxed">
+                  مبلغ {money(reservation.total)} با موفقیت پرداخت و رزرو شما ثبت شد.
+                </p>
+              </div>
+            </div>
+
+            {/* Step 2: مراجعه به رستوران و تحویل کد */}
+            <div className="relative flex items-start gap-3">
+              <div
+                className={`w-8 h-8 rounded-full grid place-items-center shrink-0 shadow-xs z-10 ${
+                  isCollected
+                    ? "bg-brand-2 text-white"
+                    : "bg-brand-soft text-brand-2 border-2 border-brand-2"
+                }`}
+              >
+                {isCollected ? (
+                  <Icon name="check" className="w-4 h-4 stroke-[3]" />
+                ) : (
+                  <Icon name="clock" className="w-4 h-4" />
+                )}
+              </div>
+
+              <div className="min-w-0 flex-1 pt-0.5">
+                <div className="flex items-center justify-between gap-2">
+                  <strong className="text-xs sm:text-sm font-black text-ink">
+                    ۲. مراجعه به رستوران و تحویل کد سفارش
+                  </strong>
+                  <span
+                    className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                      isCollected
+                        ? "text-emerald-700 dark:text-emerald-300 bg-emerald-500/10"
+                        : "text-amber-700 dark:text-amber-300 bg-amber-500/10"
+                    }`}
+                  >
+                    {isCollected ? "تحویل گرفته شد" : "مرحله جاری"}
+                  </span>
+                </div>
+
+                <p className="text-[11px] text-muted mt-1 leading-relaxed">
+                  {isCollected
+                    ? "سفارش با ارائه کد تحویل به فروشگاه با موفقیت تحویل گرفته شد."
+                    : `در بازهٔ زمانی (${reservation.pickup}) به ${reservation.merchantName} مراجعه کرده و کد تحویل زیر را اعلام فرمایید:`}
+                </p>
+
+                {/* Delivery Code Box */}
+                {!isCollected && (
+                  <div className="mt-3 p-3.5 rounded-2xl bg-canvas border border-dashed border-brand-2/40 flex items-center justify-between gap-2">
+                    <div>
+                      <span className="text-[11px] text-muted font-bold block">کد تحویل شما:</span>
+                      <strong className="text-2xl font-[family-name:var(--font-vazirmatn)] font-black text-brand-2 tracking-widest select-all">
+                        {faDigits(reservation.code)}
+                      </strong>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={copyCode}
+                      className="px-3 py-1.5 rounded-xl bg-surface border border-line text-xs font-bold text-ink hover:bg-surface-raised active:scale-95 transition-all cursor-pointer shadow-2xs"
+                    >
+                      کپی کد
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Store Address & Directions */}
+        {reservation.address && (
+          <div className="p-3 rounded-2xl bg-canvas border border-line/60 flex items-center justify-between gap-2 text-xs">
+            <div className="flex items-center gap-2 min-w-0">
+              <Icon name="pin" className="w-4 h-4 text-brand-2 shrink-0" />
+              <span className="text-muted truncate">{reservation.address}</span>
+            </div>
+            <a
+              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(reservation.merchantName + " " + reservation.address)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-brand-2 font-bold shrink-0 hover:underline inline-flex items-center gap-1"
+            >
+              <span>مسیریابی</span>
+              <Icon name="chevron" className="w-3.5 h-3.5 rtl:rotate-180" />
+            </a>
+          </div>
+        )}
+
+        {/* Close CTA */}
+        <button
+          type="button"
+          onClick={onClose}
+          className="w-full min-h-[44px] py-2.5 px-4 rounded-2xl bg-brand-2 text-white text-xs sm:text-sm font-black hover:bg-brand-2/95 transition-all shadow-xs cursor-pointer active:scale-[0.98]"
+        >
+          بستن
+        </button>
+      </div>
+    </DialogShell>
   );
 }
 
