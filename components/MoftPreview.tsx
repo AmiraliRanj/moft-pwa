@@ -1937,8 +1937,8 @@ function ReservationCard({
     <article className="w-full max-w-full min-w-0 overflow-hidden rounded-3xl bg-surface border border-line p-3.5 sm:p-4 shadow-xs space-y-3 transition-all hover:shadow-sm">
       {/* 1. Header: Merchant circular avatar + Store Info + ... Menu Button at top-left */}
       <div className="flex items-start justify-between gap-2.5 min-w-0 relative">
-        <div className="flex items-center gap-2.5 min-w-0 flex-1">
-          <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full overflow-hidden shrink-0 border border-line/60 shadow-2xs">
+        <div className="flex items-start gap-2.5 min-w-0 flex-1">
+          <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full overflow-hidden shrink-0 border border-line/60 shadow-2xs mt-0.5">
             <MerchantLogo
               name={reservation.merchantName}
               category={reservation.category}
@@ -1946,20 +1946,17 @@ function ReservationCard({
               className="!rounded-none !border-0"
             />
           </div>
-          <div className="min-w-0 flex-1 space-y-0.5">
+          <div className="min-w-0 flex-1 space-y-1">
             <h2 className="text-sm sm:text-base font-black text-ink truncate leading-tight">
               {reservation.merchantName}
             </h2>
-            <div className="flex items-center gap-2 text-xs text-muted min-w-0">
-              <span className="flex items-center gap-1 shrink-0">
-                <Icon name="clock" className="w-3.5 h-3.5 text-muted shrink-0" />
-                <span>{formatPickupDate(reservation.pickup)}</span>
-              </span>
-              <span className="opacity-30">·</span>
-              <span className="flex items-center gap-1 min-w-0 truncate">
-                <Icon name="pin" className="w-3.5 h-3.5 text-muted shrink-0" />
-                <span className="truncate">{reservation.address}</span>
-              </span>
+            <div className="flex items-center gap-1 text-[11px] sm:text-xs text-muted">
+              <Icon name="clock" className="w-3.5 h-3.5 text-muted shrink-0" />
+              <span>{formatPickupDate(reservation.pickup)}</span>
+            </div>
+            <div className="flex items-center gap-1 text-[11px] sm:text-xs text-muted min-w-0">
+              <Icon name="pin" className="w-3.5 h-3.5 text-muted shrink-0" />
+              <span className="truncate">{reservation.address}</span>
             </div>
           </div>
         </div>
