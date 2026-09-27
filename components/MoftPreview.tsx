@@ -24,7 +24,7 @@ import { useMoftTheme } from "@/components/shared/ThemeToggle";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Toaster, toast as toastManager } from "@/components/ui/toast";
 import { useDemo } from "@/demo/DemoProvider";
-import { orderStatusLabel, remainingQuantity } from "@/lib/demo-format";
+import { remainingQuantity } from "@/lib/demo-format";
 import { decimalFa, discountPercent, distanceFa, formatMerchantWithCategory, money, moneyCompact, numberFa } from "@/lib/moft-format";
 import type { MarketplaceOffer, Order } from "@/types/demo";
 import type { AppTab, CategoryId, Offer, PickupPeriod, Reservation } from "@/types/moft";
@@ -1933,75 +1933,42 @@ function ReservationCard({
 }) {
   const [showQr, setShowQr] = useState(false);
 
-  const status = reservation.orderStatus
-    ? orderStatusLabel[reservation.orderStatus]
-    : reservation.status === "active"
-    ? "فعال"
-    : reservation.status === "collected"
-    ? "تحویل شد"
-    : reservation.status === "cancelled"
-    ? "لغو شد"
-    : "زمان دریافت گذشته";
-
   const cancellable = reservation.orderStatus
     ? ["paid", "reviewed", "preparing", "ready_for_pickup"].includes(reservation.orderStatus)
     : reservation.status === "active";
 
-  const statusTone =
-    reservation.status === "collected" || reservation.orderStatus === "completed"
-      ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"
-      : reservation.status === "cancelled" || reservation.orderStatus === "cancelled"
-      ? "bg-rose-500/10 text-rose-600 border-rose-500/20"
-      : reservation.orderStatus === "ready_for_pickup"
-      ? "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/25"
-      : "bg-brand-soft text-brand-2 border-brand-2/20";
-
   return (
     <article className="w-full max-w-full min-w-0 overflow-hidden rounded-3xl bg-surface border border-line p-3.5 sm:p-4 shadow-xs space-y-3 transition-all hover:shadow-sm">
-      {/* 1. Header: Merchant circular avatar + Info (name, time, address) | Status badge */}
-      <div className="flex items-start justify-between gap-2.5 min-w-0">
-        {/* Right side (RTL start): Circular Merchant Logo + Store & Pickup Info */}
-        <div className="flex items-start gap-2.5 min-w-0 flex-1">
-          {/* Wrap MerchantLogo in circular container to avoid class conflict with component's rounded-2xl */}
-          <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full overflow-hidden shrink-0 mt-0.5 border border-line/60 shadow-2xs">
-            <MerchantLogo
-              name={reservation.merchantName}
-              category={reservation.category}
-              size="md"
-              className="!rounded-none !border-0"
-            />
-          </div>
-          <div className="min-w-0 flex-1 space-y-0.5">
-            <h2 className="text-sm sm:text-base font-black text-ink truncate leading-tight">
-              {reservation.merchantName}
-            </h2>
-            <p className="text-xs text-muted font-medium flex items-center gap-1.5 mt-0.5 min-w-0">
-              <Icon name="clock" className="w-3.5 h-3.5 text-muted shrink-0" />
-              <span className="truncate block min-w-0 flex-1">{reservation.pickup}</span>
-            </p>
-            <p className="text-xs text-muted/90 flex items-center gap-1 min-w-0">
-              <Icon name="pin" className="w-3.5 h-3.5 text-muted shrink-0" />
-              <span className="truncate block min-w-0 flex-1">{reservation.address}</span>
-            </p>
-          </div>
+      {/* 1. Header: Merchant circular avatar + Store Info (clean & uncrowded) */}
+      <div className="flex items-center gap-2.5 min-w-0">
+        <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full overflow-hidden shrink-0 border border-line/60 shadow-2xs">
+          <MerchantLogo
+            name={reservation.merchantName}
+            category={reservation.category}
+            size="md"
+            className="!rounded-none !border-0"
+          />
         </div>
-
-        {/* Left side (RTL end): Status badge & countdown */}
-        <div className="flex flex-col items-end gap-1 shrink-0">
-          <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] sm:text-xs font-bold border shadow-2xs whitespace-nowrap ${statusTone}`}>
-            <span className="w-1.5 h-1.5 rounded-full bg-current shrink-0" />
-            {status}
-          </span>
-          {reservation.status === "active" && (
-            <span className="text-[10px] font-bold text-brand-2 bg-brand-soft px-2 py-0.5 rounded-full whitespace-nowrap">
-              ۲ ساعت مانده
+        <div className="min-w-0 flex-1 space-y-0.5">
+          <h2 className="text-sm sm:text-base font-black text-ink truncate leading-tight">
+            {reservation.merchantName}
+          </h2>
+          <div className="flex items-center gap-2 text-xs text-muted min-w-0">
+            <span className="flex items-center gap-1 shrink-0">
+              <Icon name="clock" className="w-3.5 h-3.5 text-muted shrink-0" />
+              <span>{reservation.pickup}</span>
             </span>
-          )}
+            <span className="opacity-30">·</span>
+            <span className="flex items-center gap-1 min-w-0 truncate">
+              <Icon name="pin" className="w-3.5 h-3.5 text-muted shrink-0" />
+              <span className="truncate">{reservation.address}</span>
+            </span>
+          </div>
         </div>
       </div>
 
-      {/* 2. Middle Row: Product Cutout with Quantity Badge + Title & Compact Code Chip | Price */}
-      <div className="flex items-center justify-between gap-2.5 pt-2.5 border-t border-line/60 min-w-0">
+      {/* 2. Middle Row: Product Cutout with Quantity Badge + Title | Price */}
+      <div className="flex items-center justify-between gap-3 pt-2.5 border-t border-line/60 min-w-0">
         <div className="flex items-center gap-2.5 min-w-0 flex-1">
           {/* Food Cutout with Quantity Circle Badge */}
           <div className="relative w-12 h-12 sm:w-14 sm:h-14 shrink-0 rounded-2xl bg-canvas border border-line/60 overflow-visible">
@@ -2016,28 +1983,15 @@ function ReservationCard({
                 />
               </div>
             </div>
-            {/* RTL-aware quantity badge: use end/top for correct positioning in both LTR and RTL */}
+            {/* RTL-aware quantity badge */}
             <span className="absolute -top-1 -end-1 w-4.5 h-4.5 rounded-full bg-surface border border-line/80 shadow-2xs flex items-center justify-center text-[10px] font-black text-ink z-10">
               {numberFa(reservation.quantity || 1)}
             </span>
           </div>
 
-          {/* Title & Pickup Code Chip */}
-          <div className="min-w-0 flex-1 space-y-1">
-            <h3 className="text-xs sm:text-sm font-black text-ink truncate leading-tight">
-              {reservation.title}
-            </h3>
-            <button
-              type="button"
-              onClick={() => setShowQr((prev) => !prev)}
-              className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-xl bg-canvas hover:bg-surface-raised border border-line/80 text-[11px] transition-colors cursor-pointer group max-w-full"
-              aria-label={`نمایش بارکد تحویل ${reservation.code}`}
-            >
-              <Icon name="receipt" className="w-3 h-3 text-muted group-hover:text-brand-2 transition-colors shrink-0" />
-              <span className="text-muted text-[10px] sm:text-[11px] font-medium shrink-0">کد تحویل:</span>
-              <span className="font-mono font-black text-brand-2 tracking-wider truncate">{reservation.code}</span>
-            </button>
-          </div>
+          <h3 className="text-xs sm:text-sm font-black text-ink truncate leading-tight min-w-0 flex-1">
+            {reservation.title}
+          </h3>
         </div>
 
         {/* Total Price */}
@@ -2048,13 +2002,43 @@ function ReservationCard({
         </div>
       </div>
 
+      {/* 3. Delivery Code Ticket Voucher (Clean & Accessible) */}
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={() => setShowQr((prev) => !prev)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            setShowQr((prev) => !prev);
+          }
+        }}
+        aria-label={`کد تحویل ${reservation.code}؛ برای نمایش یا بستن بارکد کلیک کنید`}
+        className="flex items-center justify-between px-3 py-2 rounded-2xl bg-brand-soft/40 dark:bg-emerald-500/10 hover:bg-brand-soft/60 dark:hover:bg-emerald-500/15 border border-dashed border-brand-2/30 dark:border-emerald-500/25 transition-all cursor-pointer group active:scale-[0.99] select-none"
+      >
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="w-6 h-6 rounded-lg bg-brand-soft dark:bg-emerald-500/20 text-brand-2 dark:text-emerald-400 grid place-items-center shrink-0 shadow-2xs">
+            <Icon name="receipt" className="w-3.5 h-3.5" />
+          </span>
+          <span className="text-[11px] font-medium text-muted shrink-0">کد تحویل:</span>
+          <span className="font-mono text-sm sm:text-base font-black text-brand-2 dark:text-emerald-400 tracking-wider">
+            {reservation.code}
+          </span>
+        </div>
+
+        <div className="flex items-center gap-1 text-[11px] font-bold text-brand-2 dark:text-emerald-400 shrink-0">
+          <span>{showQr ? "بستن بارکد" : "نمایش بارکد"}</span>
+          <Icon name="chevron" className={`w-3.5 h-3.5 transition-transform duration-200 ${showQr ? "rotate-180" : "rotate-90"}`} />
+        </div>
+      </div>
+
       {/* Expandable QR Preview (Clean & Non-cluttered) */}
       {showQr && (
-        <div className="flex items-center justify-between gap-3 p-3 rounded-2xl bg-canvas/90 border border-line/70 animate-in fade-in duration-200">
-          <div className="space-y-0.5">
-            <span className="text-[10px] font-bold text-muted">بارکد دریافت بسته</span>
-            <span className="block font-mono font-black text-base text-ink tracking-widest">{reservation.code}</span>
-            <span className="text-[10px] text-muted">این کد را به فروشگاه نشان دهید</span>
+        <div className="flex items-center justify-between gap-3 p-3 rounded-2xl bg-canvas border border-line/70 animate-in fade-in zoom-in-95 duration-200">
+          <div className="space-y-1">
+            <span className="text-xs font-bold text-ink">بارکد دریافت بسته</span>
+            <span className="block font-mono font-black text-base sm:text-lg text-brand-2 tracking-widest">{reservation.code}</span>
+            <span className="text-[10px] sm:text-[11px] text-muted">این کد را به فروشگاه نشان دهید</span>
           </div>
           <div className="p-1 rounded-xl bg-surface border border-line shadow-2xs shrink-0">
             <MiniQr code={reservation.code} />
