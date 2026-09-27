@@ -45,7 +45,7 @@ const themeBootScript = `
     root.style.colorScheme = resolved;
     const themeMeta = document.getElementById("theme-color");
     const statusMeta = document.getElementById("apple-status-bar-style");
-    if (themeMeta) themeMeta.setAttribute("content", resolved === "dark" ? "#151816" : "#14532D");
+    if (themeMeta) themeMeta.setAttribute("content", resolved === "dark" ? "#1D1E21" : "#FAF9F7");
     if (statusMeta) statusMeta.setAttribute("content", resolved === "dark" ? "black-translucent" : "default");
   } catch {
     const resolved = "light";
@@ -59,7 +59,7 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
   return (
     <html lang="fa" dir="rtl" suppressHydrationWarning className="font-sans" data-scroll-behavior="smooth">
       <head>
-        <meta id="theme-color" name="theme-color" content="#14532D" />
+        <meta id="theme-color" name="theme-color" content="#FAF9F7" />
         <meta id="apple-status-bar-style" name="apple-mobile-web-app-status-bar-style" content="default" />
         <script dangerouslySetInnerHTML={{ __html: themeBootScript }} />
       </head>

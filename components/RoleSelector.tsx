@@ -7,8 +7,8 @@ export default function RoleSelector() {
   return (
     <main className="relative min-h-svh overflow-hidden bg-canvas px-3.5 sm:px-6 py-5 sm:py-7 max-w-[1200px] mx-auto flex flex-col">
       <a className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:end-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-brand focus:text-white focus:rounded-xl focus:shadow-lg" href="#role-options">رفتن به انتخاب نوع ورود</a>
-      <div className="pointer-events-none fixed -top-[300px] -end-[170px] h-[500px] w-[500px] rounded-full bg-emerald-500/15 blur-[115px]" aria-hidden="true" />
-      <div className="pointer-events-none fixed -bottom-[330px] -start-[190px] h-[500px] w-[500px] rounded-full bg-amber-400/10 blur-[115px]" aria-hidden="true" />
+      <div className="pointer-events-none fixed -top-[300px] -end-[170px] h-[500px] w-[500px] rounded-full bg-[#F87F45]/15 blur-[115px]" aria-hidden="true" />
+      <div className="pointer-events-none fixed -bottom-[330px] -start-[190px] h-[500px] w-[500px] rounded-full bg-[#FDA74D]/10 blur-[115px]" aria-hidden="true" />
       
       <div className="relative z-10 w-full max-w-[940px] mx-auto flex flex-col gap-5 sm:gap-7">
         <header className="flex items-center justify-between">
@@ -35,7 +35,7 @@ export default function RoleSelector() {
                 <li className="flex items-center gap-2"><span className="[&>svg]:w-3.5 [&>svg]:h-3.5 sm:[&>svg]:w-4 sm:[&>svg]:h-4 text-brand-2 shrink-0"><Icon name="check" /></span><span>ثبت نظر و امتیاز</span></li>
               </ul>
             </span>
-            <span className="relative z-10 mt-auto flex min-h-[44px] items-center justify-between gap-2 rounded-xl sm:rounded-2xl bg-[#174d3d] dark:bg-brand-2 dark:text-zinc-900 px-3.5 sm:px-4 text-xs sm:text-sm font-bold text-white transition-opacity group-hover:opacity-95">
+            <span className="relative z-10 mt-auto flex min-h-[44px] items-center justify-between gap-2 rounded-xl sm:rounded-2xl bg-brand-2 dark:bg-brand-2 dark:text-white px-3.5 sm:px-4 text-xs sm:text-sm font-bold text-white transition-opacity group-hover:opacity-95">
               <span>پیشنهادها رو ببین</span>
               <span className="rotate-180 [&>svg]:w-3.5 [&>svg]:h-3.5 sm:[&>svg]:w-4 sm:[&>svg]:h-4"><Icon name="arrow" /></span>
             </span>

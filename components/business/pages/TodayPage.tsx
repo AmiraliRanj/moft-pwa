@@ -102,7 +102,7 @@ export function TodayPage() {
                 <div className="flex flex-col">
                   <div className="flex items-center gap-2 mb-1">
                     <span className={`inline-flex items-center rounded-lg px-2 py-0.5 text-[0.7rem] font-bold ${
-                      offer.status === "active" ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                      offer.status === "active" ? "bg-brand-soft text-brand-2 dark:bg-[#F87F45]/15 dark:text-[#FDA74D]"
                       : offer.status === "paused" ? "bg-amber-500/10 text-amber-600 dark:text-amber-400"
                       : "bg-zinc-500/10 text-zinc-600 dark:text-zinc-400"
                     }`}>
@@ -233,7 +233,7 @@ export function TodayPage() {
                 </div>
                 <div className="flex items-center gap-3">
                   <span className={`inline-flex items-center rounded-lg px-2 py-0.5 text-[0.7rem] font-bold ${
-                    order.status === "completed" ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                    order.status === "completed" ? "bg-brand-soft text-brand-2 dark:bg-[#F87F45]/15 dark:text-[#FDA74D]"
                     : order.status === "ready_for_pickup" ? "bg-amber-500/10 text-amber-600 dark:text-amber-400"
                     : "bg-blue-500/10 text-blue-600 dark:text-blue-400"
                   }`}>

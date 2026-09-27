@@ -195,7 +195,7 @@ export function QualityPage() {
               </div>
               <div className="flex items-center gap-3">
                 <span className={`inline-flex items-center rounded-lg px-2.5 py-0.5 text-[0.7rem] font-bold ${
-                  complaint.status === "closed" ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                  complaint.status === "closed" ? "bg-brand-soft text-brand-2 dark:bg-[#F87F45]/15 dark:text-[#FDA74D]"
                   : complaint.status === "responded" ? "bg-blue-500/10 text-blue-600 dark:text-blue-400"
                   : "bg-amber-500/10 text-amber-600 dark:text-amber-400"
                 }`}>

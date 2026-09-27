@@ -121,8 +121,8 @@ export function MerchantProfileModal({
             </div>
 
             <div className="pt-2 shrink-0">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-emerald-600/10 text-emerald-700 dark:text-emerald-300 border border-emerald-600/20 shadow-2xs">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-brand-soft text-brand-2 dark:text-[#FDA74D] border border-brand-2/20 shadow-2xs">
+                <span className="w-2 h-2 rounded-full bg-brand-2 animate-pulse" />
                 <span>{numberFa(totalAvailableBoxes)} جعبه فعال</span>
               </span>
             </div>
@@ -147,7 +147,7 @@ export function MerchantProfileModal({
           <div className="grid grid-cols-3 gap-2.5 p-3 rounded-2xl bg-canvas border border-line text-center">
             <div className="space-y-0.5">
               <span className="flex items-center justify-center gap-1 text-xs font-black text-ink">
-                <Icon name="star" filled className="w-3.5 h-3.5 text-amber-500" />
+                <Icon name="star" filled className="w-3.5 h-3.5 text-[#FDA74D]" />
                 <span>{decimalFa(merchant.rating)}</span>
               </span>
               <small className="block text-[10px] text-muted font-medium">({numberFa(merchant.reviewCount)} نظر)</small>
@@ -160,8 +160,8 @@ export function MerchantProfileModal({
               <small className="block text-[10px] text-muted font-medium">{merchant.neighborhood}</small>
             </div>
             <div className="space-y-0.5">
-              <span className="flex items-center justify-center gap-1 text-xs font-black text-emerald-600 dark:text-emerald-400">
-                <Icon name="leaf" className="w-3.5 h-3.5 text-emerald-600" />
+              <span className="flex items-center justify-center gap-1 text-xs font-black text-brand-2 dark:text-[#FDA74D]">
+                <Icon name="leaf" className="w-3.5 h-3.5 text-brand-2" />
                 <span>۹۸٪</span>
               </span>
               <small className="block text-[10px] text-muted font-medium">رضایت نجات غذا</small>
@@ -181,7 +181,7 @@ export function MerchantProfileModal({
                 <span>تحویل فقط حضوری</span>
               </span>
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-surface border border-line text-[11px] font-bold text-ink">
-                <Icon name="check" className="w-3.5 h-3.5 text-emerald-600" />
+                <Icon name="check" className="w-3.5 h-3.5 text-brand-2" />
                 <span>بسته‌بندی بهداشتی</span>
               </span>
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-surface border border-line text-[11px] font-bold text-ink">

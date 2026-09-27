@@ -65,7 +65,7 @@ export function FinancePage() {
 
   const getStatusBadge = (txStatus: string) => {
     if (txStatus === "settled") {
-      return "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20";
+      return "bg-brand-soft text-brand-2 dark:bg-[#F87F45]/15 dark:text-[#FDA74D] border border-brand-2/20";
     }
     if (txStatus === "pending") {
       return "bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20";
@@ -251,7 +251,7 @@ export function FinancePage() {
                 <span
                   className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold ${
                     item.status === "paid"
-                      ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"
+                      ? "bg-brand-soft text-brand-2 dark:bg-[#F87F45]/15 dark:text-[#FDA74D] border border-brand-2/20"
                       : "bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20"
                   }`}
                 >

@@ -35,7 +35,7 @@ const statusLabel: Record<TicketStatus, string> = {
 const getStatusBadge = (status: TicketStatus) => {
   switch (status) {
     case "answered":
-      return "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20";
+      return "bg-brand-soft text-brand-2 dark:bg-[#F87F45]/15 dark:text-[#FDA74D] border border-brand-2/20";
     case "in_progress":
       return "bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20";
     case "open":
@@ -181,8 +181,8 @@ export function SupportCenter({
         </header>
 
         {createdId === selected.id && (
-          <div className="flex items-center gap-3 p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-800 dark:text-emerald-300" role="status">
-            <Icon name="check" className="w-5 h-5 shrink-0 text-emerald-600 dark:text-emerald-400" />
+          <div className="flex items-center gap-3 p-4 rounded-2xl bg-brand-soft border border-brand-2/20 text-brand-2 dark:bg-[#F87F45]/15 dark:text-[#FDA74D]" role="status">
+            <Icon name="check" className="w-5 h-5 shrink-0 text-brand-2 dark:text-[#FDA74D]" />
             <div>
               <strong className="block text-xs font-bold">درخواست شما ثبت شد</strong>
               <p className="text-[11px] mt-0.5 opacity-90">

@@ -249,7 +249,7 @@ export function PickupPage() {
           )}
           {verification.kind === "valid" && verification.order && (
             <div className="flex flex-col gap-4 text-start">
-              <span className="inline-flex items-center gap-1.5 self-start rounded-lg bg-emerald-500/10 px-3 py-1 text-xs font-bold text-emerald-600 dark:text-emerald-400">
+              <span className="inline-flex items-center gap-1.5 self-start rounded-lg bg-brand-soft px-3 py-1 text-xs font-bold text-brand-2 dark:bg-[#F87F45]/15 dark:text-[#FDA74D]">
                 <span className="[&>svg]:w-3.5 [&>svg]:h-3.5"><Icon name="check" /></span>
                 <span>کد معتبر است</span>
               </span>
@@ -274,7 +274,7 @@ export function PickupPage() {
                 </div>
                 <div>
                   <dt className="text-[0.65rem] text-muted font-bold">پرداخت</dt>
-                  <dd className="font-bold text-emerald-600 dark:text-emerald-400 mt-0.5">پرداخت‌شده</dd>
+                  <dd className="font-bold text-brand-2 dark:text-[#FDA74D] mt-0.5">پرداخت‌شده</dd>
                 </div>
                 <div>
                   <dt className="text-[0.65rem] text-muted font-bold">بازه دریافت</dt>

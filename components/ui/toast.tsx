@@ -171,9 +171,9 @@ function ToastIcon({ status }: { status: "error" | "success" | "default" }) {
     return (
       <span
         data-slot="toast-icon"
-        className="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 grid place-items-center shrink-0"
+        className="w-5 h-5 rounded-full bg-[#F87F45]/20 text-[#FDA74D] grid place-items-center shrink-0"
       >
-        <Icon name="check" className="w-3 h-3 text-emerald-400" />
+        <Icon name="check" className="w-3 h-3 text-[#FDA74D]" />
       </span>
     )
   }
@@ -197,7 +197,7 @@ function ToastList() {
       status === "error"
         ? "text-red-400"
         : status === "success"
-        ? "text-emerald-400"
+        ? "text-[#FDA74D]"
         : "text-white"
 
     return (

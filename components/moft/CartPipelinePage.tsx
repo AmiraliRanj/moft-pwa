@@ -201,7 +201,7 @@ export function CartPipelinePage({
                   st.isCurrent
                     ? "bg-brand-soft/60 border-brand-2/40 shadow-2xs"
                     : st.isDone
-                    ? "bg-emerald-500/5 border-emerald-500/20"
+                    ? "bg-brand-soft/40 border-brand-2/20"
                     : "bg-canvas/50 border-line/60 opacity-60"
                 }`}
               >
@@ -432,7 +432,7 @@ export function CartPipelinePage({
     return (
       <div className="space-y-4 pb-24 animate-in fade-in duration-200">
         <div className="p-5 rounded-3xl bg-surface border border-line shadow-xs text-center space-y-4">
-          <div className="w-14 h-14 rounded-full bg-emerald-500/15 text-brand-2 grid place-items-center mx-auto shadow-2xs">
+          <div className="w-14 h-14 rounded-full bg-brand-soft text-brand-2 grid place-items-center mx-auto shadow-2xs">
             <Icon name="check" className="w-7 h-7" />
           </div>
 

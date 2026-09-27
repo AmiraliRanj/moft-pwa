@@ -493,7 +493,7 @@ export default function MoftPreview({
 
       {islandVisible && successReservation && (
         <div className="fixed top-4 inset-x-4 z-50 max-w-sm mx-auto flex items-center gap-3 p-3.5 rounded-2xl bg-surface border border-line shadow-float backdrop-blur-xl animate-bounce" role="status">
-          <span className="w-8 h-8 rounded-full bg-emerald-500 text-white grid place-items-center shrink-0">
+          <span className="w-8 h-8 rounded-full bg-brand-2 text-white grid place-items-center shrink-0">
             <Icon name="check" className="w-4 h-4" />
           </span>
           <div className="flex-1">
@@ -933,7 +933,7 @@ function HomePage({
                 }}
                 className={`w-full flex items-center justify-between px-3 py-2 text-xs text-start transition-colors cursor-pointer ${
                   sort === opt.value
-                    ? "text-brand-2 font-black bg-brand-soft/40 dark:bg-emerald-950/40"
+                    ? "text-brand-2 font-black bg-brand-soft/40 dark:bg-[#F87F45]/15"
                     : "text-ink hover:bg-canvas-soft font-semibold"
                 }`}
               >
@@ -1393,7 +1393,7 @@ function DiscoverPage({
               </defs>
 
               {/* Background Street Grid & City Blocks */}
-              <rect width="100%" height="100%" fill="#f4f6f4" className="dark:fill-[#171e19]" />
+              <rect width="100%" height="100%" fill="#f4f6f4" className="dark:fill-[#1D1E21]" />
               <rect width="100%" height="100%" fill="url(#city-blocks)" />
 
               {/* Green Park Zones (Mellat, Abo-Atash, Taleghani) */}
@@ -1531,12 +1531,12 @@ function DiscoverPage({
                   {/* Selected State: Title card above location with category icon, restaurant name and available packs (NO background behind title/badge!) */}
                   {isSelected && (
                     <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-30 pointer-events-none flex flex-col items-center animate-in fade-in zoom-in-95 duration-200">
-                      <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface/95 dark:bg-[#18201a]/95 backdrop-blur-md border border-line shadow-lg text-start whitespace-nowrap">
+                      <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface/95 dark:bg-[#1D1E21]/95 backdrop-blur-md border border-line shadow-lg text-start whitespace-nowrap">
                         <Icon name={iconName} className="w-4 h-4 text-brand-2 shrink-0" />
                         <strong className="text-xs font-black text-ink">
                           {formatMerchantWithCategory(offer.merchantName, offer.categoryLabel)}
                         </strong>
-                        <span className="text-[11px] font-bold text-emerald-700 dark:text-emerald-300">
+                        <span className="text-[11px] font-bold text-brand-2 dark:text-[#FDA74D]">
                           • {numberFa(offer.quantityLeft)} بسته موجود
                         </span>
                       </div>
@@ -1558,7 +1558,7 @@ function DiscoverPage({
                     className={`pointer-events-auto relative w-11 h-11 rounded-full flex items-center justify-center transition-all duration-200 cursor-pointer active:scale-90 focus:outline-none ${
                       isSelected
                         ? "bg-surface ring-3 ring-brand-2 shadow-xl scale-115 z-30"
-                        : "bg-surface border-2 border-white dark:border-[#2a342c] shadow-md hover:shadow-lg hover:scale-110"
+                        : "bg-surface border-2 border-white dark:border-[#2D2F35] shadow-md hover:shadow-lg hover:scale-110"
                     }`}
                     aria-label={`انتخاب ${offer.merchantName} - ${numberFa(offer.quantityLeft)} بسته موجود`}
                   >
@@ -1618,7 +1618,7 @@ function DiscoverPage({
             <button
               type="button"
               onClick={() => setActiveOffer(currentPeekOffer)}
-              className="pointer-events-auto flex-1 min-w-0 flex items-center gap-2.5 p-2 sm:p-2.5 rounded-2xl bg-surface/95 dark:bg-[#18201a]/95 backdrop-blur-xl border border-line shadow-lg hover:shadow-xl hover:border-brand-2/40 transition-all text-start cursor-pointer active:scale-[0.98] group"
+              className="pointer-events-auto flex-1 min-w-0 flex items-center gap-2.5 p-2 sm:p-2.5 rounded-2xl bg-surface/95 dark:bg-[#1D1E21]/95 backdrop-blur-xl border border-line shadow-lg hover:shadow-xl hover:border-brand-2/40 transition-all text-start cursor-pointer active:scale-[0.98] group"
               aria-label={`مشاهده ${currentPeekOffer.title} از ${currentPeekOffer.merchantName}`}
             >
               {/* Store / Food Image Thumbnail */}
@@ -1673,7 +1673,7 @@ function DiscoverPage({
               </span>
             </button>
           ) : (
-            <div className="pointer-events-auto flex-1 min-w-0 flex items-center gap-2 p-2.5 rounded-2xl bg-surface/95 dark:bg-[#18201a]/95 backdrop-blur-xl border border-line shadow-lg text-xs text-muted">
+            <div className="pointer-events-auto flex-1 min-w-0 flex items-center gap-2 p-2.5 rounded-2xl bg-surface/95 dark:bg-[#1D1E21]/95 backdrop-blur-xl border border-line shadow-lg text-xs text-muted">
               <Icon name="info" className="w-4 h-4 text-brand-2 shrink-0" />
               <span className="truncate">جعبه‌ای در این دسته‌بندی نیست</span>
             </div>
@@ -1685,7 +1685,7 @@ function DiscoverPage({
           <div
             className="fixed bottom-0 inset-x-0 sm:inset-x-4 sm:bottom-3 max-w-lg mx-auto z-50 transition-all duration-300 ease-out transform translate-y-0 opacity-100 pointer-events-auto"
           >
-            <div className="relative bg-surface dark:bg-[#18201a] rounded-t-3xl sm:rounded-3xl border-t sm:border border-line shadow-2xl p-3.5 sm:p-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:pb-4 space-y-3">
+            <div className="relative bg-surface dark:bg-[#1D1E21] rounded-t-3xl sm:rounded-3xl border-t sm:border border-line shadow-2xl p-3.5 sm:p-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:pb-4 space-y-3">
               {/* Header with Restaurant Name, Address, pack count, distance and close button */}
               <div className="pb-2.5 border-b border-line/40 space-y-1.5">
                 <div className="flex items-start justify-between gap-2.5">
@@ -1717,7 +1717,7 @@ function DiscoverPage({
                 </div>
 
                 <div className="flex items-center gap-2 pt-0.5">
-                  <span className="text-[11px] font-black text-emerald-700 dark:text-emerald-300 bg-emerald-500/15 px-2.5 py-0.5 rounded-full shrink-0">
+                  <span className="text-[11px] font-black text-brand-2 dark:text-[#FDA74D] bg-[#F87F45]/15 px-2.5 py-0.5 rounded-full shrink-0">
                     {numberFa(totalPacks)} بسته موجود
                   </span>
                   <span className="text-[11px] font-bold text-muted truncate">
@@ -2068,15 +2068,15 @@ function ReservationCard({
       </div>
 
       {/* 3. Delivery Code Ticket Voucher (Clean, Prominent & Bold Vazir Font) */}
-      <div className="flex items-center justify-between px-3.5 py-2.5 rounded-2xl bg-brand-soft/40 dark:bg-emerald-500/10 border border-dashed border-brand-2/30 dark:border-emerald-500/25 min-w-0">
+      <div className="flex items-center justify-between px-3.5 py-2.5 rounded-2xl bg-brand-soft/40 dark:bg-[#F87F45]/10 border border-dashed border-brand-2/30 dark:border-[#F87F45]/25 min-w-0">
         <div className="flex items-center gap-2 min-w-0">
-          <span className="w-7 h-7 rounded-xl bg-brand-soft dark:bg-emerald-500/20 text-brand-2 dark:text-emerald-400 grid place-items-center shrink-0 shadow-2xs">
+          <span className="w-7 h-7 rounded-xl bg-brand-soft dark:bg-[#F87F45]/20 text-brand-2 dark:text-[#FDA74D] grid place-items-center shrink-0 shadow-2xs">
             <Icon name="receipt" className="w-4 h-4" />
           </span>
           <span className="text-xs font-bold text-muted shrink-0">کد تحویل:</span>
         </div>
 
-        <span className="font-[family-name:var(--font-vazirmatn)] font-black text-xl sm:text-2xl text-brand-2 dark:text-emerald-400 tracking-wide select-all">
+        <span className="font-[family-name:var(--font-vazirmatn)] font-black text-xl sm:text-2xl text-brand-2 dark:text-[#FDA74D] tracking-wide select-all">
           {faDigits(reservation.code)}
         </span>
       </div>
@@ -2112,7 +2112,7 @@ function ReservationCard({
               <span>ثبت نظر</span>
             </button>
           ) : (
-            <span className="w-full min-h-[44px] inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs sm:text-sm font-bold text-emerald-600 bg-emerald-500/10 rounded-2xl border border-emerald-500/20">
+            <span className="w-full min-h-[44px] inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs sm:text-sm font-bold text-brand-2 bg-brand-soft rounded-2xl border border-brand-2/20 dark:text-[#FDA74D] dark:bg-[#F87F45]/10 dark:border-[#F87F45]/20">
               <Icon name="check" className="w-4 h-4 shrink-0" />
               <span>نظر ثبت شده</span>
             </span>
@@ -2365,7 +2365,7 @@ function ProfilePage({
             <small className="block text-[10px] text-muted font-bold">کیلو غذا</small>
           </div>
           <div className="p-3 rounded-2xl bg-canvas border border-line/60 text-center space-y-1">
-            <div className="w-5 h-5 mx-auto flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+            <div className="w-5 h-5 mx-auto flex items-center justify-center text-brand-2 dark:text-[#FDA74D]">
               <Icon name="leaf" className="w-4 h-4" />
             </div>
             <strong className="block text-sm font-black text-ink">{decimalFa(co2)}</strong>
@@ -2944,7 +2944,7 @@ function SuccessState({
 }) {
   return (
     <div className="text-center space-y-4 py-2">
-      <div className="w-14 h-14 mx-auto rounded-full bg-emerald-500/10 text-emerald-600 grid place-items-center">
+      <div className="w-14 h-14 mx-auto rounded-full bg-brand-soft text-brand-2 dark:bg-[#F87F45]/15 dark:text-[#FDA74D] grid place-items-center">
         <SuccessCheck />
       </div>
       <div>

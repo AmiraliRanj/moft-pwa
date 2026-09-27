@@ -192,7 +192,7 @@ export function OrdersPage() {
                     <td className="px-4 py-3 text-muted">{order.pickupStart}–{order.pickupEnd}</td>
                     <td className="px-4 py-3">
                       <span className={`inline-flex items-center rounded-lg px-2 py-0.5 text-[0.7rem] font-bold ${
-                        order.status === "completed" ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                        order.status === "completed" ? "bg-brand-soft text-brand-2 dark:bg-[#F87F45]/15 dark:text-[#FDA74D]"
                         : order.status === "ready_for_pickup" ? "bg-amber-500/10 text-amber-600 dark:text-amber-400"
                         : "bg-blue-500/10 text-blue-600 dark:text-blue-400"
                       }`}>
@@ -229,7 +229,7 @@ export function OrdersPage() {
                 <div className="flex flex-col items-end gap-1">
                   <b className="text-xs font-mono font-bold text-ink">{formatMoney(order.total)}</b>
                   <span className={`inline-flex items-center rounded-lg px-2 py-0.5 text-[0.65rem] font-bold ${
-                    order.status === "completed" ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                    order.status === "completed" ? "bg-brand-soft text-brand-2 dark:bg-[#F87F45]/15 dark:text-[#FDA74D]"
                     : order.status === "ready_for_pickup" ? "bg-amber-500/10 text-amber-600 dark:text-amber-400"
                     : "bg-blue-500/10 text-blue-600 dark:text-blue-400"
                   }`}>

@@ -11,7 +11,7 @@ interface EndingSoonBannerCardProps {
 export function EndingSoonBannerCard({ onAction, className = "" }: EndingSoonBannerCardProps) {
   return (
     <article
-      className={`relative shrink-0 w-60 sm:w-68 rounded-2xl overflow-hidden shadow-xs border border-emerald-800/40 bg-gradient-to-br from-[#0e3521] via-[#092215] to-[#14422b] text-white group cursor-pointer transition-all hover:border-emerald-600/60 hover:shadow-md ${className}`}
+      className={`relative shrink-0 w-60 sm:w-68 rounded-2xl overflow-hidden shadow-xs border border-orange-500/25 bg-gradient-to-br from-[#26282E] via-[#1D1E21] to-[#141517] text-white group cursor-pointer transition-all hover:border-[#F87F45]/60 hover:shadow-md ${className}`}
     >
       <button
         type="button"
@@ -21,11 +21,11 @@ export function EndingSoonBannerCard({ onAction, className = "" }: EndingSoonBan
       >
         {/* Ambient lighting effects */}
         <div
-          className="absolute -top-10 -start-10 w-28 h-28 rounded-full bg-rose-500/15 blur-2xl pointer-events-none"
+          className="absolute -top-10 -start-10 w-28 h-28 rounded-full bg-[#F87F45]/20 blur-2xl pointer-events-none"
           aria-hidden="true"
         />
         <div
-          className="absolute -bottom-8 -end-8 w-24 h-24 rounded-full bg-emerald-400/15 blur-xl pointer-events-none"
+          className="absolute -bottom-8 -end-8 w-24 h-24 rounded-full bg-[#FDA74D]/15 blur-xl pointer-events-none"
           aria-hidden="true"
         />
 
@@ -35,7 +35,7 @@ export function EndingSoonBannerCard({ onAction, className = "" }: EndingSoonBan
             <Icon name="clock" className="w-3 h-3 text-rose-300 motion-safe:animate-pulse" />
             <span>فرصت آخر امروز</span>
           </span>
-          <span className="text-[10px] font-black text-emerald-300/90 bg-emerald-950/60 px-1.5 py-0.5 rounded-md border border-emerald-800/50">
+          <span className="text-[10px] font-black text-[#FDA74D] bg-[#F87F45]/15 px-1.5 py-0.5 rounded-md border border-[#F87F45]/30">
             تا ۷۰٪ تخفیف
           </span>
         </div>
@@ -46,7 +46,7 @@ export function EndingSoonBannerCard({ onAction, className = "" }: EndingSoonBan
             <h3 className="text-sm sm:text-base font-black text-white leading-snug">
               نجات فوری بسته‌ها
             </h3>
-            <p className="text-[11px] text-emerald-100/80 leading-relaxed line-clamp-2">
+            <p className="text-[11px] text-white/80 leading-relaxed line-clamp-2">
               جعبه‌های نزدیکت که کمتر از ۲ ساعت تا پایان زمان دریافت دارند.
             </p>
           </div>
@@ -63,10 +63,10 @@ export function EndingSoonBannerCard({ onAction, className = "" }: EndingSoonBan
 
         {/* Bottom Bar: Action link with icon */}
         <div className="relative z-10 pt-2 flex items-center justify-between gap-2 border-t border-white/10 w-full">
-          <span className="text-xs font-bold text-emerald-300 group-hover:text-white transition-colors">
+          <span className="text-xs font-bold text-[#FDA74D] group-hover:text-white transition-colors">
             مشاهده تمام گزینه‌ها
           </span>
-          <span className="w-7 h-7 rounded-xl bg-white/10 group-hover:bg-white text-white group-hover:text-emerald-950 grid place-items-center transition-all shadow-xs">
+          <span className="w-7 h-7 rounded-xl bg-white/10 group-hover:bg-[#F87F45] text-white grid place-items-center transition-all shadow-xs">
             <Icon name="arrow" className="w-3.5 h-3.5 rtl:rotate-180" />
           </span>
         </div>

@@ -50,15 +50,15 @@ export function HomeHeroCarousel({ onDiscover }: { onDiscover: () => void }) {
         <CarouselContent>
           {slides.map((slide, index) => (
             <CarouselItem key={slide.title} aria-label={`${index + 1} از ${slides.length}`}>
-              <section className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-emerald-800 to-teal-950 text-white p-3 sm:p-3.5 shadow-sm h-[120px] sm:h-[128px] max-h-[128px] flex items-center justify-between gap-2.5">
+              <section className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-[#F87F45] via-[#EE7235] to-[#D96025] text-white p-3 sm:p-3.5 shadow-sm h-[120px] sm:h-[128px] max-h-[128px] flex items-center justify-between gap-2.5">
                 <div className="space-y-1 z-10 max-w-[66%] flex flex-col justify-center min-w-0">
-                  <p className="text-[9px] uppercase font-bold tracking-wider text-emerald-200">دیبز برای امروز</p>
+                  <p className="text-[9px] uppercase font-bold tracking-wider text-orange-100">دیبز برای امروز</p>
                   <h1 className="text-xs sm:text-sm font-black leading-tight truncate">{slide.title}</h1>
-                  <p className="text-[10px] text-emerald-100/80 line-clamp-1 leading-normal">{slide.text}</p>
+                  <p className="text-[10px] text-white/90 line-clamp-1 leading-normal">{slide.text}</p>
                   <button
                     type="button"
                     onClick={onDiscover}
-                    className="inline-flex items-center gap-1 min-h-[36px] px-3 py-1 text-[11px] font-bold rounded-lg bg-white text-emerald-900 hover:bg-emerald-50 transition-colors shadow-2xs w-fit cursor-pointer active:scale-95 mt-0.5"
+                    className="inline-flex items-center gap-1 min-h-[36px] px-3 py-1 text-[11px] font-bold rounded-lg bg-white text-[#D96025] hover:bg-[#FFF2EB] transition-colors shadow-2xs w-fit cursor-pointer active:scale-95 mt-0.5"
                   >
                     <span>{slide.action}</span>
                     <Icon name="arrow" className="w-3 h-3 rtl:rotate-180" />

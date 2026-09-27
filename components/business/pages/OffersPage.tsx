@@ -225,7 +225,7 @@ export function OffersPage() {
                   <div className="relative h-48 w-full overflow-hidden bg-canvas-soft">
                     <FoodImage src={offer.image} sizes="(max-width: 700px) 100vw, 360px" />
                     <span className={`absolute top-3 end-3 inline-flex items-center rounded-lg px-2.5 py-1 text-xs font-bold shadow-xs ${
-                      offer.status === "active" ? "bg-emerald-600 text-white"
+                      offer.status === "active" ? "bg-brand-2 text-white"
                       : offer.status === "paused" ? "bg-amber-600 text-white"
                       : "bg-zinc-700 text-white"
                     }`}>

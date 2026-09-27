@@ -217,7 +217,7 @@ export function SettingsPage() {
                           notify(result.message, result.ok ? "success" : "error");
                         }}
                       />
-                      <div className="w-9 h-5 bg-muted/30 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
+                      <div className="w-9 h-5 bg-muted/30 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-brand-2"></div>
                     </label>
                     <button
                       className="text-xs font-medium text-rose-600 hover:text-rose-700 px-2 py-1 rounded-lg"
@@ -245,7 +245,7 @@ export function SettingsPage() {
                     <strong className="text-xs font-bold text-ink">{day}</strong>
                     <label className="relative inline-flex items-center cursor-pointer shrink-0">
                       <input type="checkbox" className="sr-only peer" defaultChecked={day !== "جمعه"} disabled={!ownerOnly} />
-                      <div className="w-8 h-4 bg-muted/30 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-emerald-600"></div>
+                      <div className="w-8 h-4 bg-muted/30 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-brand-2"></div>
                     </label>
                     <input type="time" defaultValue="08:00" disabled={!ownerOnly || day === "جمعه"} className="h-9 px-2 text-xs rounded-lg bg-surface border border-line text-ink focus:outline-none disabled:opacity-50" />
                     <span className="text-xs text-muted text-center">تا</span>
@@ -342,7 +342,7 @@ export function SettingsPage() {
                           disabled={!ownerOnly}
                           onChange={() => updateStaff(member.id, { active: !member.active })}
                         />
-                        <div className="w-8 h-4 bg-muted/30 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-emerald-600"></div>
+                        <div className="w-8 h-4 bg-muted/30 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-brand-2"></div>
                       </label>
                     </div>
                   </article>
@@ -412,7 +412,7 @@ export function SettingsPage() {
                         checked={notifications[id as keyof typeof notifications]}
                         onChange={() => setNotifications({ ...notifications, [id]: !notifications[id as keyof typeof notifications] })}
                       />
-                      <div className="w-9 h-5 bg-muted/30 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
+                      <div className="w-9 h-5 bg-muted/30 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-brand-2"></div>
                     </span>
                   </label>
                 ))}

@@ -224,7 +224,7 @@ export function BusinessShell({ children }: { children: ReactNode }) {
               <button
                 className={`flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-xs font-bold transition-colors cursor-pointer ${
                   activeBranch?.acceptsOrders
-                    ? "bg-emerald-600 text-white hover:bg-emerald-700"
+                    ? "bg-brand-2 text-white hover:bg-brand-2/90"
                     : "bg-zinc-200 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 hover:bg-zinc-300"
                 }`}
                 type="button"
@@ -376,7 +376,7 @@ export function BusinessShell({ children }: { children: ReactNode }) {
           <div
             className={`fixed bottom-20 md:bottom-6 start-1/2 -translate-x-1/2 z-50 flex items-center gap-2.5 rounded-2xl px-4 py-2.5 text-xs sm:text-sm font-bold shadow-xl border ${
               toast.kind === "success"
-                ? "bg-emerald-800 text-white border-emerald-700"
+                ? "bg-[#D96025] text-white border-[#C5501B]"
                 : "bg-rose-800 text-white border-rose-700"
             }`}
             role="status"

@@ -11,7 +11,7 @@ function applyTheme(preference: ThemePreference) {
   root.dataset.theme = preference;
   root.style.colorScheme = preference;
   root.dataset.themeReady = "true";
-  document.querySelector<HTMLMetaElement>('meta[name="theme-color"]')?.setAttribute("content", preference === "dark" ? "#151816" : "#F4F8F3");
+  document.querySelector<HTMLMetaElement>('meta[name="theme-color"]')?.setAttribute("content", preference === "dark" ? "#1D1E21" : "#FAF9F7");
   document.querySelector<HTMLMetaElement>('meta[name="apple-mobile-web-app-status-bar-style"]')?.setAttribute("content", preference === "dark" ? "black-translucent" : "default");
 }
 

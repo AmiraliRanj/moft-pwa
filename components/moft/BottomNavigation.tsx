@@ -19,7 +19,7 @@ export function BottomNavigation({
 }) {
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-40 pointer-events-auto bg-surface/95 dark:bg-[#18201a]/95 backdrop-blur-xl border-t border-line"
+      className="fixed inset-x-0 bottom-0 z-40 pointer-events-auto bg-surface/95 dark:bg-[#1D1E21]/95 backdrop-blur-xl border-t border-line"
       style={{ paddingBottom: "max(10px, calc(env(safe-area-inset-bottom, 0px) - 8px))" }}
       aria-label="ناوبری اصلی"
     >
@@ -33,16 +33,16 @@ export function BottomNavigation({
               onClick={() => onChange(item.id)}
               className={`relative flex-1 min-w-0 min-h-[44px] py-1.5 px-1 sm:px-3 flex flex-col items-center justify-center gap-1 cursor-pointer active:scale-95 select-none transition-all duration-200 ${
                 isActive
-                  ? "text-brand-2 dark:text-emerald-400 font-black"
+                  ? "text-brand-2 dark:text-[#FDA74D] font-black"
                   : "text-muted hover:text-ink font-semibold"
               }`}
               aria-label={item.label}
               aria-current={isActive ? "page" : undefined}
             >
-              {/* Light green pill backdrop behind the selected option */}
+              {/* Soft orange pill backdrop behind the selected option */}
               {isActive && (
                 <span
-                  className="absolute inset-x-1 sm:inset-x-2 inset-y-1 rounded-2xl bg-brand-soft/85 dark:bg-emerald-500/20 border border-brand-2/20 dark:border-emerald-500/30 -z-10 shadow-2xs animate-in fade-in zoom-in-95 duration-200"
+                  className="absolute inset-x-1 sm:inset-x-2 inset-y-1 rounded-2xl bg-brand-soft/85 dark:bg-[#F87F45]/20 border border-brand-2/20 dark:border-[#F87F45]/30 -z-10 shadow-2xs animate-in fade-in zoom-in-95 duration-200"
                   aria-hidden="true"
                 />
               )}
