@@ -6,7 +6,7 @@ export type IconName =
   | "check" | "leaf" | "calendar" | "route" | "bell" | "moon" | "sun" | "info"
   | "wifi" | "chevron" | "trash" | "store" | "share"
   | "grid" | "coffee" | "utensils" | "pizza" | "bread" | "cake" | "apple" | "cart" | "camera"
-  | "pencil" | "edit" | "receipt";
+  | "pencil" | "edit" | "receipt" | "dots";
 
 const paths: Record<IconName, ReactNode> = {
   home: <><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10.5V20h13v-9.5"/><path d="M9.5 20v-6h5v6"/></>,
@@ -50,6 +50,7 @@ const paths: Record<IconName, ReactNode> = {
   pencil: <><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></>,
   edit: <><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></>,
   receipt: <><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1-2-1Z"/><path d="M8 7h8M8 11h8M8 15h5"/></>,
+  dots: <><circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="5" cy="12" r="1.5" fill="currentColor" stroke="none"/></>,
 };
 
 export function Icon({ name, filled = false, className = "" }: { name: IconName; filled?: boolean; className?: string }) {

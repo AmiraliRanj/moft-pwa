@@ -25,7 +25,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Toaster, toast as toastManager } from "@/components/ui/toast";
 import { useDemo } from "@/demo/DemoProvider";
 import { remainingQuantity } from "@/lib/demo-format";
-import { decimalFa, discountPercent, distanceFa, formatMerchantWithCategory, money, moneyCompact, numberFa } from "@/lib/moft-format";
+import { decimalFa, discountPercent, distanceFa, formatJalaliDate, formatMerchantWithCategory, formatPickupDate, money, moneyCompact, numberFa } from "@/lib/moft-format";
 import type { MarketplaceOffer, Order } from "@/types/demo";
 import type { AppTab, CategoryId, Offer, PickupPeriod, Reservation } from "@/types/moft";
 
@@ -108,7 +108,7 @@ function customerReservation(order: Order, offers: MarketplaceOffer[], reviews: 
     category: offer?.category ?? "cafe",
     image: offer ? (productCutoutByOffer[offer.id] ?? offer.image) : "/images/offers/offer-01.webp",
     title: order.items[0].title,
-    pickup: `${faDigits(order.pickupDate)}، ${faDigits(order.pickupStart)} تا ${faDigits(order.pickupEnd)}`,
+    pickup: `${formatJalaliDate(order.pickupDate)}، ${faDigits(order.pickupStart)} تا ${faDigits(order.pickupEnd)}`,
     address: offer?.address ?? "شعبه انتخاب‌شده",
     code: faDigits(order.pickupCode.value),
     quantity: order.items[0].quantity,
@@ -1931,37 +1931,103 @@ function ReservationCard({
   onDirections: () => void;
   onTrackPipeline?: (reservationId: string) => void;
 }) {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setMenuOpen(false);
+      }
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setMenuOpen(false);
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [menuOpen]);
+
   const cancellable = reservation.orderStatus
     ? ["paid", "reviewed", "preparing", "ready_for_pickup"].includes(reservation.orderStatus)
     : reservation.status === "active";
 
   return (
     <article className="w-full max-w-full min-w-0 overflow-hidden rounded-3xl bg-surface border border-line p-3.5 sm:p-4 shadow-xs space-y-3 transition-all hover:shadow-sm">
-      {/* 1. Header: Merchant circular avatar + Store Info (clean & uncrowded) */}
-      <div className="flex items-center gap-2.5 min-w-0">
-        <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full overflow-hidden shrink-0 border border-line/60 shadow-2xs">
-          <MerchantLogo
-            name={reservation.merchantName}
-            category={reservation.category}
-            size="md"
-            className="!rounded-none !border-0"
-          />
-        </div>
-        <div className="min-w-0 flex-1 space-y-0.5">
-          <h2 className="text-sm sm:text-base font-black text-ink truncate leading-tight">
-            {reservation.merchantName}
-          </h2>
-          <div className="flex items-center gap-2 text-xs text-muted min-w-0">
-            <span className="flex items-center gap-1 shrink-0">
-              <Icon name="clock" className="w-3.5 h-3.5 text-muted shrink-0" />
-              <span>{reservation.pickup}</span>
-            </span>
-            <span className="opacity-30">·</span>
-            <span className="flex items-center gap-1 min-w-0 truncate">
-              <Icon name="pin" className="w-3.5 h-3.5 text-muted shrink-0" />
-              <span className="truncate">{reservation.address}</span>
-            </span>
+      {/* 1. Header: Merchant circular avatar + Store Info + ... Menu Button at top-left */}
+      <div className="flex items-start justify-between gap-2.5 min-w-0 relative">
+        <div className="flex items-center gap-2.5 min-w-0 flex-1">
+          <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full overflow-hidden shrink-0 border border-line/60 shadow-2xs">
+            <MerchantLogo
+              name={reservation.merchantName}
+              category={reservation.category}
+              size="md"
+              className="!rounded-none !border-0"
+            />
           </div>
+          <div className="min-w-0 flex-1 space-y-0.5">
+            <h2 className="text-sm sm:text-base font-black text-ink truncate leading-tight">
+              {reservation.merchantName}
+            </h2>
+            <div className="flex items-center gap-2 text-xs text-muted min-w-0">
+              <span className="flex items-center gap-1 shrink-0">
+                <Icon name="clock" className="w-3.5 h-3.5 text-muted shrink-0" />
+                <span>{formatPickupDate(reservation.pickup)}</span>
+              </span>
+              <span className="opacity-30">·</span>
+              <span className="flex items-center gap-1 min-w-0 truncate">
+                <Icon name="pin" className="w-3.5 h-3.5 text-muted shrink-0" />
+                <span className="truncate">{reservation.address}</span>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* ... More Options Menu Button at Top-Left */}
+        <div className="relative shrink-0" ref={menuRef}>
+          <button
+            type="button"
+            onClick={() => setMenuOpen((prev) => !prev)}
+            aria-label="گزینه‌های بیشتر سفارش"
+            aria-expanded={menuOpen}
+            className="w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center text-muted hover:text-ink hover:bg-canvas border border-transparent hover:border-line transition-all cursor-pointer active:scale-95"
+          >
+            <Icon name="dots" className="w-4.5 h-4.5" />
+          </button>
+
+          {menuOpen && (
+            <div className="absolute left-0 top-full mt-1.5 w-44 rounded-2xl bg-surface/95 backdrop-blur-md border border-line shadow-lg p-1.5 z-30 space-y-0.5 animate-in fade-in zoom-in-95 duration-150">
+              <button
+                type="button"
+                onClick={() => {
+                  setMenuOpen(false);
+                  onDirections();
+                }}
+                className="w-full flex items-center gap-2 px-2.5 py-2 text-xs font-bold text-ink hover:bg-canvas rounded-xl transition-colors cursor-pointer text-start"
+              >
+                <Icon name="route" className="w-4 h-4 text-brand-2 shrink-0" />
+                <span>مسیریابی</span>
+              </button>
+
+              {cancellable && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    onCancel(reservation.id);
+                  }}
+                  className="w-full flex items-center gap-2 px-2.5 py-2 text-xs font-bold text-rose-500 hover:bg-rose-500/10 rounded-xl transition-colors cursor-pointer text-start"
+                >
+                  <Icon name="close" className="w-4 h-4 text-rose-500 shrink-0" />
+                  <span>لغو سفارش</span>
+                </button>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
@@ -2021,83 +2087,37 @@ function ReservationCard({
         </blockquote>
       )}
 
-      {/* 3. Bottom Row: Balanced Action Bar */}
-      <div className="pt-2 border-t border-line/60 space-y-1.5">
-        <div className="flex items-center gap-2">
-          {reservation.status === "active" ? (
-            <>
-              {onTrackPipeline ? (
-                <button
-                  type="button"
-                  onClick={() => onTrackPipeline(reservation.id)}
-                  className="flex-1 min-w-0 min-h-[42px] inline-flex items-center justify-center gap-1.5 px-2.5 py-2 text-xs font-bold rounded-2xl bg-brand-2 text-white hover:bg-brand-2/95 transition-all shadow-xs cursor-pointer active:scale-[0.98]"
-                >
-                  <span className="truncate">پیگیری مراحل</span>
-                  <Icon name="arrow" className="w-3.5 h-3.5 rtl:rotate-180 shrink-0" />
-                </button>
-              ) : null}
-
-              <button
-                type="button"
-                onClick={onDirections}
-                aria-label="مسیریابی به فروشگاه"
-                className="flex-1 min-w-0 min-h-[42px] inline-flex items-center justify-center gap-1.5 px-2.5 py-2 text-xs font-bold rounded-2xl bg-canvas hover:bg-surface-raised border border-line text-ink transition-all cursor-pointer active:scale-[0.98]"
-              >
-                <Icon name="route" className="w-4 h-4 text-brand-2 shrink-0" />
-                <span className="truncate">مسیریابی</span>
-              </button>
-            </>
-          ) : reservation.status === "collected" ? (
-            <>
-              {!reservation.hasReview ? (
-                <button
-                  type="button"
-                  onClick={() => onReview(reservation.id)}
-                  className="flex-1 min-w-0 min-h-[42px] inline-flex items-center justify-center gap-1.5 px-2.5 py-2 text-xs font-bold rounded-2xl bg-brand-2 text-white hover:opacity-95 transition-opacity cursor-pointer active:scale-[0.98] shadow-xs"
-                >
-                  <Icon name="star" className="w-4 h-4 shrink-0" />
-                  <span className="truncate">ثبت نظر</span>
-                </button>
-              ) : (
-                <span className="flex-1 min-w-0 min-h-[42px] inline-flex items-center justify-center gap-1.5 px-2.5 py-2 text-xs font-bold text-emerald-600 bg-emerald-500/10 rounded-2xl border border-emerald-500/20">
-                  <Icon name="check" className="w-4 h-4 shrink-0" />
-                  <span className="truncate">نظر ثبت شده</span>
-                </span>
-              )}
-
-              <button
-                type="button"
-                onClick={onDirections}
-                className="flex-1 min-w-0 min-h-[42px] inline-flex items-center justify-center gap-1.5 px-2.5 py-2 text-xs font-bold rounded-2xl bg-canvas hover:bg-surface-raised border border-line text-ink transition-all cursor-pointer active:scale-[0.98]"
-              >
-                <Icon name="store" className="w-4 h-4 text-muted shrink-0" />
-                <span className="truncate">مشاهده فروشگاه</span>
-              </button>
-            </>
-          ) : (
+      {/* 4. Bottom Row: Primary Action */}
+      {reservation.status === "active" && onTrackPipeline ? (
+        <div className="pt-2 border-t border-line/60">
+          <button
+            type="button"
+            onClick={() => onTrackPipeline(reservation.id)}
+            className="w-full min-h-[44px] inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs sm:text-sm font-bold rounded-2xl bg-brand-2 text-white hover:bg-brand-2/95 transition-all shadow-xs cursor-pointer active:scale-[0.98]"
+          >
+            <span>پیگیری مراحل</span>
+            <Icon name="arrow" className="w-3.5 h-3.5 rtl:rotate-180 shrink-0" />
+          </button>
+        </div>
+      ) : reservation.status === "collected" ? (
+        <div className="pt-2 border-t border-line/60">
+          {!reservation.hasReview ? (
             <button
               type="button"
-              onClick={onDirections}
-              className="w-full min-h-[42px] inline-flex items-center justify-center gap-2 px-3 py-2 text-xs font-bold rounded-2xl bg-canvas hover:bg-surface-raised border border-line text-ink transition-all cursor-pointer active:scale-[0.98]"
+              onClick={() => onReview(reservation.id)}
+              className="w-full min-h-[44px] inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs sm:text-sm font-bold rounded-2xl bg-brand-2 text-white hover:opacity-95 transition-opacity cursor-pointer active:scale-[0.98] shadow-xs"
             >
-              <Icon name="store" className="w-4 h-4 text-muted shrink-0" />
-              <span>مشاهده فروشگاه</span>
+              <Icon name="star" className="w-4 h-4 shrink-0" />
+              <span>ثبت نظر</span>
             </button>
+          ) : (
+            <span className="w-full min-h-[44px] inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs sm:text-sm font-bold text-emerald-600 bg-emerald-500/10 rounded-2xl border border-emerald-500/20">
+              <Icon name="check" className="w-4 h-4 shrink-0" />
+              <span>نظر ثبت شده</span>
+            </span>
           )}
         </div>
-
-        {cancellable && (
-          <div className="flex justify-center pt-0.5">
-            <button
-              type="button"
-              onClick={() => onCancel(reservation.id)}
-              className="text-center text-xs font-bold text-rose-500 hover:text-rose-600 transition-colors py-1 cursor-pointer"
-            >
-              لغو رزرو
-            </button>
-          </div>
-        )}
-      </div>
+      ) : null}
     </article>
   );
 }

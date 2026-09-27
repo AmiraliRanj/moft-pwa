@@ -72,3 +72,34 @@ export function formatMerchantWithCategory(merchantName: string, categoryLabel?:
 
   return `${label} ${trimmed}`;
 }
+
+const faJalaliDate = new Intl.DateTimeFormat("fa-IR-u-ca-persian", { day: "numeric", month: "long" });
+
+export function formatJalaliDate(dateInput: string | Date): string {
+  try {
+    let d: Date;
+    if (typeof dateInput === "string") {
+      const asciiDate = dateInput.replace(/[۰-۹]/g, (w) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(w)));
+      if (asciiDate.includes("-") && !asciiDate.includes("T")) {
+        d = new Date(`${asciiDate}T12:00:00`);
+      } else {
+        d = new Date(asciiDate);
+      }
+    } else {
+      d = dateInput;
+    }
+    if (isNaN(d.getTime())) return typeof dateInput === "string" ? dateInput : "";
+    return faJalaliDate.format(d);
+  } catch {
+    return typeof dateInput === "string" ? dateInput : "";
+  }
+}
+
+export function formatPickupDate(pickupText: string): string {
+  if (!pickupText) return "";
+  return pickupText.replace(/([0-9۰-۹]{4})[-/]([0-9۰-۹]{1,2})[-/]([0-9۰-۹]{1,2})/g, (match) => {
+    const formatted = formatJalaliDate(match);
+    return formatted || match;
+  });
+}
+
