@@ -988,7 +988,7 @@ function HomePage({
     <div className="flex items-center gap-2 py-0.5">
       {/* Filters Trigger Chip */}
       <button
-        className="inline-flex items-center gap-1.5 px-3 py-1.5 min-h-[36px] text-xs font-bold rounded-full bg-surface dark:bg-[#1f2621] border border-line/80 text-ink hover:text-brand-2 hover:bg-surface-raised transition-all shadow-2xs cursor-pointer active:scale-95 shrink-0"
+        className="inline-flex items-center gap-1.5 px-3 py-1.5 min-h-[36px] text-xs font-bold rounded-full bg-surface border border-line/80 text-ink hover:text-brand-2 hover:bg-surface-raised transition-all shadow-2xs cursor-pointer active:scale-95 shrink-0"
         type="button"
         onClick={onFilters}
         aria-label="فیلترها"
@@ -1002,7 +1002,7 @@ function HomePage({
         className={`inline-flex items-center gap-1.5 px-3 py-1.5 min-h-[36px] text-xs rounded-full border transition-all shadow-2xs cursor-pointer active:scale-95 shrink-0 ${
           favoritesOnly
             ? "bg-rose-500/10 text-rose-600 border-rose-500/30 font-black shadow-rose-500/5"
-            : "bg-surface dark:bg-[#1f2621] border-line/80 text-ink hover:bg-surface-raised font-bold"
+            : "bg-surface border-line/80 text-ink hover:bg-surface-raised font-bold"
         }`}
         type="button"
         onClick={() => setFavoritesOnly(!favoritesOnly)}
@@ -1018,7 +1018,7 @@ function HomePage({
         <button
           type="button"
           onClick={() => setSortOpen((prev) => !prev)}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 min-h-[36px] text-xs font-bold rounded-full bg-surface dark:bg-[#1f2621] border border-line/80 text-ink hover:text-brand-2 hover:bg-surface-raised transition-all shadow-2xs cursor-pointer active:scale-95"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 min-h-[36px] text-xs font-bold rounded-full bg-surface border border-line/80 text-ink hover:text-brand-2 hover:bg-surface-raised transition-all shadow-2xs cursor-pointer active:scale-95"
           aria-expanded={sortOpen}
           aria-haspopup="listbox"
           aria-label={`مرتب‌سازی: ${currentSortLabel}`}
@@ -1028,7 +1028,7 @@ function HomePage({
         </button>
 
         {sortOpen && (
-          <div className="absolute start-0 top-full mt-1.5 z-30 min-w-[140px] py-1 bg-surface dark:bg-[#1f2621] rounded-2xl border border-line shadow-lg backdrop-blur-xl animate-in fade-in zoom-in-95 duration-150">
+          <div className="absolute start-0 top-full mt-1.5 z-30 min-w-[140px] py-1 bg-surface rounded-2xl border border-line shadow-lg backdrop-blur-xl animate-in fade-in zoom-in-95 duration-150">
             {sortOptions.map((opt) => (
               <button
                 key={opt.value}
@@ -1487,7 +1487,7 @@ function DiscoverPage({
   }, [activeOfferPacks]);
 
   return (
-    <div className={`relative w-full ${mode === "map" ? "h-full overflow-hidden bg-[#edf1ed] dark:bg-[#161c18]" : "min-h-full"} flex flex-col`}>
+    <div className={`relative w-full ${mode === "map" ? "h-full overflow-hidden bg-[#edf1ed] dark:bg-[#121316]" : "min-h-full"} flex flex-col`}>
       {/* Top Header Panel: View Switcher (Feed vs Map) and Category / Smart Filters */}
       <div className="w-full bg-canvas/95 backdrop-blur-xl border-b border-line shadow-2xs px-4 py-2 z-20 shrink-0 sticky top-[56px] sm:top-[60px]">
         <div className="max-w-md mx-auto">
@@ -3173,32 +3173,24 @@ function ThemeSelectDialog({
     title: string;
     desc: string;
     icon: IconName;
-    badge: string;
-    iconClass: string;
   }> = [
     {
       id: "light",
       title: "روشن",
       desc: "نمایش دائم پوسته روشن مناسب برای روز",
       icon: "sun",
-      badge: "روز",
-      iconClass: "text-amber-500 bg-amber-500/10",
     },
     {
       id: "dark",
       title: "تاریک",
       desc: "نمایش دائم پوسته تاریک و کاهش مصرف باتری",
       icon: "moon",
-      badge: "شب",
-      iconClass: "text-indigo-400 bg-indigo-500/10",
     },
     {
       id: "auto",
       title: "خودکار (بر اساس ساعت)",
       desc: "روزها پوسته روشن و شب‌ها (۱۹:۰۰ تا ۰۷:۰۰) خودکار تاریک",
       icon: "clock",
-      badge: "ساعت",
-      iconClass: "text-brand-2 bg-brand-soft",
     },
   ];
 
@@ -3207,7 +3199,7 @@ function ThemeSelectDialog({
       <div className="p-4 sm:p-5 space-y-4 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
         <div className="flex items-center justify-between pb-3 border-b border-line pe-12">
           <div>
-            <h2 id="theme-dialog-title" className="text-base font-black text-ink">
+            <h2 id="theme-dialog-title" className="text-base font-black text-ink font-morabba">
               حالت شب و روز
             </h2>
             <p className="text-xs text-muted mt-0.5">پوسته ظاهری برنامه را انتخاب کنید.</p>
@@ -3217,6 +3209,83 @@ function ThemeSelectDialog({
         <div className="space-y-2.5">
           {options.map((opt) => {
             const isSelected = current === opt.id;
+
+            if (opt.id === "light") {
+              return (
+                <button
+                  key={opt.id}
+                  type="button"
+                  onClick={() => {
+                    onSelect(opt.id);
+                    onClose();
+                  }}
+                  className={`w-full flex items-center justify-between p-3.5 rounded-2xl border text-start transition-all cursor-pointer active:scale-[0.99] bg-white text-[#1D1E21] shadow-xs ${
+                    isSelected
+                      ? "border-brand-2 ring-2 ring-brand-2/30"
+                      : "border-zinc-200 hover:border-zinc-300"
+                  }`}
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 shadow-2xs bg-amber-500/10 text-amber-500">
+                      <Icon name="sun" className="w-5 h-5" />
+                    </span>
+                    <div className="min-w-0">
+                      <strong className="block text-xs sm:text-sm font-black text-[#1D1E21]">{opt.title}</strong>
+                      <span className="block text-[11px] text-[#6B7280] truncate mt-0.5 leading-tight">{opt.desc}</span>
+                    </div>
+                  </div>
+
+                  <div
+                    className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${
+                      isSelected
+                        ? "border-brand-2 bg-brand-2 text-white"
+                        : "border-zinc-300 bg-white"
+                    }`}
+                  >
+                    {isSelected && <Icon name="check" className="w-3 h-3 stroke-[3]" />}
+                  </div>
+                </button>
+              );
+            }
+
+            if (opt.id === "dark") {
+              return (
+                <button
+                  key={opt.id}
+                  type="button"
+                  onClick={() => {
+                    onSelect(opt.id);
+                    onClose();
+                  }}
+                  className={`w-full flex items-center justify-between p-3.5 rounded-2xl border text-start transition-all cursor-pointer active:scale-[0.99] bg-[#18191B] text-white shadow-xs ${
+                    isSelected
+                      ? "border-brand-2 ring-2 ring-brand-2/30"
+                      : "border-white/10 hover:border-white/20"
+                  }`}
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 shadow-2xs bg-indigo-500/20 text-indigo-300">
+                      <Icon name="moon" className="w-5 h-5" />
+                    </span>
+                    <div className="min-w-0">
+                      <strong className="block text-xs sm:text-sm font-black text-white">{opt.title}</strong>
+                      <span className="block text-[11px] text-zinc-400 truncate mt-0.5 leading-tight">{opt.desc}</span>
+                    </div>
+                  </div>
+
+                  <div
+                    className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${
+                      isSelected
+                        ? "border-brand-2 bg-brand-2 text-white"
+                        : "border-white/25 bg-white/5"
+                    }`}
+                  >
+                    {isSelected && <Icon name="check" className="w-3 h-3 stroke-[3]" />}
+                  </div>
+                </button>
+              );
+            }
+
             return (
               <button
                 key={opt.id}
@@ -3225,23 +3294,18 @@ function ThemeSelectDialog({
                   onSelect(opt.id);
                   onClose();
                 }}
-                className={`w-full flex items-center justify-between p-3.5 rounded-2xl border text-start transition-all cursor-pointer active:scale-[0.99] ${
+                className={`w-full flex items-center justify-between p-3.5 rounded-2xl border text-start transition-all cursor-pointer active:scale-[0.99] bg-canvas border-line hover:bg-surface text-ink shadow-xs ${
                   isSelected
-                    ? "bg-brand-soft/50 border-brand-2 shadow-xs"
-                    : "bg-canvas border-line hover:bg-surface text-ink"
+                    ? "border-brand-2 ring-2 ring-brand-2/30 bg-brand-soft/20 dark:bg-brand-soft/10"
+                    : ""
                 }`}
               >
                 <div className="flex items-center gap-3 min-w-0">
-                  <span className={`w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 shadow-2xs ${opt.iconClass}`}>
-                    <Icon name={opt.icon} className="w-5 h-5" />
+                  <span className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 shadow-2xs bg-brand-soft text-brand-2 dark:bg-[#F87F45]/15 dark:text-[#FDA74D]">
+                    <Icon name="clock" className="w-5 h-5" />
                   </span>
                   <div className="min-w-0">
-                    <div className="flex items-center gap-2">
-                      <strong className="text-xs sm:text-sm font-black text-ink">{opt.title}</strong>
-                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-surface border border-line text-muted">
-                        {opt.badge}
-                      </span>
-                    </div>
+                    <strong className="block text-xs sm:text-sm font-black text-ink">{opt.title}</strong>
                     <span className="block text-[11px] text-muted truncate mt-0.5 leading-tight">{opt.desc}</span>
                   </div>
                 </div>
