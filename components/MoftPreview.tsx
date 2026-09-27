@@ -401,19 +401,25 @@ export default function MoftPreview({
       showToast("برای ثبت رزرو دوباره آنلاین شو.");
       return;
     }
+    const maxAllowed = Math.min(3, selected.quantityLeft);
+    const existing = cartItems.find((item) => item.offer.id === selected.id);
+    if (existing && existing.quantity >= maxAllowed) {
+      showToast(`حداکثر ${numberFa(maxAllowed)} بسته از این آیتم قابل انتخاب است.`, "warning");
+      return;
+    }
+
     setCartItems((prev) => {
-      const existing = prev.find((item) => item.offer.id === selected.id);
-      if (existing) {
+      const found = prev.find((item) => item.offer.id === selected.id);
+      if (found) {
         return prev.map((item) =>
           item.offer.id === selected.id
-            ? { ...item, quantity: Math.min(Math.min(3, selected.quantityLeft), item.quantity + 1) }
+            ? { ...item, quantity: Math.min(maxAllowed, item.quantity + 1) }
             : item
         );
       }
       return [...prev, { offer: selected, quantity: 1 }];
     });
-    setLayer(null);
-    switchTab("cart");
+    showToast("به سبد خرید اضافه شد.", "success");
   };
 
   const handleUpdateCartQuantity = (offerId: string, q: number) => {
@@ -796,6 +802,7 @@ export default function MoftPreview({
           onFavorite={toggleFavorite}
           onClose={closeOffer}
           onReserve={openReservation}
+          inCartQuantity={cartItems.find((it) => it.offer.id === selected.id)?.quantity ?? 0}
           onOpenMerchant={openMerchant}
           related={offers.filter((offer) => offer.category === selected.category && offer.id !== selected.id).slice(0, 2)}
           onSelect={openOffer}
@@ -2685,6 +2692,7 @@ function OfferDetails({
   offer,
   onClose,
   onReserve,
+  inCartQuantity = 0,
   onOpenMerchant,
   related,
   onSelect,
@@ -2696,6 +2704,7 @@ function OfferDetails({
   onFavorite: (id: string) => void;
   onClose: () => void;
   onReserve: () => void;
+  inCartQuantity?: number;
   onOpenMerchant?: (offer: Offer) => void;
   related: Offer[];
   onSelect: (offer: Offer) => void;
@@ -2855,12 +2864,30 @@ function OfferDetails({
           <small className="block text-[10px] text-muted">برای هر جعبه</small>
         </div>
         <button
-          className="inline-flex items-center justify-center min-w-[140px] sm:min-w-[160px] h-12 min-h-[48px] px-8 text-xs sm:text-sm font-bold rounded-2xl bg-brand-2 text-white hover:opacity-90 shadow-xs transition-all disabled:opacity-50 active:scale-[0.98] cursor-pointer"
+          className={`inline-flex items-center justify-center gap-1.5 min-w-[140px] sm:min-w-[170px] h-12 min-h-[48px] px-6 sm:px-8 text-xs sm:text-sm font-bold rounded-2xl shadow-xs transition-all active:scale-[0.98] cursor-pointer disabled:opacity-50 ${
+            inCartQuantity > 0
+              ? "bg-emerald-600 hover:bg-emerald-700 text-white"
+              : "bg-brand-2 text-white hover:opacity-90"
+          }`}
           type="button"
           disabled={offer.quantityLeft < 1}
           onClick={onReserve}
         >
-          {offer.quantityLeft > 0 ? "رزرو جعبه" : "تمام شد"}
+          {offer.quantityLeft < 1 ? (
+            "تمام شد"
+          ) : inCartQuantity > 0 ? (
+            <>
+              <Icon name="check" className="w-4 h-4 text-white shrink-0" />
+              <span>به سبد خرید اضافه شد</span>
+              {inCartQuantity > 1 && (
+                <span className="text-[11px] bg-white/25 px-1.5 py-0.2 rounded-full ms-0.5 font-bold">
+                  ({numberFa(inCartQuantity)})
+                </span>
+              )}
+            </>
+          ) : (
+            "رزرو جعبه"
+          )}
         </button>
       </div>
     </DialogShell>
