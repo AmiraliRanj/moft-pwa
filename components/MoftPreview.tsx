@@ -3389,44 +3389,10 @@ function OrderReceiptModal({
           </div>
         </div>
 
-        {/* Items and Ingredients / Contents */}
-        <div className="p-3.5 rounded-2xl bg-canvas border border-line space-y-3">
-          <div className="flex items-center justify-between border-b border-line/60 pb-2">
-            <span className="text-xs font-black text-ink">اقلام و ترکیبات بسته</span>
-            <span className="text-[11px] font-bold text-brand-2 bg-brand-soft px-2 py-0.5 rounded-md">
-              {numberFa(reservation.quantity || 1)} بسته
-            </span>
-          </div>
-
-          <div className="space-y-2">
-            <div className="flex items-center justify-between text-xs">
-              <strong className="font-black text-ink">{reservation.title}</strong>
-              <span className="font-bold text-ink">{money(reservation.total)}</span>
-            </div>
-
-            {/* Description / Ingredients */}
-            {reservation.description && (
-              <div className="p-2.5 rounded-xl bg-surface border border-line/50 text-[11.5px] text-muted leading-relaxed">
-                <span className="font-bold text-ink block mb-0.5">ترکیبات و محتویات:</span>
-                <p className="text-ink/80">{reservation.description}</p>
-              </div>
-            )}
-
-            {/* Allergens / Dietary tags */}
-            {reservation.allergens && reservation.allergens.length > 0 && (
-              <div className="flex items-center flex-wrap gap-1.5 pt-1">
-                <span className="text-[10.5px] text-muted font-bold">ترکیبات حساسیت‌زا:</span>
-                {reservation.allergens.map((allergen) => (
-                  <span
-                    key={allergen}
-                    className="px-2 py-0.5 rounded-md bg-amber-500/15 border border-amber-500/25 text-[10.5px] font-bold text-amber-800 dark:text-amber-300"
-                  >
-                    {allergen}
-                  </span>
-                ))}
-              </div>
-            )}
-          </div>
+        {/* Food Name & Price */}
+        <div className="p-3.5 sm:p-4 rounded-2xl bg-canvas border border-line flex items-center justify-between gap-3">
+          <strong className="text-xs sm:text-sm font-black text-ink truncate leading-tight">{reservation.title}</strong>
+          <span className="text-xs sm:text-sm font-black text-ink shrink-0 whitespace-nowrap">{money(reservation.total)}</span>
         </div>
 
         {/* Price Breakdown */}
