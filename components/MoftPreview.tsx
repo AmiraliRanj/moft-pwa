@@ -2066,9 +2066,6 @@ function DiscoverPage({
               <h2 id="deadline-heading" className="text-sm font-black text-ink tracking-tight">
                 ساعت صفر نجات
               </h2>
-              <span className="text-[10px] font-bold text-amber-700 dark:text-amber-300 bg-amber-500/10 px-2 py-0.5 rounded-full">
-                شیفت عصر
-              </span>
             </div>
 
             {/* Live Countdown Badge */}
@@ -2157,12 +2154,11 @@ function DiscoverPage({
                 <p className="text-[11px] text-muted">بیشترین تخفیف‌های نجات غذا در ونک</p>
               </div>
             </div>
-            <span className="text-[11px] font-bold text-muted">ارزش خرید بالا</span>
           </div>
 
           {/* Spotlight Hero Deal */}
           {topHotOffer && (
-            <article className="rounded-3xl bg-gradient-to-br from-brand-soft/70 to-surface dark:from-[#232924] dark:to-[#1D1E21] border border-brand-2/20 p-3.5 sm:p-4 shadow-xs relative overflow-hidden group">
+            <article className="rounded-3xl bg-gradient-to-br from-brand-soft/70 to-surface dark:from-[#26282D] dark:to-[#1D1E21] border border-brand-2/20 p-3.5 sm:p-4 shadow-xs relative overflow-hidden group">
               <button
                 type="button"
                 onClick={() => onSelect(topHotOffer)}
@@ -3171,25 +3167,21 @@ function ThemeSelectDialog({
   const options: Array<{
     id: ThemePreference;
     title: string;
-    desc: string;
     icon: IconName;
   }> = [
     {
       id: "light",
       title: "روشن",
-      desc: "نمایش دائم پوسته روشن مناسب برای روز",
       icon: "sun",
     },
     {
       id: "dark",
       title: "تاریک",
-      desc: "نمایش دائم پوسته تاریک و کاهش مصرف باتری",
       icon: "moon",
     },
     {
       id: "auto",
       title: "خودکار (بر اساس ساعت)",
-      desc: "روزها پوسته روشن و شب‌ها (۱۹:۰۰ تا ۰۷:۰۰) خودکار تاریک",
       icon: "clock",
     },
   ];
@@ -3219,20 +3211,15 @@ function ThemeSelectDialog({
                     onSelect(opt.id);
                     onClose();
                   }}
-                  className={`w-full flex items-center justify-between p-3.5 rounded-2xl border text-start transition-all cursor-pointer active:scale-[0.99] bg-white text-[#1D1E21] shadow-xs ${
+                  className={`w-full flex items-center justify-between p-3.5 sm:p-4 rounded-2xl border text-start transition-all cursor-pointer active:scale-[0.99] bg-white text-[#1D1E21] shadow-xs ${
                     isSelected
                       ? "border-brand-2 ring-2 ring-brand-2/30"
                       : "border-zinc-200 hover:border-zinc-300"
                   }`}
                 >
                   <div className="flex items-center gap-3 min-w-0">
-                    <span className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 shadow-2xs bg-amber-500/10 text-amber-500">
-                      <Icon name="sun" className="w-5 h-5" />
-                    </span>
-                    <div className="min-w-0">
-                      <strong className="block text-xs sm:text-sm font-black text-[#1D1E21]">{opt.title}</strong>
-                      <span className="block text-[11px] text-[#6B7280] truncate mt-0.5 leading-tight">{opt.desc}</span>
-                    </div>
+                    <Icon name="sun" className="w-5 h-5 text-amber-500 shrink-0" />
+                    <strong className="text-xs sm:text-sm font-black text-[#1D1E21]">{opt.title}</strong>
                   </div>
 
                   <div
@@ -3257,20 +3244,15 @@ function ThemeSelectDialog({
                     onSelect(opt.id);
                     onClose();
                   }}
-                  className={`w-full flex items-center justify-between p-3.5 rounded-2xl border text-start transition-all cursor-pointer active:scale-[0.99] bg-[#18191B] text-white shadow-xs ${
+                  className={`w-full flex items-center justify-between p-3.5 sm:p-4 rounded-2xl border text-start transition-all cursor-pointer active:scale-[0.99] bg-[#18191B] text-white shadow-xs ${
                     isSelected
                       ? "border-brand-2 ring-2 ring-brand-2/30"
                       : "border-white/10 hover:border-white/20"
                   }`}
                 >
                   <div className="flex items-center gap-3 min-w-0">
-                    <span className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 shadow-2xs bg-indigo-500/20 text-indigo-300">
-                      <Icon name="moon" className="w-5 h-5" />
-                    </span>
-                    <div className="min-w-0">
-                      <strong className="block text-xs sm:text-sm font-black text-white">{opt.title}</strong>
-                      <span className="block text-[11px] text-zinc-400 truncate mt-0.5 leading-tight">{opt.desc}</span>
-                    </div>
+                    <Icon name="moon" className="w-5 h-5 text-indigo-400 shrink-0" />
+                    <strong className="text-xs sm:text-sm font-black text-white">{opt.title}</strong>
                   </div>
 
                   <div
@@ -3294,20 +3276,15 @@ function ThemeSelectDialog({
                   onSelect(opt.id);
                   onClose();
                 }}
-                className={`w-full flex items-center justify-between p-3.5 rounded-2xl border text-start transition-all cursor-pointer active:scale-[0.99] bg-canvas border-line hover:bg-surface text-ink shadow-xs ${
+                className={`w-full flex items-center justify-between p-3.5 sm:p-4 rounded-2xl border text-start transition-all cursor-pointer active:scale-[0.99] bg-canvas border-line hover:bg-surface text-ink shadow-xs ${
                   isSelected
                     ? "border-brand-2 ring-2 ring-brand-2/30 bg-brand-soft/20 dark:bg-brand-soft/10"
                     : ""
                 }`}
               >
                 <div className="flex items-center gap-3 min-w-0">
-                  <span className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 shadow-2xs bg-brand-soft text-brand-2 dark:bg-[#F87F45]/15 dark:text-[#FDA74D]">
-                    <Icon name="clock" className="w-5 h-5" />
-                  </span>
-                  <div className="min-w-0">
-                    <strong className="block text-xs sm:text-sm font-black text-ink">{opt.title}</strong>
-                    <span className="block text-[11px] text-muted truncate mt-0.5 leading-tight">{opt.desc}</span>
-                  </div>
+                  <Icon name="clock" className="w-5 h-5 text-brand-2 dark:text-[#FDA74D] shrink-0" />
+                  <strong className="text-xs sm:text-sm font-black text-ink">{opt.title}</strong>
                 </div>
 
                 <div
