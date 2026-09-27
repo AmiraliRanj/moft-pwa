@@ -3583,19 +3583,19 @@ function OfferDetails({
         </div>
 
         {inCartQuantity > 0 ? (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-1 max-w-[240px] sm:max-w-[280px] justify-end">
             <button
               type="button"
               onClick={onDecrement}
               aria-label="حذف از سبد خرید"
-              className="w-12 h-12 min-h-[48px] min-w-[48px] rounded-2xl bg-surface border border-line hover:border-rose-500/40 text-muted hover:text-rose-500 active:scale-95 transition-all flex items-center justify-center cursor-pointer shadow-xs"
+              className="h-12 min-h-[48px] px-4 text-xs sm:text-sm font-bold rounded-2xl bg-surface border border-line hover:border-rose-500/40 text-muted hover:text-rose-600 active:scale-95 transition-all inline-flex items-center justify-center cursor-pointer shadow-xs shrink-0"
             >
-              <Icon name="trash" className="w-5 h-5" />
+              <span>حذف</span>
             </button>
             <button
               type="button"
               onClick={onDecrement}
-              className="inline-flex items-center justify-center gap-1.5 min-w-[130px] sm:min-w-[155px] h-12 min-h-[48px] px-5 sm:px-6 text-xs sm:text-sm font-bold rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs transition-all active:scale-[0.98] cursor-pointer"
+              className="flex-1 inline-flex items-center justify-center gap-1.5 min-w-[152px] sm:min-w-[176px] h-12 min-h-[48px] px-4 sm:px-6 text-xs sm:text-sm font-bold rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs transition-all active:scale-[0.98] cursor-pointer"
               aria-label="در سبد خرید موجود است (کلیک برای حذف)"
             >
               <Icon name="check" className="w-4 h-4 text-white shrink-0" />
@@ -3604,7 +3604,7 @@ function OfferDetails({
           </div>
         ) : (
           <button
-            className="inline-flex items-center justify-center min-w-[140px] sm:min-w-[160px] h-12 min-h-[48px] px-8 text-xs sm:text-sm font-bold rounded-2xl bg-brand-2 text-white hover:opacity-90 shadow-xs transition-all disabled:opacity-50 active:scale-[0.98] cursor-pointer"
+            className="flex-1 max-w-[240px] sm:max-w-[280px] min-w-[176px] sm:min-w-[208px] h-12 min-h-[48px] px-6 sm:px-8 inline-flex items-center justify-center text-xs sm:text-sm font-bold rounded-2xl bg-brand-2 text-white hover:opacity-90 shadow-xs transition-all disabled:opacity-50 active:scale-[0.98] cursor-pointer"
             type="button"
             disabled={offer.quantityLeft < 1}
             onClick={onIncrement}
