@@ -928,7 +928,13 @@ function HomePage({
 
   const currentSortLabel = sortOptions.find((o) => o.value === sort)?.label ?? "مرتب‌سازی";
   const browsing = Boolean(query.trim()) || category !== "all";
-  const popular = allOffers.filter((offer) => offer.popular).slice(0, 4);
+  const popular = Array.from(
+    new Map(
+      allOffers
+        .filter((offer) => offer.popular)
+        .map((offer) => [offer.merchantName, offer])
+    ).values()
+  ).slice(0, 8);
   const ending = allOffers.filter((offer) => offer.endingSoon).slice(0, 5);
 
   const filterBar = (
@@ -1050,23 +1056,42 @@ function HomePage({
 
           <section className="space-y-3" aria-labelledby="popular-title">
             <SectionHeading title="همسایه‌های خوش‌سلیقه" id="popular-title" />
-            <div className="grid gap-2">
+            <div
+              className="flex items-start gap-3.5 sm:gap-4 overflow-x-auto py-2 px-1 scrollbar-none"
+              style={{ scrollbarWidth: "none" }}
+            >
               {popular.map((offer) => (
                 <button
-                  className="flex items-center justify-between gap-3 p-3 rounded-2xl bg-surface border border-line shadow-xs hover:border-brand-2/30 transition-colors text-start cursor-pointer active:scale-[0.99]"
+                  className="flex flex-col items-center gap-2 shrink-0 w-20 sm:w-22 group cursor-pointer focus-visible:outline-none select-none active:scale-95 transition-transform text-center"
                   type="button"
                   key={offer.id}
                   onClick={() => (onOpenMerchant ? onOpenMerchant(offer) : onSelect(offer))}
                   aria-label={`مشاهده پروفایل ${offer.merchantName}`}
                 >
-                  <div className="flex items-center gap-3">
-                    <MerchantLogo name={offer.merchantName} category={offer.category} size="md" />
-                    <div>
-                      <strong className="block text-xs font-bold text-ink">{offer.merchantName}</strong>
-                      <small className="block text-[11px] text-muted mt-0.5">{offer.neighborhood} · امتیاز {decimalFa(offer.rating)}</small>
-                    </div>
+                  {/* Circular Profile Avatar */}
+                  <div className="relative p-1 rounded-full bg-surface border-2 border-line/80 group-hover:border-brand-2 shadow-xs group-hover:shadow-sm transition-all flex items-center justify-center">
+                    <MerchantLogo
+                      name={offer.merchantName}
+                      category={offer.category}
+                      size="lg"
+                      className="!rounded-full w-14 h-14 sm:w-16 sm:h-16 shadow-none"
+                    />
+                    {/* Star Rating Badge */}
+                    <span className="absolute -bottom-1 inset-x-auto bg-surface border border-line text-[10px] font-black text-ink px-1.5 py-0.5 rounded-full shadow-2xs flex items-center gap-0.5">
+                      <Icon name="star" filled className="w-2.5 h-2.5 text-amber-500 shrink-0" />
+                      <span>{decimalFa(offer.rating)}</span>
+                    </span>
                   </div>
-                  <Icon name="chevron" className="w-4 h-4 text-muted rtl:rotate-180 shrink-0" />
+
+                  {/* Merchant Name & Neighborhood */}
+                  <div className="w-full min-w-0">
+                    <strong className="block text-xs font-bold text-ink truncate group-hover:text-brand-2 transition-colors leading-tight">
+                      {offer.merchantName}
+                    </strong>
+                    <span className="block text-[10.5px] text-muted truncate mt-0.5">
+                      {offer.neighborhood}
+                    </span>
+                  </div>
                 </button>
               ))}
             </div>
