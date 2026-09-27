@@ -129,11 +129,11 @@ export function OfferCard({
             <span />
           )}
 
-          <div className="flex items-baseline gap-2">
-            <del className="text-[11px] text-muted line-through" aria-label={`ارزش ${moneyCompact(offer.originalPrice)}`}>
+          <div className="flex items-baseline gap-2 shrink-0 whitespace-nowrap">
+            <del className="text-[11px] text-muted line-through whitespace-nowrap" aria-label={`ارزش ${moneyCompact(offer.originalPrice)}`}>
               {moneyCompact(offer.originalPrice)}
             </del>
-            <strong className="text-sm font-black text-ink">
+            <strong className="text-sm font-black text-ink whitespace-nowrap">
               {moneyCompact(offer.price)}
             </strong>
           </div>

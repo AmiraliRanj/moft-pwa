@@ -259,6 +259,7 @@ export default function MoftPreview({
         setTab("orders");
       } else if (path.includes("/offers") || path.includes("/discover") || path.includes("/favorites")) {
         setTab("discover");
+        setSearchVisible(true);
       } else if (path.includes("/profile")) {
         setTab("profile");
       } else {
@@ -368,7 +369,7 @@ export default function MoftPreview({
     if (nextTab === tab) return;
     setPreviousTab(tab);
     setTab(nextTab);
-    if (nextTab === "home") {
+    if (nextTab === "home" || nextTab === "discover") {
       setSearchVisible(true);
     }
     window.history.pushState({}, "", paths[nextTab]);
@@ -719,6 +720,7 @@ export default function MoftPreview({
             onFilters={() => setLayer("filters")}
             mode={discoverMode}
             onModeChange={setDiscoverMode}
+            searchVisible={searchVisible}
           />
         </div>
       ) : (
@@ -1180,6 +1182,7 @@ function DiscoverPage({
   onFilters,
   mode = "feed",
   onModeChange,
+  searchVisible = true,
 }: {
   offers: Offer[];
   favorites: Set<string>;
@@ -1189,6 +1192,7 @@ function DiscoverPage({
   onFilters?: () => void;
   mode: DiscoverMode;
   onModeChange: (mode: DiscoverMode) => void;
+  searchVisible?: boolean;
 }) {
   type SmartFilter = "all" | "hot" | "deadline" | "walk" | "tonight";
   const [smartFilter, setSmartFilter] = useState<SmartFilter>("all");
@@ -1485,50 +1489,58 @@ function DiscoverPage({
   return (
     <div className={`relative w-full ${mode === "map" ? "h-full overflow-hidden bg-[#edf1ed] dark:bg-[#161c18]" : "min-h-full"} flex flex-col`}>
       {/* Top Header Panel: View Switcher (Feed vs Map) and Category / Smart Filters */}
-      <div className="w-full bg-canvas/95 backdrop-blur-xl border-b border-line shadow-2xs px-4 py-2.5 z-20 shrink-0 sticky top-0">
-        <div className="max-w-md mx-auto space-y-2.5">
-          {/* Row 1: Segmented Switcher & Filter Button */}
-          <div className="flex items-center justify-between gap-2.5">
-            <div className="flex-1 flex items-center p-1 rounded-2xl bg-surface border border-line shadow-2xs">
-              <button
-                type="button"
-                onClick={() => onModeChange("feed")}
-                className={`flex-1 min-h-[38px] rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95 ${
-                  mode === "feed"
-                    ? "bg-brand-soft text-brand-2 font-black shadow-2xs"
-                    : "text-muted hover:text-ink"
-                }`}
-                aria-pressed={mode === "feed"}
-              >
-                <Icon name="spark" className="w-4 h-4" />
-                <span>ویترین کشف</span>
-              </button>
+      <div className="w-full bg-canvas/95 backdrop-blur-xl border-b border-line shadow-2xs px-4 py-2 z-20 shrink-0 sticky top-[56px] sm:top-[60px]">
+        <div className="max-w-md mx-auto">
+          {/* Row 1: Segmented Switcher & Filter Button (collapsible on scroll like search bar) */}
+          <div
+            className={`overflow-hidden transition-all duration-300 ease-in-out ${
+              mode === "map" || searchVisible
+                ? "max-h-16 opacity-100 mb-2 translate-y-0"
+                : "max-h-0 opacity-0 mb-0 -translate-y-2 pointer-events-none"
+            }`}
+          >
+            <div className="flex items-center justify-between gap-2.5">
+              <div className="flex-1 flex items-center p-1 rounded-2xl bg-surface border border-line shadow-2xs">
+                <button
+                  type="button"
+                  onClick={() => onModeChange("feed")}
+                  className={`flex-1 min-h-[38px] rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95 ${
+                    mode === "feed"
+                      ? "bg-brand-soft text-brand-2 font-black shadow-2xs"
+                      : "text-muted hover:text-ink"
+                  }`}
+                  aria-pressed={mode === "feed"}
+                >
+                  <Icon name="spark" className="w-4 h-4" />
+                  <span>ویترین کشف</span>
+                </button>
 
-              <button
-                type="button"
-                onClick={() => onModeChange("map")}
-                className={`flex-1 min-h-[38px] rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95 ${
-                  mode === "map"
-                    ? "bg-brand-soft text-brand-2 font-black shadow-2xs"
-                    : "text-muted hover:text-ink"
-                }`}
-                aria-pressed={mode === "map"}
-              >
-                <Icon name="map" className="w-4 h-4" />
-                <span>روی نقشه</span>
-              </button>
+                <button
+                  type="button"
+                  onClick={() => onModeChange("map")}
+                  className={`flex-1 min-h-[38px] rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95 ${
+                    mode === "map"
+                      ? "bg-brand-soft text-brand-2 font-black shadow-2xs"
+                      : "text-muted hover:text-ink"
+                  }`}
+                  aria-pressed={mode === "map"}
+                >
+                  <Icon name="map" className="w-4 h-4" />
+                  <span>روی نقشه</span>
+                </button>
+              </div>
+
+              {onFilters && (
+                <button
+                  type="button"
+                  onClick={onFilters}
+                  className="w-10 h-10 min-w-[40px] min-h-[40px] rounded-xl bg-surface border border-line flex items-center justify-center text-ink hover:text-brand-2 hover:bg-surface-raised active:scale-95 transition-all shadow-2xs cursor-pointer"
+                  aria-label="فیلترهای پیشرفته"
+                >
+                  <Icon name="sliders" className="w-4 h-4 text-brand-2" />
+                </button>
+              )}
             </div>
-
-            {onFilters && (
-              <button
-                type="button"
-                onClick={onFilters}
-                className="w-10 h-10 min-w-[40px] min-h-[40px] rounded-xl bg-surface border border-line flex items-center justify-center text-ink hover:text-brand-2 hover:bg-surface-raised active:scale-95 transition-all shadow-2xs cursor-pointer"
-                aria-label="فیلترهای پیشرفته"
-              >
-                <Icon name="sliders" className="w-4 h-4 text-brand-2" />
-              </button>
-            )}
           </div>
 
           {/* Row 2: In Map Mode -> Category Chips; In Feed Mode -> Smart Filter Chips */}
@@ -2078,7 +2090,7 @@ function DiscoverPage({
               return (
                 <article
                   key={offer.id}
-                  className="w-[230px] sm:w-[250px] shrink-0 snap-start rounded-2xl bg-surface border border-line overflow-hidden shadow-2xs hover:border-brand-2/40 transition-all flex flex-col justify-between"
+                  className="w-[235px] sm:w-[255px] shrink-0 snap-start rounded-2xl bg-surface border border-line overflow-hidden shadow-2xs hover:border-brand-2/40 transition-all flex flex-col justify-between"
                 >
                   <button
                     type="button"
@@ -2089,7 +2101,7 @@ function DiscoverPage({
                     <div className="relative w-full h-28 bg-canvas overflow-hidden">
                       <FoodImage
                         src={offer.image}
-                        sizes="250px"
+                        sizes="255px"
                         className="w-full h-full object-cover"
                       />
                       <span className="absolute top-2 start-2 px-2 py-0.5 rounded-md text-[10px] font-black bg-rose-600 text-white shadow-xs">
@@ -2101,17 +2113,26 @@ function DiscoverPage({
                       </span>
                     </div>
 
-                    <div className="p-3 flex flex-col flex-1 justify-between gap-2">
+                    <div className="p-3 flex flex-col flex-1 justify-between gap-2.5">
                       <div>
-                        <h3 className="text-xs font-black text-ink truncate">{offer.title}</h3>
+                        <h3 className="text-xs sm:text-sm font-black text-ink truncate leading-tight">{offer.title}</h3>
                         <p className="text-[11px] text-muted truncate mt-0.5">{offer.merchantName}</p>
+                        <div className="flex items-center gap-1.5 text-[10.5px] text-muted mt-2 truncate">
+                          <Icon name="clock" className="w-3.5 h-3.5 text-muted shrink-0" />
+                          <span className="truncate">{offer.pickup}</span>
+                        </div>
                       </div>
 
-                      <div className="flex items-baseline justify-between pt-2 border-t border-line/50">
-                        <span className="text-[10px] text-muted">{offer.pickup}</span>
-                        <div className="flex items-baseline gap-1.5">
-                          <del className="text-[10px] text-muted line-through">{moneyCompact(offer.originalPrice)}</del>
-                          <strong className="text-xs font-black text-ink">{moneyCompact(offer.price)}</strong>
+                      {/* Dedicated Price Row: price and unit on one line, no time in price field */}
+                      <div className="flex items-center justify-between pt-2 border-t border-line/60">
+                        <span className="text-[10px] font-bold text-muted">قیمت:</span>
+                        <div className="flex items-baseline gap-2 shrink-0 whitespace-nowrap">
+                          <del className="text-[10.5px] text-muted line-through whitespace-nowrap">
+                            {moneyCompact(offer.originalPrice)}
+                          </del>
+                          <strong className="text-xs sm:text-sm font-black text-brand-2 whitespace-nowrap">
+                            {moneyCompact(offer.price)}
+                          </strong>
                         </div>
                       </div>
                     </div>
@@ -2180,10 +2201,13 @@ function DiscoverPage({
                   </div>
 
                   <div className="flex items-center justify-between mt-3 pt-2 border-t border-line/60">
-                    <span className="text-[11px] text-muted">{topHotOffer.pickup}</span>
-                    <div className="flex items-baseline gap-2">
-                      <del className="text-xs text-muted line-through">{moneyCompact(topHotOffer.originalPrice)}</del>
-                      <strong className="text-base font-black text-ink">{moneyCompact(topHotOffer.price)}</strong>
+                    <span className="text-[11px] text-muted flex items-center gap-1.5 truncate">
+                      <Icon name="clock" className="w-3.5 h-3.5 text-muted shrink-0" />
+                      <span className="truncate">{topHotOffer.pickup}</span>
+                    </span>
+                    <div className="flex items-baseline gap-2 shrink-0 whitespace-nowrap">
+                      <del className="text-xs text-muted line-through whitespace-nowrap">{moneyCompact(topHotOffer.originalPrice)}</del>
+                      <strong className="text-base font-black text-ink whitespace-nowrap">{moneyCompact(topHotOffer.price)}</strong>
                     </div>
                   </div>
                 </div>
