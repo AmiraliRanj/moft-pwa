@@ -2809,7 +2809,7 @@ function OfferDetails({
           <small className="block text-[10px] text-muted">برای هر جعبه</small>
         </div>
         <button
-          className="inline-flex items-center justify-center px-6 py-2.5 text-xs font-bold rounded-xl bg-brand-2 text-white hover:opacity-90 shadow-xs transition-opacity disabled:opacity-50 min-h-[44px] active:scale-[0.98]"
+          className="inline-flex items-center justify-center min-w-[140px] sm:min-w-[160px] h-12 min-h-[48px] px-8 text-xs sm:text-sm font-bold rounded-2xl bg-brand-2 text-white hover:opacity-90 shadow-xs transition-all disabled:opacity-50 active:scale-[0.98] cursor-pointer"
           type="button"
           disabled={offer.quantityLeft < 1}
           onClick={onReserve}
@@ -2974,7 +2974,7 @@ function ReservationFlow({
         <div className="p-4 pb-[max(1rem,env(safe-area-inset-bottom))] border-t border-line flex items-center justify-end gap-2 bg-surface">
           {step > 1 && (
             <button
-              className="px-4 h-11 min-h-[44px] text-xs font-semibold rounded-xl bg-canvas border border-line text-ink hover:bg-surface-raised transition-colors"
+              className="px-5 h-12 min-h-[48px] text-xs sm:text-sm font-bold rounded-2xl bg-canvas border border-line text-ink hover:bg-surface-raised transition-colors cursor-pointer"
               type="button"
               onClick={() => setStep(step - 1)}
             >
@@ -2982,7 +2982,7 @@ function ReservationFlow({
             </button>
           )}
           <button
-            className="flex-1 h-11 min-h-[44px] inline-flex items-center justify-center text-xs font-bold rounded-xl bg-brand-2 text-white hover:opacity-90 shadow-xs transition-opacity disabled:opacity-50"
+            className="flex-1 h-12 min-h-[48px] inline-flex items-center justify-center text-xs sm:text-sm font-bold rounded-2xl bg-brand-2 text-white hover:opacity-90 shadow-xs transition-opacity disabled:opacity-50 cursor-pointer active:scale-[0.98]"
             type="button"
             onClick={() => (step === 2 ? onConfirm() : setStep(2))}
             disabled={confirming || !acknowledged}
