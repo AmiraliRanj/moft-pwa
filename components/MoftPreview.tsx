@@ -2663,8 +2663,7 @@ function OfferDetails({
                   <Icon name="clock" className="w-4 h-4 text-brand-2" />
                 </div>
                 <div className="min-w-0">
-                  <small className="block text-[10px] text-muted font-bold">زمان دریافت حضوری</small>
-                  <strong className="block text-xs font-black text-ink truncate mt-0.5">{offer.pickup}</strong>
+                  <strong className="block text-xs font-black text-ink truncate">{offer.pickup}</strong>
                 </div>
               </div>
 
@@ -2673,8 +2672,7 @@ function OfferDetails({
                   <Icon name="bag" className="w-4 h-4 text-brand-2" />
                 </div>
                 <div className="min-w-0">
-                  <small className="block text-[10px] text-muted font-bold">موجودی این لحظه</small>
-                  <strong className="block text-xs font-black text-ink truncate mt-0.5">
+                  <strong className="block text-xs font-black text-ink truncate">
                     {numberFa(offer.quantityLeft)} جعبه
                     {offer.quantityLeft <= 3 && (
                       <span className="text-[10px] text-rose-500 font-bold ms-1">(پایان نزدیک)</span>
@@ -2689,8 +2687,7 @@ function OfferDetails({
                 <Icon name="pin" className="w-4 h-4 text-brand-2" />
               </div>
               <div className="min-w-0 flex-1">
-                <small className="block text-[10px] text-muted font-bold">آدرس دریافت حضوری</small>
-                <strong className="block text-xs font-bold text-ink leading-snug mt-0.5">{offer.address}</strong>
+                <strong className="block text-xs font-bold text-ink leading-snug">{offer.address}</strong>
                 <span className="block text-[10.5px] text-muted mt-0.5">
                   تحویل فقط به‌صورت حضوری و در بازهٔ مشخص‌شده است.
                 </span>
