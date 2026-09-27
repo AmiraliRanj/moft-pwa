@@ -642,7 +642,6 @@ export default function MoftPreview({
                 onSelect={openOffer}
                 onOpenMerchant={openMerchant}
                 onDiscover={() => switchTab("discover")}
-                savedMeals={savedMeals}
                 onFilters={() => setLayer("filters")}
                 favoritesOnly={favoritesOnly}
                 setFavoritesOnly={setFavoritesOnly}
@@ -825,7 +824,6 @@ function HomePage({
   onSelect,
   onOpenMerchant,
   onDiscover,
-  savedMeals,
   onFilters,
   favoritesOnly,
   setFavoritesOnly,
@@ -842,7 +840,6 @@ function HomePage({
   onSelect: (offer: Offer) => void;
   onOpenMerchant?: (offer: Offer) => void;
   onDiscover: () => void;
-  savedMeals: number;
   onFilters: () => void;
   favoritesOnly: boolean;
   setFavoritesOnly: (value: boolean) => void;
@@ -1019,27 +1016,6 @@ function HomePage({
             </div>
           </section>
 
-          <section className="flex items-center justify-between gap-4 p-5 rounded-3xl bg-surface border border-line shadow-xs">
-            <div className="space-y-1">
-              <span className="w-8 h-8 rounded-xl bg-brand-soft text-brand-2 grid place-items-center mb-1">
-                <Icon name="leaf" className="w-4 h-4" />
-              </span>
-              <h2 className="text-sm font-black text-ink leading-snug">
-                تا امروز <AnimatedNumber value={savedMeals || 1} /> وعده با یک انتخاب خوب همراه شده.
-              </h2>
-              <p className="text-[11px] text-muted leading-relaxed">
-                {savedMeals ? "این عدد با رزروهای تو به‌روز می‌شود." : "اولین جعبه‌ات می‌تواند شروع این مسیر باشد."}
-              </p>
-            </div>
-            <div className="flex flex-col items-center justify-center w-20 h-20 rounded-2xl bg-brand-soft text-brand-2 shrink-0">
-              <strong className="text-base font-black leading-none">
-                <AnimatedNumber value={(savedMeals || 1) * 11} />
-              </strong>
-              <small className="text-[10px] text-center mt-1 font-bold leading-tight">
-                لیتر آب<br />تخمینی
-              </small>
-            </div>
-          </section>
         </div>
       )}
     </div>
