@@ -2582,7 +2582,7 @@ function OfferDetails({
   return (
     <DialogShell titleId="offer-title" onClose={onClose} size="fullscreen">
       <div ref={detailScrollRef} className="overflow-y-auto flex-1 h-full">
-        <div className="relative w-full h-64 sm:h-72 bg-canvas overflow-hidden">
+        <div className="relative w-full h-72 sm:h-80 bg-canvas overflow-hidden">
           <FoodImage
             src={offer.image}
             alt={`تصویر ${offer.title}`}
@@ -2590,49 +2590,62 @@ function OfferDetails({
             priority
             className="w-full h-full object-cover"
           />
-          <div className="absolute inset-x-0 bottom-0 p-4 bg-gradient-to-t from-black/85 via-black/40 to-transparent text-white">
-            <strong className="block text-base sm:text-lg font-black">{offer.title}</strong>
+          {/* Food Title & Description Overlay on bottom right/start of image */}
+          <div className="absolute inset-x-0 bottom-0 p-4 pt-12 bg-gradient-to-t from-black/90 via-black/55 to-transparent text-white space-y-1">
+            <h1 id="offer-title" className="text-base sm:text-lg font-black leading-snug drop-shadow-sm">
+              {offer.title}
+            </h1>
+            {offer.description && (
+              <p className="text-[11px] sm:text-xs text-white/90 leading-relaxed line-clamp-2 drop-shadow-xs max-w-md">
+                {offer.description}
+              </p>
+            )}
           </div>
         </div>
 
         <div className="p-4 sm:p-5 space-y-4">
+          {/* Rating & Distance */}
           <div className="flex items-center justify-between text-xs text-muted">
-            <span className="flex items-center gap-1 font-bold text-ink">
-              <Icon name="star" filled className="w-3.5 h-3.5 text-amber-500" />
+            <span className="flex items-center gap-1.5 font-bold text-ink">
+              <Icon name="star" filled className="w-3.5 h-3.5 text-brand-2" />
               <span>{decimalFa(offer.rating)}</span>
               <span className="text-muted font-normal text-[11px]">({numberFa(offer.reviewCount)} نظر)</span>
             </span>
-            <span className="flex items-center gap-1">
+            <span className="flex items-center gap-1.5 font-medium">
               <Icon name="pin" className="w-3.5 h-3.5 text-muted" />
               <span>{distanceFa(offer.distanceKm)}</span>
             </span>
           </div>
 
-          <button
-            type="button"
-            onClick={() => onOpenMerchant && onOpenMerchant(offer)}
-            className="flex items-center gap-3 text-start w-full p-2.5 -m-2.5 rounded-2xl hover:bg-canvas/80 active:bg-canvas transition-colors cursor-pointer group"
-            aria-label={`مشاهده صفحه اختصاصی ${offer.merchantName}`}
-          >
-            <MerchantLogo name={offer.merchantName} category={offer.category} size="md" />
+          {/* Clean Merchant Header: Clickable Logo and Name (Profile text button removed) */}
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => onOpenMerchant && onOpenMerchant(offer)}
+              className="min-w-[44px] min-h-[44px] w-11 h-11 rounded-full grid place-items-center transition-transform cursor-pointer hover:scale-105 active:scale-95 shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-2"
+              aria-label={`مشاهده صفحه اختصاصی ${offer.merchantName}`}
+            >
+              <MerchantLogo name={offer.merchantName} category={offer.category} size="md" />
+            </button>
             <div className="min-w-0 flex-1">
-              <div className="flex items-center justify-between">
-                <h2 id="offer-title" className="text-base font-black text-ink group-hover:text-brand-2 transition-colors">
+              <button
+                type="button"
+                onClick={() => onOpenMerchant && onOpenMerchant(offer)}
+                className="text-start group cursor-pointer block min-w-0 focus-visible:outline-none"
+                aria-label={`مشاهده صفحه اختصاصی ${offer.merchantName}`}
+              >
+                <strong className="block text-sm sm:text-base font-black text-ink group-hover:text-brand-2 transition-colors truncate leading-tight">
                   {formatMerchantWithCategory(offer.merchantName, offer.categoryLabel)}
-                </h2>
-                {onOpenMerchant && (
-                  <span className="text-[11px] font-bold text-brand-2 inline-flex items-center gap-0.5 shrink-0">
-                    <span>پروفایل</span>
-                    <Icon name="chevron" className="w-3.5 h-3.5 rtl:rotate-180" />
-                  </span>
-                )}
-              </div>
-              <p className="text-xs text-muted mt-0.5 leading-relaxed line-clamp-1">{offer.description}</p>
+                </strong>
+                <span className="block text-[11px] text-muted font-medium mt-0.5 truncate">
+                  {offer.neighborhood} · {offer.categoryLabel}
+                </span>
+              </button>
             </div>
-          </button>
+          </div>
 
           {/* 3 Key Elements: Pickup Time, Remaining Quantity & Pickup Address */}
-          <section className="p-3.5 rounded-2xl bg-canvas border border-line space-y-3">
+          <section className="p-3.5 sm:p-4 rounded-2xl bg-canvas border border-line space-y-3 shadow-2xs">
             <div className="grid grid-cols-2 gap-3 pb-3 border-b border-line/60">
               <div className="flex items-center gap-2.5">
                 <div className="w-8 h-8 rounded-xl bg-surface border border-line text-brand-2 grid place-items-center shrink-0">
@@ -2674,14 +2687,15 @@ function OfferDetails({
             </div>
           </section>
 
-          <section className="flex items-start gap-3 p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-800 dark:text-amber-300">
+          {/* Allergen & Safety Warning */}
+          <section className="flex items-start gap-3 p-3.5 sm:p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-800 dark:text-amber-300">
             <span className="w-5 h-5 rounded-full bg-amber-500 text-white font-bold text-xs grid place-items-center shrink-0">!</span>
-            <div className="text-xs space-y-1">
+            <div className="text-xs space-y-1 min-w-0 flex-1">
               <strong className="block font-bold">هشدار آلرژی و ایمنی</strong>
               <p className="opacity-90 leading-relaxed text-[11px]">
                 فقط غذای سالم عرضه می‌شود، اما ترکیب متغیر است. اگر آلرژی جدی داری، پیش از دریافت با فروشگاه هماهنگ کن.
               </p>
-              <div className="flex flex-wrap gap-1 pt-1">
+              <div className="flex flex-wrap gap-1.5 pt-1">
                 {offer.allergens.map((item) => (
                   <span key={item} className="px-2 py-0.5 rounded-md bg-amber-500/20 text-[10px] font-bold">
                     {item}
@@ -2691,8 +2705,9 @@ function OfferDetails({
             </div>
           </section>
 
+          {/* Recommendations */}
           {related.length > 0 && (
-            <section className="space-y-3 pt-2">
+            <section className="space-y-3 pt-1">
               <SectionHeading title="شاید این‌ها را هم دوست داشته باشی" />
               <div className="grid grid-cols-2 gap-3">
                 {related.map((item) => (
@@ -2711,6 +2726,7 @@ function OfferDetails({
         </div>
       </div>
 
+      {/* Sticky Bottom Reservation Bar */}
       <div className="sticky bottom-0 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] border-t border-line bg-surface/95 backdrop-blur-md flex items-center justify-between gap-4">
         <div>
           <del className="block text-xs text-muted line-through">{money(offer.originalPrice)}</del>
