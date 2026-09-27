@@ -59,5 +59,5 @@ export type Reservation = {
   originalPrice?: number;
 };
 
-export type ThemePreference = "light" | "dark";
+export type ThemePreference = "light" | "dark" | "auto";
 export type AppTab = "home" | "discover" | "orders" | "reservations" | "cart" | "profile";

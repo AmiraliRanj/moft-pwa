@@ -362,21 +362,6 @@ button, input, select, textarea, a, [role="button"] {
   grid-auto-flow: initial;
 }
 
-.glass-toggle-input {
-  width: 54px !important;
-  height: 32px !important;
-  position: relative !important;
-  justify-self: end;
-  direction: ltr;
-  overflow: visible;
-  border: 1px solid var(--line-strong) !important;
-  background: #d9ddda !important;
-  box-shadow: none;
-}
-
-.glass-toggle-input[data-checked] {
-  background: #F87F45 !important;
-}
 
 /* Hide scrollbar utility */
 .scrollbar-none {
