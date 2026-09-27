@@ -4,7 +4,6 @@ import { useState } from "react";
 import Image from "next/image";
 import { MerchantLogo } from "@/components/moft/MerchantLogo";
 import { Icon } from "@/components/moft/Icon";
-import { AnimatedNumber } from "@/components/moft/AnimatedNumber";
 import { Checkbox } from "@/components/ui/checkbox";
 import { discountPercent, formatPickupDate, money, numberFa } from "@/lib/moft-format";
 import type { Offer, Reservation } from "@/types/moft";
@@ -38,12 +37,10 @@ type CheckoutPhase = "cart" | "payment_method" | "confirm" | "success";
 
 export function CartPipelinePage({
   cartItems = [],
-  onUpdateQuantity,
   onRemoveItem,
   onClearCart,
   pendingOffer,
   quantity = 1,
-  setQuantity,
   onConfirmOrder,
   onDirections,
   onDiscover,
@@ -585,40 +582,10 @@ export function CartPipelinePage({
                     </button>
                   </div>
 
-                  {/* Quantity Controls */}
+                  {/* Quantity Indicator */}
                   <div className="flex items-center justify-between p-2.5 rounded-2xl bg-canvas border border-line/70">
                     <span className="text-xs font-bold text-muted">تعداد:</span>
-                    <div className="flex items-center gap-2.5">
-                      <button
-                        type="button"
-                        onClick={() =>
-                          onUpdateQuantity
-                            ? onUpdateQuantity(offer.id, Math.max(1, itQty - 1))
-                            : setQuantity?.(Math.max(1, (quantity || 1) - 1))
-                        }
-                        disabled={itQty <= 1}
-                        className="w-8 h-8 rounded-xl bg-surface border border-line flex items-center justify-center text-ink disabled:opacity-30 hover:bg-surface-raised transition-colors cursor-pointer"
-                        aria-label="کاهش تعداد"
-                      >
-                        <Icon name="minus" className="w-3.5 h-3.5" />
-                      </button>
-                      <strong className="text-sm font-black min-w-[18px] text-center font-[family-name:var(--font-vazirmatn)]">
-                        <AnimatedNumber value={itQty} />
-                      </strong>
-                      <button
-                        type="button"
-                        onClick={() =>
-                          onUpdateQuantity
-                            ? onUpdateQuantity(offer.id, Math.min(Math.min(3, offer.quantityLeft), itQty + 1))
-                            : setQuantity?.(Math.min(Math.min(3, offer.quantityLeft), (quantity || 1) + 1))
-                        }
-                        disabled={itQty >= Math.min(3, offer.quantityLeft)}
-                        className="w-8 h-8 rounded-xl bg-surface border border-line flex items-center justify-center text-ink disabled:opacity-30 hover:bg-surface-raised transition-colors cursor-pointer"
-                        aria-label="افزایش تعداد"
-                      >
-                        <Icon name="plus" className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
+                    <span className="text-xs font-black text-ink">۱ جعبه</span>
                   </div>
 
                   {/* Pricing Row for this item */}

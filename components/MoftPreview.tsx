@@ -402,24 +402,13 @@ export default function MoftPreview({
       showToast("برای ثبت رزرو دوباره آنلاین شو.");
       return;
     }
-    const maxAllowed = Math.min(3, selected.quantityLeft);
     const existing = cartItems.find((item) => item.offer.id === selected.id);
-    if (existing && existing.quantity >= maxAllowed) {
-      showToast(`حداکثر ${numberFa(maxAllowed)} بسته از این آیتم قابل انتخاب است.`, "warning");
+    if (existing) {
+      showToast("این بسته قبلاً به سبد خرید اضافه شده است.", "info");
       return;
     }
 
-    setCartItems((prev) => {
-      const found = prev.find((item) => item.offer.id === selected.id);
-      if (found) {
-        return prev.map((item) =>
-          item.offer.id === selected.id
-            ? { ...item, quantity: Math.min(maxAllowed, item.quantity + 1) }
-            : item
-        );
-      }
-      return [...prev, { offer: selected, quantity: 1 }];
-    });
+    setCartItems((prev) => [...prev, { offer: selected, quantity: 1 }]);
     showToast("به سبد خرید اضافه شد.", "success");
   };
 
@@ -427,13 +416,8 @@ export default function MoftPreview({
     setCartItems((prev) => {
       const found = prev.find((item) => item.offer.id === offerId);
       if (!found) return prev;
-      if (found.quantity <= 1) {
-        showToast("از سبد خرید حذف شد.", "info");
-        return prev.filter((item) => item.offer.id !== offerId);
-      }
-      return prev.map((item) =>
-        item.offer.id === offerId ? { ...item, quantity: item.quantity - 1 } : item
-      );
+      showToast("از سبد خرید حذف شد.", "info");
+      return prev.filter((item) => item.offer.id !== offerId);
     });
   };
 
@@ -3237,43 +3221,38 @@ function OfferDetails({
         </div>
       </div>
 
-      {/* Sticky Bottom Reservation Bar with Live Price & Stepper CTA */}
+      {/* Sticky Bottom Reservation Bar */}
       <div className="sticky bottom-0 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] border-t border-line bg-surface/95 backdrop-blur-md flex items-center justify-between gap-4">
         <div className="min-w-0">
           <del className="block text-xs text-muted line-through">
-            {money(offer.originalPrice * (inCartQuantity > 0 ? inCartQuantity : 1))}
+            {money(offer.originalPrice)}
           </del>
           <strong className="block text-sm sm:text-base font-black text-ink">
-            {money(offer.price * (inCartQuantity > 0 ? inCartQuantity : 1))}
+            {money(offer.price)}
           </strong>
           <small className="block text-[10.5px] text-muted">
-            {inCartQuantity > 1 ? `برای ${numberFa(inCartQuantity)} جعبه` : "برای هر جعبه"}
+            برای هر جعبه
           </small>
         </div>
 
         {inCartQuantity > 0 ? (
-          <div className="inline-flex items-center justify-between min-w-[140px] sm:min-w-[160px] h-12 min-h-[48px] px-2.5 rounded-2xl bg-brand-2 text-white shadow-xs transition-all">
-            <button
-              type="button"
-              onClick={onIncrement}
-              disabled={inCartQuantity >= Math.min(3, offer.quantityLeft)}
-              aria-label="افزایش تعداد"
-              className="w-8 h-8 rounded-xl bg-white/20 hover:bg-white/30 active:scale-95 disabled:opacity-40 transition-all flex items-center justify-center text-white cursor-pointer"
-            >
-              <Icon name="plus" className="w-4 h-4" />
-            </button>
-
-            <span className="font-[family-name:var(--font-vazirmatn)] font-black text-sm text-white px-2 select-none">
-              <AnimatedNumber value={inCartQuantity} />
-            </span>
-
+          <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={onDecrement}
-              aria-label={inCartQuantity === 1 ? "حذف از سبد خرید" : "کاهش تعداد"}
-              className="w-8 h-8 rounded-xl bg-white/20 hover:bg-white/30 active:scale-95 transition-all flex items-center justify-center text-white cursor-pointer"
+              aria-label="حذف از سبد خرید"
+              className="w-12 h-12 min-h-[48px] min-w-[48px] rounded-2xl bg-surface border border-line hover:border-rose-500/40 text-muted hover:text-rose-500 active:scale-95 transition-all flex items-center justify-center cursor-pointer shadow-xs"
             >
-              <Icon name={inCartQuantity === 1 ? "trash" : "minus"} className="w-4 h-4" />
+              <Icon name="trash" className="w-5 h-5" />
+            </button>
+            <button
+              type="button"
+              onClick={onDecrement}
+              className="inline-flex items-center justify-center gap-1.5 min-w-[130px] sm:min-w-[155px] h-12 min-h-[48px] px-5 sm:px-6 text-xs sm:text-sm font-bold rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs transition-all active:scale-[0.98] cursor-pointer"
+              aria-label="در سبد خرید موجود است (کلیک برای حذف)"
+            >
+              <Icon name="check" className="w-4 h-4 text-white shrink-0" />
+              <span>به سبد خرید اضافه شد</span>
             </button>
           </div>
         ) : (
@@ -3296,7 +3275,6 @@ function ReservationFlow({
   step,
   setStep,
   quantity,
-  setQuantity,
   confirming,
   onConfirm,
   success,
@@ -3353,25 +3331,7 @@ function ReservationFlow({
             <div className="space-y-3">
               <div className="flex items-center justify-between p-3 rounded-xl bg-canvas border border-line">
                 <span className="text-xs font-bold text-ink">تعداد جعبه</span>
-                <div className="flex items-center gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    disabled={quantity <= 1}
-                    className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-xl bg-surface border border-line grid place-items-center text-ink disabled:opacity-40 hover:bg-surface-raised transition-colors"
-                  >
-                    <Icon name="minus" className="w-4 h-4" />
-                  </button>
-                  <strong className="text-sm font-black min-w-[24px] text-center"><AnimatedNumber value={quantity} /></strong>
-                  <button
-                    type="button"
-                    onClick={() => setQuantity(Math.min(Math.min(3, offer.quantityLeft), quantity + 1))}
-                    disabled={quantity >= Math.min(3, offer.quantityLeft)}
-                    className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-xl bg-surface border border-line grid place-items-center text-ink disabled:opacity-40 hover:bg-surface-raised transition-colors"
-                  >
-                    <Icon name="plus" className="w-4 h-4" />
-                  </button>
-                </div>
+                <span className="text-xs font-black text-ink">۱ جعبه</span>
               </div>
 
               <div className="flex items-center justify-between p-3 rounded-xl bg-brand-soft text-brand-2">
