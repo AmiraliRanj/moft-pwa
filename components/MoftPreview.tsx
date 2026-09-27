@@ -1931,8 +1931,6 @@ function ReservationCard({
   onDirections: () => void;
   onTrackPipeline?: (reservationId: string) => void;
 }) {
-  const [showQr, setShowQr] = useState(false);
-
   const cancellable = reservation.orderStatus
     ? ["paid", "reviewed", "preparing", "ready_for_pickup"].includes(reservation.orderStatus)
     : reservation.status === "active";
@@ -2002,49 +2000,19 @@ function ReservationCard({
         </div>
       </div>
 
-      {/* 3. Delivery Code Ticket Voucher (Clean & Accessible) */}
-      <div
-        role="button"
-        tabIndex={0}
-        onClick={() => setShowQr((prev) => !prev)}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault();
-            setShowQr((prev) => !prev);
-          }
-        }}
-        aria-label={`کد تحویل ${reservation.code}؛ برای نمایش یا بستن بارکد کلیک کنید`}
-        className="flex items-center justify-between px-3 py-2 rounded-2xl bg-brand-soft/40 dark:bg-emerald-500/10 hover:bg-brand-soft/60 dark:hover:bg-emerald-500/15 border border-dashed border-brand-2/30 dark:border-emerald-500/25 transition-all cursor-pointer group active:scale-[0.99] select-none"
-      >
+      {/* 3. Delivery Code Ticket Voucher (Clean, Prominent & Bold Vazir Font) */}
+      <div className="flex items-center justify-between px-3.5 py-2.5 rounded-2xl bg-brand-soft/40 dark:bg-emerald-500/10 border border-dashed border-brand-2/30 dark:border-emerald-500/25 min-w-0">
         <div className="flex items-center gap-2 min-w-0">
-          <span className="w-6 h-6 rounded-lg bg-brand-soft dark:bg-emerald-500/20 text-brand-2 dark:text-emerald-400 grid place-items-center shrink-0 shadow-2xs">
-            <Icon name="receipt" className="w-3.5 h-3.5" />
+          <span className="w-7 h-7 rounded-xl bg-brand-soft dark:bg-emerald-500/20 text-brand-2 dark:text-emerald-400 grid place-items-center shrink-0 shadow-2xs">
+            <Icon name="receipt" className="w-4 h-4" />
           </span>
-          <span className="text-[11px] font-medium text-muted shrink-0">کد تحویل:</span>
-          <span className="font-mono text-sm sm:text-base font-black text-brand-2 dark:text-emerald-400 tracking-wider">
-            {reservation.code}
-          </span>
+          <span className="text-xs font-bold text-muted shrink-0">کد تحویل:</span>
         </div>
 
-        <div className="flex items-center gap-1 text-[11px] font-bold text-brand-2 dark:text-emerald-400 shrink-0">
-          <span>{showQr ? "بستن بارکد" : "نمایش بارکد"}</span>
-          <Icon name="chevron" className={`w-3.5 h-3.5 transition-transform duration-200 ${showQr ? "rotate-180" : "rotate-90"}`} />
-        </div>
+        <span className="font-[family-name:var(--font-vazirmatn)] font-black text-xl sm:text-2xl text-brand-2 dark:text-emerald-400 tracking-wide select-all">
+          {faDigits(reservation.code)}
+        </span>
       </div>
-
-      {/* Expandable QR Preview (Clean & Non-cluttered) */}
-      {showQr && (
-        <div className="flex items-center justify-between gap-3 p-3 rounded-2xl bg-canvas border border-line/70 animate-in fade-in zoom-in-95 duration-200">
-          <div className="space-y-1">
-            <span className="text-xs font-bold text-ink">بارکد دریافت بسته</span>
-            <span className="block font-mono font-black text-base sm:text-lg text-brand-2 tracking-widest">{reservation.code}</span>
-            <span className="text-[10px] sm:text-[11px] text-muted">این کد را به فروشگاه نشان دهید</span>
-          </div>
-          <div className="p-1 rounded-xl bg-surface border border-line shadow-2xs shrink-0">
-            <MiniQr code={reservation.code} />
-          </div>
-        </div>
-      )}
 
       {reservation.reviewResponse && (
         <blockquote className="p-3 rounded-2xl bg-brand-soft/60 border-s-2 border-brand-2 text-xs text-ink space-y-1">
