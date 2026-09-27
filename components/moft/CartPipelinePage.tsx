@@ -345,13 +345,6 @@ export function CartPipelinePage({
               })}
             </div>
 
-            {/* University Preview Notice */}
-            <div className="flex items-start gap-2 p-3 rounded-2xl bg-brand-soft/40 border border-brand-2/20 text-xs text-ink/80">
-              <Icon name="info" className="w-4 h-4 text-brand-2 shrink-0 mt-0.5" />
-              <p className="text-[11px] leading-relaxed">
-                این یک پیش‌نمایش دانشگاهی است و تمامی پرداخت‌ها شبیه‌سازی آزمایشی هستند.
-              </p>
-            </div>
 
             {/* Actions */}
             <div className="flex items-center gap-2 pt-2 border-t border-line/60">
