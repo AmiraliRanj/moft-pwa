@@ -137,6 +137,7 @@ export default function MoftPreview({
 }: MoftPreviewProps) {
   const { state, placeOrder, transitionOrder, submitReview } = useDemo();
   const [tab, setTab] = useState<AppTab>(initialTab);
+  const [discoverMode, setDiscoverMode] = useState<"feed" | "map">("feed");
   const [previousTab, setPreviousTab] = useState<AppTab>("home");
   const [cartClosing, setCartClosing] = useState(false);
   const [category, setCategory] = useState<CategoryId>("all");
@@ -534,7 +535,7 @@ export default function MoftPreview({
 
   return (
     <div className="min-h-screen bg-canvas text-ink font-sans w-full max-w-full overflow-x-clip">
-      <main className={`w-full max-w-full overflow-x-clip ${tab === "discover" ? "h-dvh max-h-dvh overflow-hidden pb-0 overscroll-none select-none" : "pb-28 sm:pb-32"}`}>
+      <main className={`w-full max-w-full overflow-x-clip ${tab === "discover" && discoverMode === "map" ? "h-dvh max-h-dvh overflow-hidden pb-0 overscroll-none select-none" : "pb-28 sm:pb-32"}`}>
         <a
         className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:start-2 focus:z-50 px-3 py-1 bg-surface text-ink rounded-lg border border-line"
         href="#main-content"
@@ -716,7 +717,15 @@ export default function MoftPreview({
       </div>
 
       {tab === "discover" ? (
-        <div id="main-content" tabIndex={-1} className="w-full h-[calc(100dvh-56px-64px)] sm:h-[calc(100vh-60px-70px)] relative overflow-hidden overscroll-none touch-none select-none">
+        <div
+          id="main-content"
+          tabIndex={-1}
+          className={
+            discoverMode === "map"
+              ? "w-full h-[calc(100dvh-56px-64px)] sm:h-[calc(100vh-60px-70px)] relative overflow-hidden overscroll-none touch-none select-none"
+              : "w-full min-h-full"
+          }
+        >
           <DiscoverPage
             offers={offers}
             favorites={favorites}
@@ -724,6 +733,8 @@ export default function MoftPreview({
             onSelect={openOffer}
             showToast={showToast}
             onFilters={() => setLayer("filters")}
+            mode={discoverMode}
+            onModeChange={setDiscoverMode}
           />
         </div>
       ) : (
@@ -1174,11 +1185,17 @@ function getCategoryIconName(category: CategoryId | string): IconName {
   }
 }
 
+type DiscoverMode = "feed" | "map";
+
 function DiscoverPage({
   offers,
+  favorites,
+  onFavorite,
   onSelect,
   showToast,
   onFilters,
+  mode = "feed",
+  onModeChange,
 }: {
   offers: Offer[];
   favorites: Set<string>;
@@ -1186,7 +1203,77 @@ function DiscoverPage({
   onSelect: (offer: Offer) => void;
   showToast: (msg: string) => void;
   onFilters?: () => void;
+  mode: DiscoverMode;
+  onModeChange: (mode: DiscoverMode) => void;
 }) {
+  type SmartFilter = "all" | "hot" | "deadline" | "walk" | "tonight";
+  const [smartFilter, setSmartFilter] = useState<SmartFilter>("all");
+  const [walkRadius, setWalkRadius] = useState<number | null>(null);
+
+  // Live countdown to today's evening pickup cutoff
+  const [countdown, setCountdown] = useState<{ hours: number; minutes: number; seconds: number }>({
+    hours: 0,
+    minutes: 42,
+    seconds: 15,
+  });
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setCountdown((prev) => {
+        if (prev.seconds > 0) return { ...prev, seconds: prev.seconds - 1 };
+        if (prev.minutes > 0) return { ...prev, minutes: prev.minutes - 1, seconds: 59 };
+        if (prev.hours > 0) return { hours: prev.hours - 1, minutes: 59, seconds: 59 };
+        return { hours: 1, minutes: 30, seconds: 0 };
+      });
+    }, 1000);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  const countdownFormatted = `${faDigits(String(countdown.minutes).padStart(2, "0"))}:${faDigits(String(countdown.seconds).padStart(2, "0"))}`;
+
+  // Deadline offers: items ending soon or low quantity left
+  const deadlineOffers = useMemo(() => {
+    return offers.filter((o) => o.endingSoon || o.quantityLeft <= 2 || o.pickupPeriod === "evening").slice(0, 5);
+  }, [offers]);
+
+  // Hot offers: high discount or popular
+  const hotOffers = useMemo(() => {
+    return [...offers]
+      .filter((o) => discountPercent(o.originalPrice, o.price) >= 45 || o.popular)
+      .sort((a, b) => discountPercent(b.originalPrice, b.price) - discountPercent(a.originalPrice, a.price))
+      .slice(0, 5);
+  }, [offers]);
+
+  const topHotOffer = hotOffers[0] ?? offers[0];
+
+  // Feed filtered offers
+  const feedOffers = useMemo(() => {
+    let list = offers;
+
+    if (smartFilter === "hot") {
+      list = list.filter((o) => discountPercent(o.originalPrice, o.price) >= 50 || o.popular);
+    } else if (smartFilter === "deadline") {
+      list = list.filter((o) => o.endingSoon || o.quantityLeft <= 2);
+    } else if (smartFilter === "walk") {
+      list = list.filter((o) => o.distanceKm <= 1.5);
+    } else if (smartFilter === "tonight") {
+      list = list.filter((o) => o.pickupPeriod === "evening" || o.pickupPeriod === "late");
+    }
+
+    if (walkRadius !== null) {
+      list = list.filter((o) => o.distanceKm <= walkRadius);
+    }
+
+    return list;
+  }, [offers, smartFilter, walkRadius]);
+
+  const smartFilterOptions: Array<{ id: SmartFilter; label: string; icon: IconName }> = [
+    { id: "all", label: "همه جعبه‌ها", icon: "grid" },
+    { id: "hot", label: "شکار داغ", icon: "flame" },
+    { id: "deadline", label: "مهلت فوری", icon: "clock" },
+    { id: "walk", label: "نزدیک (پیاده)", icon: "pin" },
+    { id: "tonight", label: "شیفت امشب", icon: "moon" },
+  ];
   const [activeOffer, setActiveOffer] = useState<Offer | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<CategoryId>("all");
   const [peekIndex, setPeekIndex] = useState(0);
@@ -1412,57 +1499,103 @@ function DiscoverPage({
   }, [activeOfferPacks]);
 
   return (
-    <div className="relative w-full h-full overflow-hidden bg-[#edf1ed] dark:bg-[#161c18] flex flex-col">
-      {/* Top Header Panel: Below the header, with a clear background behind itself */}
-      <div className="w-full bg-canvas/95 dark:bg-canvas/95 backdrop-blur-xl border-b border-line shadow-xs px-4 py-2.5 z-20 shrink-0">
-        <div className="max-w-md mx-auto space-y-2">
-          {/* Row 1: Discover Box Title & Toggle Filter Button */}
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2.5">
-              <Icon name="map" className="w-5 h-5 text-brand-2 shrink-0" />
-              <div>
-                <h2 className="text-sm font-black text-ink tracking-tight">کشف جعبه‌های اطراف</h2>
-                <p className="text-[11px] text-muted">محدودهٔ ونک، جردن و میرداماد</p>
-              </div>
+    <div className={`relative w-full ${mode === "map" ? "h-full overflow-hidden bg-[#edf1ed] dark:bg-[#161c18]" : "min-h-full"} flex flex-col`}>
+      {/* Top Header Panel: View Switcher (Feed vs Map) and Category / Smart Filters */}
+      <div className="w-full bg-canvas/95 backdrop-blur-xl border-b border-line shadow-2xs px-4 py-2.5 z-20 shrink-0 sticky top-0">
+        <div className="max-w-md mx-auto space-y-2.5">
+          {/* Row 1: Segmented Switcher & Filter Button */}
+          <div className="flex items-center justify-between gap-2.5">
+            <div className="flex-1 flex items-center p-1 rounded-2xl bg-surface border border-line shadow-2xs">
+              <button
+                type="button"
+                onClick={() => onModeChange("feed")}
+                className={`flex-1 min-h-[38px] rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95 ${
+                  mode === "feed"
+                    ? "bg-brand-soft text-brand-2 font-black shadow-2xs"
+                    : "text-muted hover:text-ink"
+                }`}
+                aria-pressed={mode === "feed"}
+              >
+                <Icon name="spark" className="w-4 h-4" />
+                <span>ویترین کشف</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => onModeChange("map")}
+                className={`flex-1 min-h-[38px] rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95 ${
+                  mode === "map"
+                    ? "bg-brand-soft text-brand-2 font-black shadow-2xs"
+                    : "text-muted hover:text-ink"
+                }`}
+                aria-pressed={mode === "map"}
+              >
+                <Icon name="map" className="w-4 h-4" />
+                <span>روی نقشه</span>
+              </button>
             </div>
 
-            {/* Toggle Filter Button */}
-            <button
-              type="button"
-              onClick={onFilters}
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 min-h-[38px] rounded-xl bg-surface border border-line text-xs font-bold text-ink hover:text-brand-2 hover:bg-surface-raised active:scale-95 transition-all shadow-xs cursor-pointer"
-              aria-label="فیلترهای پیشرفته"
-            >
-              <Icon name="sliders" className="w-4 h-4 text-brand-2" />
-              <span>فیلترها</span>
-            </button>
+            {onFilters && (
+              <button
+                type="button"
+                onClick={onFilters}
+                className="w-10 h-10 min-w-[40px] min-h-[40px] rounded-xl bg-surface border border-line flex items-center justify-center text-ink hover:text-brand-2 hover:bg-surface-raised active:scale-95 transition-all shadow-2xs cursor-pointer"
+                aria-label="فیلترهای پیشرفته"
+              >
+                <Icon name="sliders" className="w-4 h-4 text-brand-2" />
+              </button>
+            )}
           </div>
 
-          {/* Row 2: Category Toggle Filter Chips */}
-          <div
-            className="flex items-center gap-1.5 overflow-x-auto scrollbar-none py-0.5"
-            style={{ scrollbarWidth: "none" }}
-          >
-            {quickCategories.map((cat) => (
-              <button
-                key={cat.id}
-                type="button"
-                onClick={() => setSelectedCategory(cat.id)}
-                className={`px-3.5 py-1 min-h-[32px] rounded-full text-[11px] font-bold whitespace-nowrap transition-all shadow-xs cursor-pointer active:scale-95 border ${
-                  selectedCategory === cat.id
-                    ? "bg-ink text-canvas border-ink shadow-xs"
-                    : "bg-surface text-ink border-line hover:bg-surface-raised"
-                }`}
-              >
-                {cat.label}
-              </button>
-            ))}
-          </div>
+          {/* Row 2: In Map Mode -> Category Chips; In Feed Mode -> Smart Filter Chips */}
+          {mode === "map" ? (
+            <div
+              className="flex items-center gap-1.5 overflow-x-auto scrollbar-none py-0.5"
+              style={{ scrollbarWidth: "none" }}
+            >
+              {quickCategories.map((cat) => (
+                <button
+                  key={cat.id}
+                  type="button"
+                  onClick={() => setSelectedCategory(cat.id)}
+                  className={`px-3.5 py-1 min-h-[32px] rounded-full text-[11px] font-bold whitespace-nowrap transition-all shadow-xs cursor-pointer active:scale-95 border ${
+                    selectedCategory === cat.id
+                      ? "bg-ink text-canvas border-ink shadow-xs"
+                      : "bg-surface text-ink border-line hover:bg-surface-raised"
+                  }`}
+                >
+                  {cat.label}
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div
+              className="flex items-center gap-1.5 overflow-x-auto scrollbar-none py-0.5"
+              style={{ scrollbarWidth: "none" }}
+            >
+              {smartFilterOptions.map((f) => (
+                <button
+                  key={f.id}
+                  type="button"
+                  onClick={() => setSmartFilter(f.id)}
+                  className={`inline-flex items-center gap-1.5 px-3 py-1 min-h-[32px] rounded-full text-[11px] font-bold whitespace-nowrap transition-all shadow-2xs cursor-pointer active:scale-95 border ${
+                    smartFilter === f.id
+                      ? "bg-ink text-canvas border-ink shadow-xs"
+                      : "bg-surface text-ink border-line hover:bg-surface-raised"
+                  }`}
+                >
+                  <Icon name={f.icon} className="w-3.5 h-3.5" />
+                  <span>{f.label}</span>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Map Area: ONLY the map is scrollable and pannable */}
-      <div className="relative flex-1 w-full overflow-hidden">
+      {mode === "map" ? (
+        /* Map Area: ONLY the map is scrollable and pannable */
+        <div className="relative flex-1 w-full overflow-hidden">
         {/* Scrollable / Draggable Map Canvas Container */}
         <div
           ref={mapScrollRef}
@@ -1923,8 +2056,239 @@ function DiscoverPage({
           </div>
         )}
       </div>
-    </div>
-  );
+    ) : (
+      /* Feed Area Container */
+      <div className="w-full max-w-md mx-auto px-4 pt-3.5 space-y-6">
+        {/* Section 1: ساعت صفر نجات | Urgent Rescue Deadline Countdown */}
+        <section className="space-y-3" aria-labelledby="deadline-heading">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <span className="relative flex h-2.5 w-2.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500" />
+              </span>
+              <h2 id="deadline-heading" className="text-sm font-black text-ink tracking-tight">
+                ساعت صفر نجات
+              </h2>
+              <span className="text-[10px] font-bold text-amber-700 dark:text-amber-300 bg-amber-500/10 px-2 py-0.5 rounded-full">
+                شیفت عصر
+              </span>
+            </div>
+
+            {/* Live Countdown Badge */}
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-300">
+              <Icon name="clock" className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
+              <span className="font-[family-name:var(--font-vazirmatn)] font-black text-xs tracking-wider">
+                {countdownFormatted}
+              </span>
+            </div>
+          </div>
+
+          {/* Deadline Urgent Snap Carousel */}
+          <div
+            className="flex items-stretch gap-3 overflow-x-auto pb-1 -mx-4 px-4 scrollbar-none snap-x"
+            style={{ scrollbarWidth: "none" }}
+          >
+            {deadlineOffers.map((offer) => {
+              const discount = discountPercent(offer.originalPrice, offer.price);
+              return (
+                <article
+                  key={offer.id}
+                  className="w-[230px] sm:w-[250px] shrink-0 snap-start rounded-2xl bg-surface border border-line overflow-hidden shadow-2xs hover:border-brand-2/40 transition-all flex flex-col justify-between"
+                >
+                  <button
+                    type="button"
+                    onClick={() => onSelect(offer)}
+                    className="w-full text-start flex flex-col h-full cursor-pointer focus:outline-none"
+                    aria-label={`مشاهده ${offer.title} از ${offer.merchantName}`}
+                  >
+                    <div className="relative w-full h-28 bg-canvas overflow-hidden">
+                      <FoodImage
+                        src={offer.image}
+                        sizes="250px"
+                        className="w-full h-full object-cover"
+                      />
+                      <span className="absolute top-2 start-2 px-2 py-0.5 rounded-md text-[10px] font-black bg-rose-600 text-white shadow-xs">
+                        {discount > 0 ? `${numberFa(discount)}٪ تخفیف` : "فوری"}
+                      </span>
+                      <span className="absolute bottom-2 start-2 px-2 py-0.5 rounded-md text-[10px] font-black bg-black/75 text-white backdrop-blur-xs flex items-center gap-1">
+                        <Icon name="clock" className="w-3 h-3 text-amber-400" />
+                        <span>تنها {numberFa(offer.quantityLeft)} عدد مانده</span>
+                      </span>
+                    </div>
+
+                    <div className="p-3 flex flex-col flex-1 justify-between gap-2">
+                      <div>
+                        <h3 className="text-xs font-black text-ink truncate">{offer.title}</h3>
+                        <p className="text-[11px] text-muted truncate mt-0.5">{offer.merchantName}</p>
+                      </div>
+
+                      <div className="flex items-baseline justify-between pt-2 border-t border-line/50">
+                        <span className="text-[10px] text-muted">{offer.pickup}</span>
+                        <div className="flex items-baseline gap-1.5">
+                          <del className="text-[10px] text-muted line-through">{moneyCompact(offer.originalPrice)}</del>
+                          <strong className="text-xs font-black text-ink">{moneyCompact(offer.price)}</strong>
+                        </div>
+                      </div>
+                    </div>
+                  </button>
+                </article>
+              );
+            })}
+          </div>
+        </section>
+
+        {/* Section 2: شکار داغ امروز | Hot Drops & Golden Deals */}
+        <section className="space-y-3" aria-labelledby="hot-heading">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="w-7 h-7 rounded-xl bg-rose-500/10 text-rose-500 flex items-center justify-center">
+                <Icon name="flame" className="w-4 h-4" />
+              </span>
+              <div>
+                <h2 id="hot-heading" className="text-sm font-black text-ink tracking-tight">
+                  شکار داغ امروز
+                </h2>
+                <p className="text-[11px] text-muted">بیشترین تخفیف‌های نجات غذا در ونک</p>
+              </div>
+            </div>
+            <span className="text-[11px] font-bold text-muted">ارزش خرید بالا</span>
+          </div>
+
+          {/* Spotlight Hero Deal */}
+          {topHotOffer && (
+            <article className="rounded-3xl bg-gradient-to-br from-brand-soft/70 to-surface dark:from-[#232924] dark:to-[#1D1E21] border border-brand-2/20 p-3.5 sm:p-4 shadow-xs relative overflow-hidden group">
+              <button
+                type="button"
+                onClick={() => onSelect(topHotOffer)}
+                className="w-full text-start flex flex-col sm:flex-row items-center gap-3.5 cursor-pointer focus:outline-none"
+                aria-label={`شکار طلایی: ${topHotOffer.title} از ${topHotOffer.merchantName}`}
+              >
+                <div className="relative w-full sm:w-36 h-36 sm:h-32 rounded-2xl overflow-hidden bg-canvas shrink-0 shadow-2xs">
+                  <FoodImage
+                    src={topHotOffer.image}
+                    sizes="(max-width: 640px) 100vw, 144px"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                  <span className="absolute top-2 start-2 px-2.5 py-1 rounded-xl text-xs font-black bg-rose-600 text-white shadow-xs">
+                    {numberFa(discountPercent(topHotOffer.originalPrice, topHotOffer.price))}٪ تخفیف طلایی
+                  </span>
+                </div>
+
+                <div className="w-full min-w-0 flex-1 flex flex-col justify-between py-0.5">
+                  <div>
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-[11px] font-bold text-brand-2 dark:text-[#FDA74D] flex items-center gap-1">
+                        <Icon name="spark" className="w-3.5 h-3.5" />
+                        <span>بهترین پیشنهاد محله</span>
+                      </span>
+                      <div className="inline-flex items-center gap-1 text-xs font-black text-ink">
+                        <Icon name="star" filled className="w-3.5 h-3.5 text-brand-2" />
+                        <span>{decimalFa(topHotOffer.rating)}</span>
+                      </div>
+                    </div>
+                    <h3 className="text-sm sm:text-base font-black text-ink mt-1 truncate">
+                      {topHotOffer.title}
+                    </h3>
+                    <p className="text-xs text-muted mt-0.5 truncate">
+                      {formatMerchantWithCategory(topHotOffer.merchantName, topHotOffer.categoryLabel)} • {distanceFa(topHotOffer.distanceKm)}
+                    </p>
+                  </div>
+
+                  <div className="flex items-center justify-between mt-3 pt-2 border-t border-line/60">
+                    <span className="text-[11px] text-muted">{topHotOffer.pickup}</span>
+                    <div className="flex items-baseline gap-2">
+                      <del className="text-xs text-muted line-through">{moneyCompact(topHotOffer.originalPrice)}</del>
+                      <strong className="text-base font-black text-ink">{moneyCompact(topHotOffer.price)}</strong>
+                    </div>
+                  </div>
+                </div>
+              </button>
+            </article>
+          )}
+        </section>
+
+        {/* Section 3: رادار پیاده‌روی و دسترسی سریع | Walking Proximity Radar */}
+        <div className="p-3.5 rounded-2xl bg-surface border border-line flex items-center justify-between gap-3 shadow-2xs">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <span className="w-8 h-8 rounded-xl bg-brand-soft text-brand-2 grid place-items-center shrink-0">
+              <Icon name="route" className="w-4 h-4" />
+            </span>
+            <div className="min-w-0">
+              <strong className="block text-xs font-black text-ink truncate">رادار فاصلهٔ پیاده‌روی</strong>
+              <small className="block text-[10.5px] text-muted truncate">موقعیت مرجع: تهران، میدان ونک</small>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-1 shrink-0">
+            {[
+              { label: "همه", val: null },
+              { label: "۱.۵ ک‌م", val: 1.5 },
+              { label: "۳ ک‌م", val: 3 },
+            ].map((item) => (
+              <button
+                key={item.label}
+                type="button"
+                onClick={() => setWalkRadius(item.val)}
+                className={`px-2.5 py-1 min-h-[30px] rounded-lg text-[10.5px] font-bold transition-all cursor-pointer ${
+                  walkRadius === item.val
+                    ? "bg-brand-2 text-white font-black shadow-2xs"
+                    : "bg-canvas text-muted hover:text-ink border border-line/60"
+                }`}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Section 4: فهرست جعبه‌های کاوش | Discovery Offers Grid */}
+        <section className="space-y-3" aria-labelledby="feed-offers-heading">
+          <div className="flex items-center justify-between">
+            <h2 id="feed-offers-heading" className="text-xs font-bold text-muted">
+              {numberFa(feedOffers.length)} جعبه برای نجات در اطراف شما
+            </h2>
+            {smartFilter !== "all" && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSmartFilter("all");
+                  setWalkRadius(null);
+                }}
+                className="text-[11px] font-bold text-brand-2 hover:underline cursor-pointer"
+              >
+                پاک کردن فیلترها
+              </button>
+            )}
+          </div>
+
+          {feedOffers.length > 0 ? (
+            <OfferList
+              offers={feedOffers}
+              favorites={favorites}
+              onFavorite={onFavorite}
+              onSelect={onSelect}
+            />
+          ) : (
+            <div className="p-8 rounded-3xl bg-surface border border-line text-center space-y-2">
+              <p className="text-xs font-bold text-muted">جعبه‌ای با فیلترهای انتخابی شما پیدا نشد.</p>
+              <button
+                type="button"
+                onClick={() => {
+                  setSmartFilter("all");
+                  setWalkRadius(null);
+                }}
+                className="text-xs font-bold text-brand-2 hover:underline cursor-pointer"
+              >
+                نمایش همه پیشنهادها
+              </button>
+            </div>
+          )}
+        </section>
+      </div>
+    )}
+  </div>
+);
 }
 
 function OrdersPage({

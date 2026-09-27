@@ -6,7 +6,7 @@ export type IconName =
   | "check" | "leaf" | "calendar" | "route" | "bell" | "moon" | "sun" | "info"
   | "wifi" | "chevron" | "trash" | "store" | "share"
   | "grid" | "coffee" | "utensils" | "pizza" | "bread" | "cake" | "apple" | "cart" | "camera"
-  | "pencil" | "edit" | "receipt" | "dots";
+  | "pencil" | "edit" | "receipt" | "dots" | "flame";
 
 const paths: Record<IconName, ReactNode> = {
   home: <><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10.5V20h13v-9.5"/><path d="M9.5 20v-6h5v6"/></>,
@@ -17,6 +17,7 @@ const paths: Record<IconName, ReactNode> = {
   heart: <path d="M20.5 9.5c0 5-8.5 10-8.5 10s-8.5-5-8.5-10a4.5 4.5 0 0 1 8.5-2.2 4.5 4.5 0 0 1 8.5 2.2Z"/>,
   arrow: <><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></>,
   spark: <><path d="m12 2 1.4 5.6L19 9l-5.6 1.4L12 16l-1.4-5.6L5 9l5.6-1.4L12 2Z"/><path d="m19 15 .7 2.3L22 18l-2.3.7L19 21l-.7-2.3L16 18l2.3-.7L19 15Z"/></>,
+  flame: <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 3Z" />,
   clock: <><circle cx="12" cy="12" r="8.5"/><path d="M12 7v5l3 2"/></>,
   star: <path d="m12 3 2.7 5.5 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1-4.4-4.3 6.1-.9L12 3Z"/>,
   sliders: <><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></>,
