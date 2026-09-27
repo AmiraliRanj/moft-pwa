@@ -10,26 +10,39 @@ import { discountPercent, formatPickupDate, money, numberFa } from "@/lib/moft-f
 import type { Offer, Reservation } from "@/types/moft";
 import type { OrderStatus } from "@/types/demo";
 
+export interface CartItem {
+  offer: Offer;
+  quantity: number;
+}
+
 interface CartPipelinePageProps {
-  pendingOffer: Offer | null;
+  cartItems?: CartItem[];
+  onUpdateQuantity?: (offerId: string, quantity: number) => void;
+  onRemoveItem?: (offerId: string) => void;
+  onClearCart?: () => void;
+  onConfirmOrder: (items: CartItem[]) => void;
+  pendingOffer?: Offer | null;
   activeReservations?: Reservation[];
   reservations?: Reservation[];
-  quantity: number;
-  setQuantity: (q: number) => void;
-  onConfirmOrder: (offer: Offer, quantity: number) => void;
+  quantity?: number;
+  setQuantity?: (q: number) => void;
   onTransitionOrder?: (orderId: string, status: OrderStatus) => void;
   onDirections?: () => void;
   onDiscover: () => void;
   onGoToOrders: () => void;
-  onClearPending: () => void;
+  onClearPending?: () => void;
   showToast: (msg: string, type?: "success" | "error" | "info" | "warning") => void;
 }
 
 type CheckoutPhase = "cart" | "payment_method" | "confirm" | "success";
 
 export function CartPipelinePage({
+  cartItems = [],
+  onUpdateQuantity,
+  onRemoveItem,
+  onClearCart,
   pendingOffer,
-  quantity,
+  quantity = 1,
   setQuantity,
   onConfirmOrder,
   onDirections,
@@ -47,35 +60,52 @@ export function CartPipelinePage({
   // Selected reservation to track if user taps track from the active orders list
   const [trackingReservation, setTrackingReservation] = useState<Reservation | null>(null);
 
+  // Effective list of items in the current cart session
+  const effectiveItems: CartItem[] =
+    cartItems.length > 0
+      ? cartItems
+      : pendingOffer
+      ? [{ offer: pendingOffer, quantity }]
+      : [];
 
-  // Calculations
-  const totalAmount = pendingOffer ? pendingOffer.price * quantity : 0;
-  const originalTotal = pendingOffer ? pendingOffer.originalPrice * quantity : 0;
-  const discount = pendingOffer ? discountPercent(pendingOffer.originalPrice, pendingOffer.price) : 0;
+  // Calculations for all items in the current order session
+  const totalAmount = effectiveItems.reduce((acc, it) => acc + it.offer.price * it.quantity, 0);
+  const originalTotal = effectiveItems.reduce((acc, it) => acc + it.offer.originalPrice * it.quantity, 0);
+  const discount = originalTotal > 0 ? discountPercent(originalTotal, totalAmount) : 0;
 
   // Handle final checkout confirmation
   const handlePayAndConfirm = () => {
-    if (!pendingOffer) return;
+    if (effectiveItems.length === 0) return;
     if (!allergiesAcknowledged) {
       showToast("لطفاً تأیید بررسی محتویات جعبه را علامت بزنید.", "warning");
       return;
     }
     setIsProcessing(true);
     setTimeout(() => {
-      onConfirmOrder(pendingOffer, quantity);
+      onConfirmOrder(effectiveItems);
       setIsProcessing(false);
+      
+      const firstItem = effectiveItems[0];
+      const hasMultiple = effectiveItems.length > 1;
+      const titleSummary = hasMultiple
+        ? `${firstItem.offer.title} (+${numberFa(effectiveItems.length - 1)} قلم دیگر)`
+        : firstItem.offer.title;
+      const merchantSummary = hasMultiple
+        ? `${firstItem.offer.merchantName} و ...`
+        : firstItem.offer.merchantName;
+
       // Create a simulated confirmed reservation object for the immediate success screen
       const simulatedRes: Reservation = {
         id: `ord-${Date.now()}`,
-        offerId: pendingOffer.id,
-        merchantName: pendingOffer.merchantName,
-        category: pendingOffer.category,
-        image: pendingOffer.image,
-        title: pendingOffer.title,
-        pickup: pendingOffer.pickup,
-        address: pendingOffer.address,
+        offerId: firstItem.offer.id,
+        merchantName: merchantSummary,
+        category: firstItem.offer.category,
+        image: firstItem.offer.image,
+        title: titleSummary,
+        pickup: firstItem.offer.pickup,
+        address: firstItem.offer.address,
         code: `${Math.floor(100000 + Math.random() * 900000)}`.replace(/\d/g, (d) => "۰۱۲۳۴۵۶۷۸۹"[Number(d)]),
-        quantity,
+        quantity: effectiveItems.reduce((acc, it) => acc + it.quantity, 0),
         total: totalAmount,
         status: "active",
         orderStatus: "paid",
@@ -348,30 +378,38 @@ export function CartPipelinePage({
         )}
 
         {/* STEP 2: Review and Confirm Payment */}
-        {phase === "confirm" && pendingOffer && (
+        {phase === "confirm" && effectiveItems.length > 0 && (
           <div className="p-4 rounded-3xl bg-surface border border-line shadow-xs space-y-4 animate-in fade-in duration-150">
             <div className="space-y-0.5">
               <h2 className="text-sm font-black text-ink">بررسی نهایی و پرداخت</h2>
               <p className="text-[11px] text-muted">جزئیات سفارش را مرور و پرداخت آزمایشی را تأیید کنید.</p>
             </div>
 
-            {/* Concise Summary */}
-            <div className="p-3 rounded-2xl bg-canvas border border-line/70 space-y-2 text-xs">
-              <div className="flex items-center justify-between">
-                <span className="text-muted">فروشگاه:</span>
-                <strong className="text-ink font-bold">{pendingOffer.merchantName}</strong>
+            {/* Concise Summary of All Items */}
+            <div className="p-3.5 rounded-2xl bg-canvas border border-line/70 space-y-2.5 text-xs">
+              <div className="space-y-2 pb-2.5 border-b border-line/60">
+                <span className="text-muted block font-bold text-[11px]">اقلام سفارش ({numberFa(effectiveItems.length)} مورد):</span>
+                {effectiveItems.map(({ offer, quantity: itQty }) => (
+                  <div key={offer.id} className="flex items-center justify-between text-xs py-0.5">
+                    <div className="min-w-0 flex-1 truncate pe-2">
+                      <span className="text-ink font-bold">{offer.title}</span>
+                      <span className="text-muted text-[11px] ms-1">({numberFa(itQty)} عدد · {offer.merchantName})</span>
+                    </div>
+                    <span className="font-bold text-ink shrink-0">{money(offer.price * itQty)}</span>
+                  </div>
+                ))}
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-muted">محتوا:</span>
-                <span className="text-ink">{pendingOffer.title} ({numberFa(quantity)} عدد)</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-muted">بازه تحویل:</span>
-                <span className="text-ink font-medium">{formatPickupDate(pendingOffer.pickup)}</span>
-              </div>
-              <div className="flex items-center justify-between pt-2 border-t border-line/50">
-                <span className="font-bold text-ink">مبلغ قابل پرداخت:</span>
-                <span className="font-black text-sm text-brand-2">{money(totalAmount)}</span>
+
+              {originalTotal > totalAmount && (
+                <div className="flex items-center justify-between text-muted text-[11.5px]">
+                  <span>مجموع قیمت اصلی:</span>
+                  <del className="line-through">{money(originalTotal)}</del>
+                </div>
+              )}
+
+              <div className="flex items-center justify-between pt-1 text-sm">
+                <span className="font-black text-ink">مبلغ کل قابل پرداخت:</span>
+                <span className="font-black text-base text-brand-2">{money(totalAmount)}</span>
               </div>
             </div>
 
@@ -481,95 +519,151 @@ export function CartPipelinePage({
   return (
     <div className="space-y-4 pb-24 animate-in fade-in duration-200">
 
-      {/* SECTION 1: Pending Cart Item (If item exists in cart) */}
-      {pendingOffer ? (
-        <section className="p-3.5 sm:p-4 rounded-3xl bg-surface border border-line shadow-xs space-y-3.5">
-          <div className="flex items-start justify-between gap-3">
-            {/* Store & Cutout Info */}
-            <div className="flex items-start gap-2.5 min-w-0 flex-1">
-              <div className="relative w-16 h-16 sm:w-18 sm:h-18 rounded-2xl overflow-hidden bg-canvas border border-line/60 shrink-0">
-                <Image
-                  src={pendingOffer.image || "/images/products/dibz-dessert-box-cutout.png"}
-                  alt={pendingOffer.title}
-                  fill
-                  sizes="72px"
-                  className="object-contain p-1"
-                />
-              </div>
-
-              <div className="min-w-0 flex-1 space-y-0.5">
-                <div className="flex items-center gap-1.5">
-                  <MerchantLogo name={pendingOffer.merchantName} category={pendingOffer.category} size="sm" />
-                  <span className="text-xs font-bold text-ink truncate">{pendingOffer.merchantName}</span>
-                </div>
-                <h2 className="text-sm font-black text-ink truncate leading-tight">{pendingOffer.title}</h2>
-                <p className="text-[11px] text-muted flex items-center gap-1 pt-0.5 truncate">
-                  <Icon name="clock" className="w-3.5 h-3.5 text-muted shrink-0" />
-                  <span>{formatPickupDate(pendingOffer.pickup)}</span>
-                </p>
-              </div>
-            </div>
-
-            {/* Trash button */}
-            <button
-              type="button"
-              onClick={onClearPending}
-              aria-label="حذف از سبد خرید"
-              className="w-8 h-8 rounded-full flex items-center justify-center text-muted hover:text-rose-500 hover:bg-rose-500/10 transition-colors cursor-pointer shrink-0"
-            >
-              <Icon name="trash" className="w-4 h-4" />
-            </button>
-          </div>
-
-          {/* Quantity Controls & Price Breakdown */}
-          <div className="flex items-center justify-between p-2.5 rounded-2xl bg-canvas border border-line/70">
-            <span className="text-xs font-bold text-muted">تعداد:</span>
-            <div className="flex items-center gap-2.5">
-              <button
-                type="button"
-                onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                disabled={quantity <= 1}
-                className="w-8 h-8 rounded-xl bg-surface border border-line flex items-center justify-center text-ink disabled:opacity-30 hover:bg-surface-raised transition-colors cursor-pointer"
-                aria-label="کاهش تعداد"
-              >
-                <Icon name="minus" className="w-3.5 h-3.5" />
-              </button>
-              <strong className="text-sm font-black min-w-[18px] text-center font-[family-name:var(--font-vazirmatn)]">
-                <AnimatedNumber value={quantity} />
-              </strong>
-              <button
-                type="button"
-                onClick={() => setQuantity(Math.min(Math.min(3, pendingOffer.quantityLeft), quantity + 1))}
-                disabled={quantity >= Math.min(3, pendingOffer.quantityLeft)}
-                className="w-8 h-8 rounded-xl bg-surface border border-line flex items-center justify-center text-ink disabled:opacity-30 hover:bg-surface-raised transition-colors cursor-pointer"
-                aria-label="افزایش تعداد"
-              >
-                <Icon name="plus" className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          </div>
-
-          {/* Pricing Row */}
-          <div className="flex items-center justify-between pt-1 border-t border-line/50 text-xs">
+      {/* SECTION 1: Pending Cart Items (All in ONE single container despite various items) */}
+      {effectiveItems.length > 0 ? (
+        <section className="p-3.5 sm:p-4 rounded-3xl bg-surface border border-line shadow-xs space-y-4">
+          {/* Header of the container: Order Items Count & Clear action */}
+          <div className="flex items-center justify-between pb-2 border-b border-line/60">
             <div className="flex items-center gap-2">
-              <del className="text-muted line-through">{money(originalTotal)}</del>
-              {discount > 0 && (
-                <span className="text-[10px] font-bold text-rose-600 bg-rose-500/10 px-1.5 py-0.5 rounded-full">
-                  {numberFa(discount)}٪ تخفیف
-                </span>
-              )}
+              <span className="w-2 h-2 rounded-full bg-brand-2" />
+              <h2 className="text-xs sm:text-sm font-black text-ink">اقلام سفارش ({numberFa(effectiveItems.length)} مورد)</h2>
             </div>
-            <div className="flex items-baseline gap-1">
-              <span className="text-muted text-[11px]">مبلغ:</span>
-              <strong className="font-black text-sm text-brand-2">{money(totalAmount)}</strong>
+            {onClearCart && effectiveItems.length > 1 && (
+              <button
+                type="button"
+                onClick={onClearCart}
+                className="text-[11px] font-bold text-muted hover:text-rose-500 transition-colors cursor-pointer"
+              >
+                حذف همه
+              </button>
+            )}
+          </div>
+
+          {/* List of items inside this ONE container */}
+          <div className="divide-y divide-line/60 space-y-3.5">
+            {effectiveItems.map(({ offer, quantity: itQty }) => {
+              const itemTotal = offer.price * itQty;
+              const itemOriginal = offer.originalPrice * itQty;
+              const itemDiscount = discountPercent(offer.originalPrice, offer.price);
+
+              return (
+                <div key={offer.id} className="pt-3.5 first:pt-0 space-y-3">
+                  <div className="flex items-start justify-between gap-3">
+                    {/* Store & Cutout Info */}
+                    <div className="flex items-start gap-2.5 min-w-0 flex-1">
+                      <div className="relative w-16 h-16 sm:w-18 sm:h-18 rounded-2xl overflow-hidden bg-canvas border border-line/60 shrink-0">
+                        <Image
+                          src={offer.image || "/images/products/dibz-dessert-box-cutout.png"}
+                          alt={offer.title}
+                          fill
+                          sizes="72px"
+                          className="object-contain p-1"
+                        />
+                      </div>
+
+                      <div className="min-w-0 flex-1 space-y-0.5">
+                        <div className="flex items-center gap-1.5">
+                          <MerchantLogo name={offer.merchantName} category={offer.category} size="sm" />
+                          <span className="text-xs font-bold text-ink truncate">{offer.merchantName}</span>
+                        </div>
+                        <h3 className="text-xs sm:text-sm font-black text-ink truncate leading-tight">{offer.title}</h3>
+                        <p className="text-[11px] text-muted flex items-center gap-1 pt-0.5 truncate">
+                          <Icon name="clock" className="w-3.5 h-3.5 text-muted shrink-0" />
+                          <span>{formatPickupDate(offer.pickup)}</span>
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Trash button for this item */}
+                    <button
+                      type="button"
+                      onClick={() => (onRemoveItem ? onRemoveItem(offer.id) : onClearPending?.())}
+                      aria-label={`حذف ${offer.title} از سبد خرید`}
+                      className="w-8 h-8 rounded-full flex items-center justify-center text-muted hover:text-rose-500 hover:bg-rose-500/10 transition-colors cursor-pointer shrink-0"
+                    >
+                      <Icon name="trash" className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  {/* Quantity Controls */}
+                  <div className="flex items-center justify-between p-2.5 rounded-2xl bg-canvas border border-line/70">
+                    <span className="text-xs font-bold text-muted">تعداد:</span>
+                    <div className="flex items-center gap-2.5">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          onUpdateQuantity
+                            ? onUpdateQuantity(offer.id, Math.max(1, itQty - 1))
+                            : setQuantity?.(Math.max(1, (quantity || 1) - 1))
+                        }
+                        disabled={itQty <= 1}
+                        className="w-8 h-8 rounded-xl bg-surface border border-line flex items-center justify-center text-ink disabled:opacity-30 hover:bg-surface-raised transition-colors cursor-pointer"
+                        aria-label="کاهش تعداد"
+                      >
+                        <Icon name="minus" className="w-3.5 h-3.5" />
+                      </button>
+                      <strong className="text-sm font-black min-w-[18px] text-center font-[family-name:var(--font-vazirmatn)]">
+                        <AnimatedNumber value={itQty} />
+                      </strong>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          onUpdateQuantity
+                            ? onUpdateQuantity(offer.id, Math.min(Math.min(3, offer.quantityLeft), itQty + 1))
+                            : setQuantity?.(Math.min(Math.min(3, offer.quantityLeft), (quantity || 1) + 1))
+                        }
+                        disabled={itQty >= Math.min(3, offer.quantityLeft)}
+                        className="w-8 h-8 rounded-xl bg-surface border border-line flex items-center justify-center text-ink disabled:opacity-30 hover:bg-surface-raised transition-colors cursor-pointer"
+                        aria-label="افزایش تعداد"
+                      >
+                        <Icon name="plus" className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Pricing Row for this item */}
+                  <div className="flex items-center justify-between text-xs px-1">
+                    <div className="flex items-center gap-2">
+                      <del className="text-muted line-through text-[11px]">{money(itemOriginal)}</del>
+                      {itemDiscount > 0 && (
+                        <span className="text-[10px] font-bold text-rose-600 bg-rose-500/10 px-1.5 py-0.5 rounded-full">
+                          {numberFa(itemDiscount)}٪ تخفیف
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-muted text-[11px]">مبلغ:</span>
+                      <strong className="font-bold text-xs text-ink">{money(itemTotal)}</strong>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Pricing Summary of the entire order session */}
+          <div className="pt-3 border-t border-line space-y-2">
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-muted font-medium">مجموع قیمت اصلی:</span>
+              <del className="text-muted font-bold line-through">{money(originalTotal)}</del>
+            </div>
+            {discount > 0 && (
+              <div className="flex items-center justify-between text-xs text-rose-600 font-bold">
+                <span>تخفیف کل سفارش:</span>
+                <span>{money(originalTotal - totalAmount)} ({numberFa(discount)}٪)</span>
+              </div>
+            )}
+            <div className="flex items-center justify-between text-sm pt-2 border-t border-line/60">
+              <span className="font-black text-ink">مبلغ قابل پرداخت:</span>
+              <strong className="font-black text-base text-brand-2">{money(totalAmount)}</strong>
             </div>
           </div>
 
-          {/* Primary Pay Button */}
+          {/* EXACTLY 1 PRIMARY CTA BUTTON FOR THE WHOLE ORDER */}
           <button
             type="button"
             onClick={() => setPhase("payment_method")}
-            className="w-full min-h-[46px] py-2.5 px-4 rounded-2xl bg-brand-2 hover:bg-brand-2/90 active:scale-[0.99] text-white text-xs sm:text-sm font-black transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer"
+            className="w-full min-h-[48px] py-2.5 px-4 rounded-2xl bg-brand-2 hover:bg-brand-2/90 active:scale-[0.99] text-white text-xs sm:text-sm font-black transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer"
           >
             <span>ادامه و پرداخت</span>
             <Icon name="arrow" className="w-4 h-4 rtl:rotate-180 shrink-0" />

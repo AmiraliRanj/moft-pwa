@@ -19,7 +19,7 @@ import { OfferCard, OfferList } from "@/components/moft/OfferCard";
 import { SearchBar } from "@/components/moft/SearchBar";
 import { EndingSoonBannerCard } from "@/components/moft/EndingSoonBannerCard";
 import { MerchantProfileModal } from "@/components/moft/MerchantProfileModal";
-import { CartPipelinePage } from "@/components/moft/CartPipelinePage";
+import { CartPipelinePage, type CartItem } from "@/components/moft/CartPipelinePage";
 import { useMoftTheme } from "@/components/shared/ThemeToggle";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Toaster, toast as toastManager } from "@/components/ui/toast";
@@ -155,7 +155,7 @@ export default function MoftPreview({
   );
   const [selected, setSelected] = useState<Offer | null>(null);
   const [selectedMerchant, setSelectedMerchant] = useState<Offer | null>(null);
-  const [pendingCartOffer, setPendingCartOffer] = useState<Offer | null>(null);
+  const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [layer, setLayer] = useState<Layer>(null);
   const [reservationStep, setReservationStep] = useState(1);
   const [quantity, setQuantity] = useState(1);
@@ -401,10 +401,45 @@ export default function MoftPreview({
       showToast("برای ثبت رزرو دوباره آنلاین شو.");
       return;
     }
-    setPendingCartOffer(selected);
-    setQuantity(1);
+    setCartItems((prev) => {
+      const existing = prev.find((item) => item.offer.id === selected.id);
+      if (existing) {
+        return prev.map((item) =>
+          item.offer.id === selected.id
+            ? { ...item, quantity: Math.min(Math.min(3, selected.quantityLeft), item.quantity + 1) }
+            : item
+        );
+      }
+      return [...prev, { offer: selected, quantity: 1 }];
+    });
     setLayer(null);
     switchTab("cart");
+  };
+
+  const handleUpdateCartQuantity = (offerId: string, q: number) => {
+    setCartItems((prev) =>
+      prev.map((item) => (item.offer.id === offerId ? { ...item, quantity: q } : item))
+    );
+  };
+
+  const handleRemoveCartItem = (offerId: string) => {
+    setCartItems((prev) => prev.filter((item) => item.offer.id !== offerId));
+    showToast("آیتم از سبد خرید حذف شد.");
+  };
+
+  const handleClearCart = () => {
+    setCartItems([]);
+    showToast("سبد خرید خالی شد.");
+  };
+
+  const handleConfirmCartOrder = (items: CartItem[]) => {
+    for (const item of items) {
+      const result = placeOrder(item.offer.id, item.quantity);
+      if (!result.ok) {
+        showToast(result.error, "error");
+      }
+    }
+    setCartItems([]);
   };
 
   const openReceipt = (reservation: Reservation) => {
@@ -592,9 +627,9 @@ export default function MoftPreview({
                   aria-label="سبد خرید و رزروها"
                 >
                   <Icon name="cart" className="w-6 h-6" />
-                  {pendingCartOffer && (
+                  {cartItems.length > 0 && (
                     <b className="pointer-events-none absolute -top-0.5 -end-0.5 min-w-5 h-5 px-1 rounded-full bg-brand-2 text-white text-[11px] font-black grid place-items-center border-2 border-canvas shadow-xs">
-                      {numberFa(1)}
+                      {numberFa(cartItems.reduce((acc, it) => acc + it.quantity, 0))}
                     </b>
                   )}
                 </button>
@@ -708,26 +743,19 @@ export default function MoftPreview({
             )}
             {tab === "cart" && (
               <CartPipelinePage
-                pendingOffer={pendingCartOffer}
+                cartItems={cartItems}
+                onUpdateQuantity={handleUpdateCartQuantity}
+                onRemoveItem={handleRemoveCartItem}
+                onClearCart={handleClearCart}
+                onConfirmOrder={handleConfirmCartOrder}
                 activeReservations={activeReservations}
                 reservations={reservations}
-                quantity={quantity}
-                setQuantity={setQuantity}
-                onConfirmOrder={(offer, qty) => {
-                  const result = placeOrder(offer.id, qty);
-                  if (!result.ok) {
-                    showToast(result.error, "error");
-                    return;
-                  }
-                  setPendingCartOffer(null);
-                }}
                 onTransitionOrder={(orderId, status) => {
                   transitionOrder(orderId, status);
                 }}
                 onDirections={() => showToast("مسیریابی این فروشگاه اکنون در دسترس نیست.")}
                 onDiscover={() => switchTab("discover")}
                 onGoToOrders={() => switchTab("orders")}
-                onClearPending={() => setPendingCartOffer(null)}
                 showToast={showToast}
               />
             )}
