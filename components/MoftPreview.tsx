@@ -2773,9 +2773,8 @@ function ReservationCard({
             <button
               type="button"
               onClick={() => onReceipt(reservation)}
-              className="min-h-[44px] inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs sm:text-sm font-bold rounded-2xl bg-surface border border-line text-ink hover:bg-canvas transition-colors cursor-pointer active:scale-[0.98]"
+              className="min-h-[44px] inline-flex items-center justify-center px-3 py-2 text-xs sm:text-sm font-bold rounded-2xl bg-surface border border-line text-ink hover:bg-canvas transition-colors cursor-pointer active:scale-[0.98]"
             >
-              <Icon name="receipt" className="w-4 h-4 text-brand-2 shrink-0" />
               <span>مشاهده رسید</span>
             </button>
           )}
@@ -2784,9 +2783,8 @@ function ReservationCard({
             <button
               type="button"
               onClick={() => onReview(reservation.id)}
-              className={`min-h-[44px] inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs sm:text-sm font-bold rounded-2xl bg-brand-2 text-white hover:opacity-95 transition-opacity cursor-pointer active:scale-[0.98] shadow-xs ${!onReceipt ? "col-span-2 w-full" : ""}`}
+              className={`min-h-[44px] inline-flex items-center justify-center px-3 py-2 text-xs sm:text-sm font-bold rounded-2xl bg-brand-2 text-white hover:opacity-95 transition-opacity cursor-pointer active:scale-[0.98] shadow-xs ${!onReceipt ? "col-span-2 w-full" : ""}`}
             >
-              <Icon name="star" className="w-4 h-4 shrink-0" />
               <span>ثبت نظر</span>
             </button>
           ) : (
@@ -2801,9 +2799,8 @@ function ReservationCard({
           <button
             type="button"
             onClick={() => onReceipt(reservation)}
-            className="w-full min-h-[44px] inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs sm:text-sm font-bold rounded-2xl bg-surface border border-line text-ink hover:bg-canvas transition-colors cursor-pointer active:scale-[0.98]"
+            className="w-full min-h-[44px] inline-flex items-center justify-center px-3 py-2 text-xs sm:text-sm font-bold rounded-2xl bg-surface border border-line text-ink hover:bg-canvas transition-colors cursor-pointer active:scale-[0.98]"
           >
-            <Icon name="receipt" className="w-4 h-4 text-brand-2 shrink-0" />
             <span>مشاهده رسید</span>
           </button>
         </div>
