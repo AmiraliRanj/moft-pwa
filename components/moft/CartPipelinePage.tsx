@@ -486,15 +486,6 @@ export function CartPipelinePage({
   // -------------------------------------------------------------
   return (
     <div className="space-y-4 pb-24 animate-in fade-in duration-200">
-      {/* Page Header */}
-      <header className="flex items-center justify-between min-h-[44px]">
-        <div>
-          <h1 className="text-base sm:text-lg font-black text-ink">سبد خرید</h1>
-          <p className="text-xs text-muted">
-            {pendingOffer ? "۱ جعبه در انتظار پرداخت" : "مدیریت سبد و سفارش‌های شما"}
-          </p>
-        </div>
-      </header>
 
       {/* SECTION 1: Pending Cart Item (If item exists in cart) */}
       {pendingOffer ? (
