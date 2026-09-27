@@ -2724,19 +2724,15 @@ function OfferDetails({
           {/* 3 Key Elements: Pickup Time, Remaining Quantity & Pickup Address */}
           <section className="p-3.5 sm:p-4 rounded-2xl bg-canvas border border-line space-y-3 shadow-2xs">
             <div className="grid grid-cols-2 gap-3 pb-3 border-b border-line/60">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-surface border border-line text-brand-2 grid place-items-center shrink-0">
-                  <Icon name="clock" className="w-4 h-4 text-brand-2" />
-                </div>
+              <div className="flex items-center gap-2">
+                <Icon name="clock" className="w-5 h-5 text-brand-2 shrink-0" />
                 <div className="min-w-0">
                   <strong className="block text-xs font-black text-ink truncate">{offer.pickup}</strong>
                 </div>
               </div>
 
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-surface border border-line text-brand-2 grid place-items-center shrink-0">
-                  <Icon name="bag" className="w-4 h-4 text-brand-2" />
-                </div>
+              <div className="flex items-center gap-2">
+                <Icon name="bag" className="w-5 h-5 text-brand-2 shrink-0" />
                 <div className="min-w-0">
                   <strong className="block text-xs font-black text-ink truncate">
                     {numberFa(offer.quantityLeft)} جعبه
@@ -2748,10 +2744,8 @@ function OfferDetails({
               </div>
             </div>
 
-            <div className="flex items-start gap-2.5 pt-0.5">
-              <div className="w-8 h-8 rounded-xl bg-surface border border-line text-brand-2 grid place-items-center shrink-0 mt-0.5">
-                <Icon name="pin" className="w-4 h-4 text-brand-2" />
-              </div>
+            <div className="flex items-start gap-2 pt-0.5">
+              <Icon name="pin" className="w-5 h-5 text-brand-2 shrink-0 mt-0.5" />
               <div className="min-w-0 flex-1">
                 <strong className="block text-xs font-bold text-ink leading-snug">{offer.address}</strong>
                 <span className="block text-[10.5px] text-muted mt-0.5">
