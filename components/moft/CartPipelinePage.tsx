@@ -559,10 +559,7 @@ export function CartPipelinePage({
                       </div>
 
                       <div className="min-w-0 flex-1 space-y-0.5">
-                        <div className="flex items-center gap-1.5">
-                          <MerchantLogo name={offer.merchantName} category={offer.category} size="sm" />
-                          <span className="text-xs font-bold text-ink truncate">{offer.merchantName}</span>
-                        </div>
+                        <span className="text-xs font-bold text-ink truncate block">{offer.merchantName}</span>
                         <h3 className="text-xs sm:text-sm font-black text-ink truncate leading-tight">{offer.title}</h3>
                         <p className="text-[11px] text-muted flex items-center gap-1 pt-0.5 truncate">
                           <Icon name="clock" className="w-3.5 h-3.5 text-muted shrink-0" />
@@ -580,12 +577,6 @@ export function CartPipelinePage({
                     >
                       <Icon name="trash" className="w-4 h-4" />
                     </button>
-                  </div>
-
-                  {/* Quantity Indicator */}
-                  <div className="flex items-center justify-between p-2.5 rounded-2xl bg-canvas border border-line/70">
-                    <span className="text-xs font-bold text-muted">تعداد:</span>
-                    <span className="text-xs font-black text-ink">۱ جعبه</span>
                   </div>
 
                   {/* Pricing Row for this item */}

@@ -3329,10 +3329,6 @@ function ReservationFlow({
             </div>
 
             <div className="space-y-3">
-              <div className="flex items-center justify-between p-3 rounded-xl bg-canvas border border-line">
-                <span className="text-xs font-bold text-ink">تعداد جعبه</span>
-                <span className="text-xs font-black text-ink">۱ جعبه</span>
-              </div>
 
               <div className="flex items-center justify-between p-3 rounded-xl bg-brand-soft text-brand-2">
                 <div className="flex items-center gap-2">
