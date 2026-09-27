@@ -578,9 +578,9 @@ export default function MoftPreview({
                   aria-label="سبد خرید و رزروها"
                 >
                   <Icon name="cart" className="w-6 h-6" />
-                  {activeReservations.length > 0 && (
+                  {pendingCartOffer && (
                     <b className="pointer-events-none absolute -top-0.5 -end-0.5 min-w-5 h-5 px-1 rounded-full bg-brand-2 text-white text-[11px] font-black grid place-items-center border-2 border-canvas shadow-xs">
-                      {numberFa(activeReservations.length)}
+                      {numberFa(1)}
                     </b>
                   )}
                 </button>
@@ -665,6 +665,7 @@ export default function MoftPreview({
               <CartPipelinePage
                 pendingOffer={pendingCartOffer}
                 activeReservations={activeReservations}
+                reservations={reservations}
                 quantity={quantity}
                 setQuantity={setQuantity}
                 onConfirmOrder={(offer, qty) => {
