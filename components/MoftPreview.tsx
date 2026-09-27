@@ -526,7 +526,7 @@ export default function MoftPreview({
                 >
                   <span className="relative w-9 h-9 sm:w-10 sm:h-10 rounded-2xl overflow-hidden shadow-xs border border-line/50 shrink-0 bg-brand-soft grid place-items-center">
                     <Image
-                      src="/icons/dibz-ios-default-180-v2.png"
+                      src="/icons/dibz-ios-dark.png"
                       alt="لوگوی دیبز"
                       width={40}
                       height={40}
@@ -2944,7 +2944,7 @@ function SuccessState({
 
       <div className="p-4 rounded-2xl bg-canvas border border-line text-start space-y-3">
         <div className="flex items-center gap-2">
-          <Image src="/icons/dibz-ios-default-180-v2.png" alt="" width={24} height={24} className="rounded-md" />
+          <Image src="/icons/dibz-ios-dark.png" alt="" width={24} height={24} className="rounded-md" />
           <small className="text-[11px] font-bold text-muted">برگهٔ دریافت دیبز</small>
         </div>
         <div>
