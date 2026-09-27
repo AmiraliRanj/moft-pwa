@@ -17,7 +17,7 @@ export default function RoleSelector() {
         </header>
 
         <section aria-labelledby="role-title" className="text-start">
-          <h1 id="role-title" className="text-xl sm:text-3xl font-extrabold text-ink leading-snug tracking-tight text-start">دوست داری از کدوم سمت وارد دیبز بشی؟</h1>
+          <h1 id="role-title" className="text-xl sm:text-3xl font-extrabold text-ink leading-snug tracking-tight text-start font-morabba">دوست داری از کدوم سمت وارد دیبز بشی؟</h1>
         </section>
       </div>
 

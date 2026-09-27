@@ -53,7 +53,7 @@ export function HomeHeroCarousel({ onDiscover }: { onDiscover: () => void }) {
               <section className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-[#F87F45] via-[#EE7235] to-[#D96025] text-white p-3 sm:p-3.5 shadow-sm h-[120px] sm:h-[128px] max-h-[128px] flex items-center justify-between gap-2.5">
                 <div className="space-y-1 z-10 max-w-[66%] flex flex-col justify-center min-w-0">
                   <p className="text-[9px] uppercase font-bold tracking-wider text-orange-100">دیبز برای امروز</p>
-                  <h1 className="text-xs sm:text-sm font-black leading-tight truncate">{slide.title}</h1>
+                  <h1 className="text-xs sm:text-sm font-black leading-tight truncate font-morabba">{slide.title}</h1>
                   <p className="text-[10px] text-white/90 line-clamp-1 leading-normal">{slide.text}</p>
                   <button
                     type="button"

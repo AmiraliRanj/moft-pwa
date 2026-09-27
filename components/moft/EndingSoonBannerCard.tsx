@@ -43,7 +43,7 @@ export function EndingSoonBannerCard({ onAction, className = "" }: EndingSoonBan
         {/* Middle Section: Text description + Cutout Product Image */}
         <div className="relative z-10 my-2.5 flex items-center justify-between gap-2 w-full">
           <div className="space-y-1 min-w-0 flex-1">
-            <h3 className="text-sm sm:text-base font-black text-white leading-snug">
+            <h3 className="text-sm sm:text-base font-black text-white leading-snug font-morabba">
               نجات فوری بسته‌ها
             </h3>
             <p className="text-[11px] text-white/80 leading-relaxed line-clamp-2">

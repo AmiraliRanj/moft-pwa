@@ -304,7 +304,7 @@ export function SupportCenter({
     <div className="space-y-6">
       <header className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-line">
         <div>
-          <h1 className="text-xl font-black text-ink">
+          <h1 className="text-xl font-black text-ink font-morabba">
             {scope === "customer" ? "چطور می‌توانیم کمک کنیم؟" : "مرکز پشتیبانی کسب‌وکار"}
           </h1>
           <p className="text-xs text-muted mt-1">پاسخ پرسش‌های رایج را ببینید یا یک درخواست قابل پیگیری ثبت کنید.</p>

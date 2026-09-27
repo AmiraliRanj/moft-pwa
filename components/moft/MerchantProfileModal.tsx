@@ -130,7 +130,7 @@ export function MerchantProfileModal({
 
           {/* Store Title & Category Badge */}
           <div className="space-y-1">
-            <h1 id="merchant-title" className="text-xl sm:text-2xl font-black text-ink leading-tight">
+            <h1 id="merchant-title" className="text-xl sm:text-2xl font-black text-ink leading-tight font-morabba">
               {merchant.merchantName}
             </h1>
             <div className="flex items-center gap-2">
@@ -224,7 +224,7 @@ export function MerchantProfileModal({
           <section className="space-y-3 pt-1">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-base font-black text-ink">جعبه‌های فعال برای دریافت</h2>
+                <h2 className="text-base font-black text-ink font-morabba">جعبه‌های فعال برای دریافت</h2>
                 <p className="text-[11px] text-muted">امروز می‌توانید این بسته‌ها را رزرو و تحویل بگیرید</p>
               </div>
               <span className="text-xs font-bold text-brand-2 bg-brand-soft/70 px-2.5 py-0.5 rounded-full">
@@ -308,7 +308,7 @@ export function MerchantProfileModal({
 
           {/* Customer Reviews Section */}
           <section className="space-y-2.5 pt-2">
-            <h2 className="text-sm font-black text-ink">نظرات خریداران این فروشگاه</h2>
+            <h2 className="text-sm font-black text-ink font-morabba">نظرات خریداران این فروشگاه</h2>
             <div className="space-y-2">
               <div className="p-3 rounded-2xl bg-canvas/70 border border-line text-xs space-y-1">
                 <div className="flex items-center justify-between">

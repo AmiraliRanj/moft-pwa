@@ -18,7 +18,7 @@ export function BusinessPageHeader({
     <header className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between text-start">
       <div>
         <p className="mb-1 text-xs font-bold tracking-wide text-brand-2">{eyebrow}</p>
-        <h1 className="text-2xl sm:text-3xl font-black text-ink">{title}</h1>
+        <h1 className="text-2xl sm:text-3xl font-black text-ink font-morabba">{title}</h1>
         <p className="mt-1 text-xs sm:text-sm text-muted">{description}</p>
       </div>
       {action && <div className="flex w-full sm:w-auto items-center gap-2">{action}</div>}

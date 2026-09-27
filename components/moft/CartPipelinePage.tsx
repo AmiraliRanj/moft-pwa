@@ -516,7 +516,7 @@ export function CartPipelinePage({
           <div className="flex items-center justify-between pb-2 border-b border-line/60">
             <div className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-brand-2" />
-              <h2 className="text-xs sm:text-sm font-black text-ink">اقلام سفارش ({numberFa(effectiveItems.length)} مورد)</h2>
+              <h2 className="text-xs sm:text-sm font-black text-ink font-morabba">اقلام سفارش ({numberFa(effectiveItems.length)} مورد)</h2>
             </div>
             {onClearCart && effectiveItems.length > 1 && (
               <button
@@ -627,7 +627,7 @@ export function CartPipelinePage({
             <Icon name="bag" className="w-6 h-6" />
           </div>
           <div className="space-y-1">
-            <h3 className="text-sm font-bold text-ink">سبد خرید شما خالی است</h3>
+            <h3 className="text-sm font-bold text-ink font-morabba">سبد خرید شما خالی است</h3>
             <p className="text-xs text-muted">جعبه‌های پایان روز را با تخفیف ویژه رزرو کنید.</p>
           </div>
           <div className="flex flex-col gap-2 pt-2">

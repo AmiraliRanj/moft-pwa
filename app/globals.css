@@ -4,6 +4,32 @@
 
 @custom-variant dark (&:is([data-theme="dark"] *), &:is(.dark *));
 
+@font-face {
+  font-family: "Morabba";
+  src: url("/fonts/morabba/MorabbaVF.woff2") format("woff2-variations"),
+       url("/fonts/morabba/MorabbaVF.woff") format("woff-variations"),
+       url("/fonts/morabba/Morabba-Bold.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Morabba";
+  src: url("/fonts/morabba/Morabba-Bold.woff2") format("woff2");
+  font-weight: 700 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Morabba";
+  src: url("/fonts/morabba/Morabba-Black.woff2") format("woff2");
+  font-weight: 850 900;
+  font-style: normal;
+  font-display: swap;
+}
+
 @theme {
   --color-canvas: var(--canvas);
   --color-canvas-soft: var(--canvas-soft);
@@ -41,6 +67,7 @@
   --shadow-float: var(--shadow-float);
 
   --font-sans: var(--font-vazirmatn), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-morabba: "Morabba", var(--font-vazirmatn), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 
   --color-background: var(--canvas);
   --color-foreground: var(--ink);
@@ -49,6 +76,7 @@
 :root {
   color-scheme: light;
   --font-vazirmatn: "Vazirmatn Variable";
+  --font-morabba: "Morabba", var(--font-vazirmatn), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --color-primary: #F87F45;
   --color-primary-deep: #E0672C;
   --color-lime: #FDA74D;
@@ -410,5 +438,9 @@ button, input, select, textarea, a, [role="button"] {
   .animate-cart-slide-out {
     animation: none !important;
   }
+}
+
+.font-morabba {
+  font-family: var(--font-morabba), "Morabba", serif !important;
 }
 

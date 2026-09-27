@@ -2416,7 +2416,7 @@ function OrderTimelineDialog({
         {/* Header */}
         <div className="flex items-center justify-between pb-3 border-b border-line pe-12">
           <div>
-            <h2 id="order-timeline-title" className="text-base font-black text-ink">
+            <h2 id="order-timeline-title" className="text-base font-black text-ink font-morabba">
               پیگیری مراحل سفارش
             </h2>
             <p className="text-xs text-muted mt-0.5">وضعیت و مراحل دریافت بستهٔ نجات غذا</p>
@@ -2873,7 +2873,7 @@ function ProfilePage({
         </div>
 
         <div>
-          <h1 className="text-base font-black text-ink">تاریخچهٔ سفارش‌ها</h1>
+          <h1 className="text-base font-black text-ink font-morabba">تاریخچهٔ سفارش‌ها</h1>
           <p className="text-xs text-muted mt-0.5">سفارش‌های قبلی، دریافت‌شده و سوابق خرید شما</p>
         </div>
 
@@ -2912,7 +2912,7 @@ function ProfilePage({
       >
         <div className="flex items-center gap-3">
           <Icon name="user" className="w-6 h-6 text-brand-2 shrink-0" />
-          <h1 className="text-base font-black text-ink">{state.customer.name}</h1>
+          <h1 className="text-base font-black text-ink font-morabba">{state.customer.name}</h1>
         </div>
         <Icon name="pencil" className="w-4 h-4 text-muted shrink-0" />
       </button>
@@ -3444,7 +3444,7 @@ function OfferDetails({
           />
           {/* Food Title, Description & Rating Overlay on bottom right/start of image */}
           <div className="absolute inset-x-0 bottom-0 p-4 pt-14 bg-gradient-to-t from-black/90 via-black/60 to-transparent text-white space-y-1.5">
-            <h1 id="offer-title" className="text-base sm:text-lg font-black leading-snug drop-shadow-sm">
+            <h1 id="offer-title" className="text-base sm:text-lg font-black leading-snug drop-shadow-sm font-morabba">
               {offer.title}
             </h1>
             {offer.description && (
@@ -3711,7 +3711,7 @@ function ReservationFlow({
         {step === 2 && (
           <>
             <div>
-              <h2 id="reservation-title" className="text-base font-black text-ink">آمادهٔ ثبت رزرو</h2>
+              <h2 id="reservation-title" className="text-base font-black text-ink font-morabba">آمادهٔ ثبت رزرو</h2>
             </div>
             <div className="divide-y divide-line rounded-2xl bg-canvas border border-line overflow-hidden">
               <div className="flex items-center justify-between p-3 text-xs">
@@ -4036,7 +4036,7 @@ function AboutSheet({ onClose }: { onClose: () => void }) {
         </div>
         <div>
           <p className="text-[11px] font-bold uppercase tracking-wider text-brand-2">داستان دیبز</p>
-          <h2 id="about-title" className="text-base font-black text-ink mt-0.5">انتخاب خوش‌طعم برای امروز</h2>
+          <h2 id="about-title" className="text-base font-black text-ink mt-0.5 font-morabba">انتخاب خوش‌طعم برای امروز</h2>
           <p className="text-xs text-muted mt-1 leading-relaxed">
             دیبز کاربران را به جعبه‌های سالم و آمادهٔ دریافت حضوری در محله‌شان وصل می‌کند.
           </p>
@@ -4086,7 +4086,7 @@ function CancelDialog({ onClose, onConfirm }: { onClose: () => void; onConfirm: 
           <Icon name="trash" className="w-6 h-6" />
         </div>
         <div>
-          <h2 className="text-base font-black text-ink">رزرو لغو شود؟</h2>
+          <h2 className="text-base font-black text-ink font-morabba">رزرو لغو شود؟</h2>
           <p className="text-xs text-muted mt-1 leading-relaxed">
             پس از لغو، کد دریافت غیرفعال و موجودی مجاز به فروشگاه بازگردانده می‌شود.
           </p>
@@ -4128,7 +4128,7 @@ function OrderReceiptModal({
             <Icon name="receipt" className="w-6 h-6" />
           </div>
           <div>
-            <h2 className="text-base sm:text-lg font-black text-ink">رسید سفارش دیبز</h2>
+            <h2 className="text-base sm:text-lg font-black text-ink font-morabba">رسید سفارش دیبز</h2>
             <p className="text-xs font-bold text-muted mt-0.5">{reservation.merchantName}</p>
           </div>
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-canvas border border-line text-[11px] font-bold text-muted">
@@ -4227,7 +4227,7 @@ function ReviewDialog({
         }}
       >
         <div>
-          <h2 id="customer-review-title" className="text-base font-black text-ink">نظرت درباره این سفارش چیست؟</h2>
+          <h2 id="customer-review-title" className="text-base font-black text-ink font-morabba">نظرت درباره این سفارش چیست؟</h2>
           <p className="text-xs text-muted mt-1">پاسخ شما در پنل کیفیت کسب‌وکار دیده می‌شود. سفارش: <b className="font-mono">{orderId}</b></p>
         </div>
 
@@ -4288,7 +4288,7 @@ function SectionHeading({
     <div className="flex items-end justify-between gap-3">
       <div>
         {eyebrow && <span className="block text-[10px] sm:text-xs font-bold text-muted uppercase tracking-wider mb-0.5">{eyebrow}</span>}
-        <h2 id={id} className="text-lg sm:text-xl font-black text-ink tracking-tight">{title}</h2>
+        <h2 id={id} className="text-lg sm:text-xl font-black text-ink tracking-tight font-morabba">{title}</h2>
       </div>
       {action && (
         <button

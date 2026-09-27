@@ -19,7 +19,7 @@ export function EmptyState({
         <Icon name={icon} className="w-6 h-6" />
       </span>
       <div>
-        <h2 className="text-sm font-black text-ink">{title}</h2>
+        <h2 className="text-sm font-black text-ink font-morabba">{title}</h2>
         <p className="text-xs text-muted max-w-xs mt-1 leading-relaxed">{text}</p>
       </div>
       {action && (
