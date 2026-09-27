@@ -2668,8 +2668,8 @@ function OfferDetails({
             priority
             className="w-full h-full object-cover"
           />
-          {/* Food Title & Description Overlay on bottom right/start of image */}
-          <div className="absolute inset-x-0 bottom-0 p-4 pt-12 bg-gradient-to-t from-black/90 via-black/55 to-transparent text-white space-y-1">
+          {/* Food Title, Description & Rating Overlay on bottom right/start of image */}
+          <div className="absolute inset-x-0 bottom-0 p-4 pt-14 bg-gradient-to-t from-black/90 via-black/60 to-transparent text-white space-y-1.5">
             <h1 id="offer-title" className="text-base sm:text-lg font-black leading-snug drop-shadow-sm">
               {offer.title}
             </h1>
@@ -2678,23 +2678,22 @@ function OfferDetails({
                 {offer.description}
               </p>
             )}
+            <div className="flex items-center gap-2 pt-0.5 text-xs text-white">
+              <span className="inline-flex items-center gap-1 font-bold drop-shadow-xs">
+                <Icon name="star" filled className="w-3.5 h-3.5 text-amber-400" />
+                <span>{decimalFa(offer.rating)}</span>
+                <span className="text-white/80 font-normal text-[11px]">({numberFa(offer.reviewCount)} نظر)</span>
+              </span>
+              <span className="text-white/40">•</span>
+              <span className="inline-flex items-center gap-1 font-medium text-[11px] text-white/85 drop-shadow-xs">
+                <Icon name="pin" className="w-3 h-3 text-white/70" />
+                <span>{distanceFa(offer.distanceKm)}</span>
+              </span>
+            </div>
           </div>
         </div>
 
         <div className="p-4 sm:p-5 space-y-4">
-          {/* Rating & Distance */}
-          <div className="flex items-center justify-between text-xs text-muted">
-            <span className="flex items-center gap-1.5 font-bold text-ink">
-              <Icon name="star" filled className="w-3.5 h-3.5 text-brand-2" />
-              <span>{decimalFa(offer.rating)}</span>
-              <span className="text-muted font-normal text-[11px]">({numberFa(offer.reviewCount)} نظر)</span>
-            </span>
-            <span className="flex items-center gap-1.5 font-medium">
-              <Icon name="pin" className="w-3.5 h-3.5 text-muted" />
-              <span>{distanceFa(offer.distanceKm)}</span>
-            </span>
-          </div>
-
           {/* Clean Merchant Header: Clickable Logo and Name (Profile text button removed) */}
           <div className="flex items-center gap-3">
             <button
@@ -2716,7 +2715,7 @@ function OfferDetails({
                   {formatMerchantWithCategory(offer.merchantName, offer.categoryLabel)}
                 </strong>
                 <span className="block text-[11px] text-muted font-medium mt-0.5 truncate">
-                  {offer.neighborhood} · {offer.categoryLabel}
+                  {offer.neighborhood} · {offer.categoryLabel} · {distanceFa(offer.distanceKm)}
                 </span>
               </button>
             </div>
