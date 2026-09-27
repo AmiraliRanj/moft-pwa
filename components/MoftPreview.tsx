@@ -34,7 +34,7 @@ type InstallPromptEvent = Event & {
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 };
 
-type Layer = "detail" | "reserve" | "filters" | "location" | "about" | "cancel" | "review" | "merchant" | null;
+type Layer = "detail" | "reserve" | "filters" | "location" | "about" | "cancel" | "review" | "merchant" | "receipt" | null;
 type SortMode = "nearest" | "popular" | "discount";
 
 const productCutoutByOffer: Record<string, string> = {
@@ -118,6 +118,9 @@ function customerReservation(order: Order, offers: MarketplaceOffer[], reviews: 
     hasReview: Boolean(review),
     reviewResponse: review?.response,
     createdAt: order.createdAt,
+    description: offer?.description ?? "بسته غافلگیرکننده با اقلام تازه روز",
+    allergens: offer?.allergens ?? [],
+    originalPrice: offer ? offer.originalValue * order.items[0].quantity : order.total,
   };
 }
 
@@ -160,6 +163,7 @@ export default function MoftPreview({
   const [successReservation, setSuccessReservation] = useState<Reservation | null>(null);
   const [cancelId, setCancelId] = useState<string | null>(null);
   const [reviewOrderId, setReviewOrderId] = useState<string | null>(null);
+  const [receiptReservation, setReceiptReservation] = useState<Reservation | null>(null);
   const [storageWarning, setStorageWarning] = useState(false);
   const [online, setOnline] = useState(true);
   const [notifications, setNotifications] = useState(true);
@@ -401,6 +405,11 @@ export default function MoftPreview({
     setQuantity(1);
     setLayer(null);
     switchTab("cart");
+  };
+
+  const openReceipt = (reservation: Reservation) => {
+    setReceiptReservation(reservation);
+    setLayer("receipt");
   };
 
   const completeReservation = () => {
@@ -691,6 +700,7 @@ export default function MoftPreview({
                 subTab={ordersSubTab}
                 onCancel={requestCancel}
                 onReview={requestReview}
+                onReceipt={openReceipt}
                 onDiscover={() => switchTab("discover")}
                 onDirections={() => showToast("مسیریابی این فروشگاه اکنون در دسترس نیست.")}
                 onTrackPipeline={() => switchTab("cart")}
@@ -736,6 +746,7 @@ export default function MoftPreview({
                 showToast={showToast}
                 onCancel={requestCancel}
                 onReview={requestReview}
+                onReceipt={openReceipt}
                 onDirections={() => showToast("مسیریابی این فروشگاه اکنون در دسترس نیست.")}
               />
             )}
@@ -842,6 +853,15 @@ export default function MoftPreview({
           onClose={closeMerchant}
           onSelectOffer={openOffer}
           onDirections={() => showToast("مسیریابی این فروشگاه اکنون در دسترس نیست.")}
+        />
+      )}
+      {layer === "receipt" && receiptReservation && (
+        <OrderReceiptModal
+          reservation={receiptReservation}
+          onClose={() => {
+            setLayer(null);
+            setReceiptReservation(null);
+          }}
         />
       )}
       <Toaster timeout={3400} limit={3} />
@@ -1838,6 +1858,7 @@ function OrdersPage({
   subTab = "active",
   onCancel,
   onReview,
+  onReceipt,
   onDiscover,
   onDirections,
   onTrackPipeline,
@@ -1847,6 +1868,7 @@ function OrdersPage({
   subTab?: "active" | "history";
   onCancel: (id: string) => void;
   onReview: (id: string) => void;
+  onReceipt?: (reservation: Reservation) => void;
   onDiscover: () => void;
   onDirections: () => void;
   onTrackPipeline?: (reservationId: string) => void;
@@ -1867,6 +1889,7 @@ function OrdersPage({
                 reservation={reservation}
                 onCancel={onCancel}
                 onReview={onReview}
+                onReceipt={onReceipt}
                 onDirections={onDirections}
                 onTrackPipeline={onTrackPipeline}
               />
@@ -1889,6 +1912,7 @@ function OrdersPage({
               reservation={reservation}
               onCancel={onCancel}
               onReview={onReview}
+              onReceipt={onReceipt}
               onDirections={onDirections}
             />
           ))}
@@ -1910,12 +1934,14 @@ function ReservationCard({
   reservation,
   onCancel,
   onReview,
+  onReceipt,
   onDirections,
   onTrackPipeline,
 }: {
   reservation: Reservation;
   onCancel: (id: string) => void;
   onReview: (id: string) => void;
+  onReceipt?: (reservation: Reservation) => void;
   onDirections: () => void;
   onTrackPipeline?: (reservationId: string) => void;
 }) {
@@ -1986,6 +2012,20 @@ function ReservationCard({
 
           {menuOpen && (
             <div className="absolute left-0 top-full mt-1.5 w-44 rounded-2xl bg-surface/95 backdrop-blur-md border border-line shadow-lg p-1.5 z-30 space-y-0.5 animate-in fade-in zoom-in-95 duration-150">
+              {onReceipt && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    onReceipt(reservation);
+                  }}
+                  className="w-full flex items-center gap-2 px-2.5 py-2 text-xs font-bold text-ink hover:bg-canvas rounded-xl transition-colors cursor-pointer text-start"
+                >
+                  <Icon name="receipt" className="w-4 h-4 text-brand-2 shrink-0" />
+                  <span>مشاهده رسید</span>
+                </button>
+              )}
+
               <button
                 type="button"
                 onClick={() => {
@@ -2051,19 +2091,21 @@ function ReservationCard({
         </div>
       </div>
 
-      {/* 3. Delivery Code Ticket Voucher (Clean, Prominent & Bold Vazir Font) */}
-      <div className="flex items-center justify-between px-3.5 py-2.5 rounded-2xl bg-brand-soft/40 dark:bg-[#F87F45]/10 border border-dashed border-brand-2/30 dark:border-[#F87F45]/25 min-w-0">
-        <div className="flex items-center gap-2 min-w-0">
-          <span className="w-7 h-7 rounded-xl bg-brand-soft dark:bg-[#F87F45]/20 text-brand-2 dark:text-[#FDA74D] grid place-items-center shrink-0 shadow-2xs">
-            <Icon name="receipt" className="w-4 h-4" />
-          </span>
-          <span className="text-xs font-bold text-muted shrink-0">کد تحویل:</span>
-        </div>
+      {/* 3. Delivery Code Ticket Voucher (Clean, Prominent & Bold Vazir Font) - Only shown for active orders */}
+      {reservation.status === "active" && (
+        <div className="flex items-center justify-between px-3.5 py-2.5 rounded-2xl bg-brand-soft/40 dark:bg-[#F87F45]/10 border border-dashed border-brand-2/30 dark:border-[#F87F45]/25 min-w-0">
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="w-7 h-7 rounded-xl bg-brand-soft dark:bg-[#F87F45]/20 text-brand-2 dark:text-[#FDA74D] grid place-items-center shrink-0 shadow-2xs">
+              <Icon name="receipt" className="w-4 h-4" />
+            </span>
+            <span className="text-xs font-bold text-muted shrink-0">کد تحویل:</span>
+          </div>
 
-        <span className="font-[family-name:var(--font-vazirmatn)] font-black text-xl sm:text-2xl text-brand-2 dark:text-[#FDA74D] tracking-wide select-all">
-          {faDigits(reservation.code)}
-        </span>
-      </div>
+          <span className="font-[family-name:var(--font-vazirmatn)] font-black text-xl sm:text-2xl text-brand-2 dark:text-[#FDA74D] tracking-wide select-all">
+            {faDigits(reservation.code)}
+          </span>
+        </div>
+      )}
 
       {reservation.reviewResponse && (
         <blockquote className="p-3 rounded-2xl bg-brand-soft/60 border-s-2 border-brand-2 text-xs text-ink space-y-1">
@@ -2072,7 +2114,7 @@ function ReservationCard({
         </blockquote>
       )}
 
-      {/* 4. Bottom Row: Primary Action */}
+      {/* 4. Bottom Row: Primary Actions */}
       {reservation.status === "active" && onTrackPipeline ? (
         <div className="pt-2 border-t border-line/60">
           <button
@@ -2085,22 +2127,44 @@ function ReservationCard({
           </button>
         </div>
       ) : reservation.status === "collected" ? (
-        <div className="pt-2 border-t border-line/60">
+        <div className="pt-2 border-t border-line/60 grid grid-cols-2 gap-2">
+          {onReceipt && (
+            <button
+              type="button"
+              onClick={() => onReceipt(reservation)}
+              className="min-h-[44px] inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs sm:text-sm font-bold rounded-2xl bg-surface border border-line text-ink hover:bg-canvas transition-colors cursor-pointer active:scale-[0.98]"
+            >
+              <Icon name="receipt" className="w-4 h-4 text-brand-2 shrink-0" />
+              <span>مشاهده رسید</span>
+            </button>
+          )}
+
           {!reservation.hasReview ? (
             <button
               type="button"
               onClick={() => onReview(reservation.id)}
-              className="w-full min-h-[44px] inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs sm:text-sm font-bold rounded-2xl bg-brand-2 text-white hover:opacity-95 transition-opacity cursor-pointer active:scale-[0.98] shadow-xs"
+              className={`min-h-[44px] inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs sm:text-sm font-bold rounded-2xl bg-brand-2 text-white hover:opacity-95 transition-opacity cursor-pointer active:scale-[0.98] shadow-xs ${!onReceipt ? "col-span-2 w-full" : ""}`}
             >
               <Icon name="star" className="w-4 h-4 shrink-0" />
               <span>ثبت نظر</span>
             </button>
           ) : (
-            <span className="w-full min-h-[44px] inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs sm:text-sm font-bold text-brand-2 bg-brand-soft rounded-2xl border border-brand-2/20 dark:text-[#FDA74D] dark:bg-[#F87F45]/10 dark:border-[#F87F45]/20">
+            <span className={`min-h-[44px] inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs sm:text-sm font-bold text-brand-2 bg-brand-soft rounded-2xl border border-brand-2/20 dark:text-[#FDA74D] dark:bg-[#F87F45]/10 dark:border-[#F87F45]/20 ${!onReceipt ? "col-span-2 w-full" : ""}`}>
               <Icon name="check" className="w-4 h-4 shrink-0" />
               <span>نظر ثبت شده</span>
             </span>
           )}
+        </div>
+      ) : reservation.status !== "active" && onReceipt ? (
+        <div className="pt-2 border-t border-line/60">
+          <button
+            type="button"
+            onClick={() => onReceipt(reservation)}
+            className="w-full min-h-[44px] inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs sm:text-sm font-bold rounded-2xl bg-surface border border-line text-ink hover:bg-canvas transition-colors cursor-pointer active:scale-[0.98]"
+          >
+            <Icon name="receipt" className="w-4 h-4 text-brand-2 shrink-0" />
+            <span>مشاهده رسید</span>
+          </button>
         </div>
       ) : null}
     </article>
@@ -2121,6 +2185,7 @@ function ProfilePage({
   showToast,
   onCancel,
   onReview,
+  onReceipt,
   onDirections,
 }: {
   savedMeals: number;
@@ -2136,6 +2201,7 @@ function ProfilePage({
   showToast: (message: string) => void;
   onCancel: (id: string) => void;
   onReview: (id: string) => void;
+  onReceipt?: (reservation: Reservation) => void;
   onDirections: () => void;
 }) {
   const { state, updateCustomer } = useDemo();
@@ -2180,6 +2246,7 @@ function ProfilePage({
                 reservation={reservation}
                 onCancel={onCancel}
                 onReview={onReview}
+                onReceipt={onReceipt}
                 onDirections={onDirections}
               />
             ))}
@@ -3265,6 +3332,133 @@ function CancelDialog({ onClose, onConfirm }: { onClose: () => void; onConfirm: 
             onClick={onConfirm}
           >
             بله، لغو کن
+          </button>
+        </div>
+      </div>
+    </DialogShell>
+  );
+}
+
+function OrderReceiptModal({
+  reservation,
+  onClose,
+}: {
+  reservation: Reservation;
+  onClose: () => void;
+}) {
+  return (
+    <DialogShell onClose={onClose} label="رسید الکترونیکی سفارش">
+      <div className="p-4 sm:p-5 space-y-4 max-h-[82vh] overflow-y-auto text-start">
+        {/* Header receipt badge & store */}
+        <div className="text-center space-y-2 pt-1 pb-3 border-b border-dashed border-line">
+          <div className="w-12 h-12 mx-auto rounded-2xl bg-brand-soft text-brand-2 dark:bg-[#F87F45]/15 dark:text-[#FDA74D] grid place-items-center shadow-2xs">
+            <Icon name="receipt" className="w-6 h-6" />
+          </div>
+          <div>
+            <h2 className="text-base sm:text-lg font-black text-ink">رسید سفارش دیبز</h2>
+            <p className="text-xs font-bold text-muted mt-0.5">{reservation.merchantName}</p>
+          </div>
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-canvas border border-line text-[11px] font-bold text-muted">
+            <span>شناسه سفارش:</span>
+            <span className="font-mono text-ink font-black">#{faDigits(reservation.id.replace("order-", ""))}</span>
+          </div>
+        </div>
+
+        {/* Date and Time Details */}
+        <div className="p-3.5 rounded-2xl bg-canvas border border-line space-y-2.5 text-xs">
+          <div className="flex items-center justify-between">
+            <span className="text-muted font-bold">زمان و بازه تحویل:</span>
+            <span className="font-bold text-ink">{reservation.pickup}</span>
+          </div>
+          <div className="flex items-start justify-between gap-2">
+            <span className="text-muted font-bold shrink-0">آدرس دریافت:</span>
+            <span className="font-bold text-ink text-end leading-tight">{reservation.address}</span>
+          </div>
+          {reservation.createdAt && (
+            <div className="flex items-center justify-between">
+              <span className="text-muted font-bold">تاریخ ثبت سفارش:</span>
+              <span className="font-bold text-muted">{formatJalaliDate(reservation.createdAt)}</span>
+            </div>
+          )}
+          <div className="flex items-center justify-between">
+            <span className="text-muted font-bold">وضعیت سفارش:</span>
+            <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-bold">
+              <Icon name="check" className="w-3.5 h-3.5" />
+              <span>تحویل حضوری با موفقیت انجام شد</span>
+            </span>
+          </div>
+        </div>
+
+        {/* Items and Ingredients / Contents */}
+        <div className="p-3.5 rounded-2xl bg-canvas border border-line space-y-3">
+          <div className="flex items-center justify-between border-b border-line/60 pb-2">
+            <span className="text-xs font-black text-ink">اقلام و ترکیبات بسته</span>
+            <span className="text-[11px] font-bold text-brand-2 bg-brand-soft px-2 py-0.5 rounded-md">
+              {numberFa(reservation.quantity || 1)} بسته
+            </span>
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center justify-between text-xs">
+              <strong className="font-black text-ink">{reservation.title}</strong>
+              <span className="font-bold text-ink">{money(reservation.total)}</span>
+            </div>
+
+            {/* Description / Ingredients */}
+            {reservation.description && (
+              <div className="p-2.5 rounded-xl bg-surface border border-line/50 text-[11.5px] text-muted leading-relaxed">
+                <span className="font-bold text-ink block mb-0.5">ترکیبات و محتویات:</span>
+                <p className="text-ink/80">{reservation.description}</p>
+              </div>
+            )}
+
+            {/* Allergens / Dietary tags */}
+            {reservation.allergens && reservation.allergens.length > 0 && (
+              <div className="flex items-center flex-wrap gap-1.5 pt-1">
+                <span className="text-[10.5px] text-muted font-bold">ترکیبات حساسیت‌زا:</span>
+                {reservation.allergens.map((allergen) => (
+                  <span
+                    key={allergen}
+                    className="px-2 py-0.5 rounded-md bg-amber-500/15 border border-amber-500/25 text-[10.5px] font-bold text-amber-800 dark:text-amber-300"
+                  >
+                    {allergen}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Price Breakdown */}
+        <div className="p-3.5 rounded-2xl bg-canvas border border-line space-y-2 text-xs">
+          <div className="flex items-center justify-between">
+            <span className="text-muted font-bold">روش پرداخت:</span>
+            <span className="font-bold text-ink">پرداخت شبیه‌سازی‌شده (کیف پول دیبز)</span>
+          </div>
+
+          {reservation.originalPrice && reservation.originalPrice > reservation.total && (
+            <div className="flex items-center justify-between text-muted">
+              <span>ارزش مرجع بسته:</span>
+              <del className="font-mono">{money(reservation.originalPrice)}</del>
+            </div>
+          )}
+
+          <div className="flex items-center justify-between pt-2 border-t border-line/60">
+            <span className="text-sm font-black text-ink">مبلغ پرداخت‌شده:</span>
+            <span className="text-base sm:text-lg font-black text-brand-2 dark:text-[#FDA74D]">
+              {money(reservation.total)}
+            </span>
+          </div>
+        </div>
+
+        {/* Close Button */}
+        <div className="pt-1">
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-full min-h-[44px] py-2.5 px-4 rounded-2xl bg-surface border border-line text-ink font-black text-xs sm:text-sm hover:bg-canvas transition-colors cursor-pointer active:scale-[0.98]"
+          >
+            بستن رسید
           </button>
         </div>
       </div>

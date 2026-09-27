@@ -54,6 +54,9 @@ export type Reservation = {
   hasReview?: boolean;
   reviewResponse?: string;
   createdAt: string;
+  description?: string;
+  allergens?: string[];
+  originalPrice?: number;
 };
 
 export type ThemePreference = "light" | "dark";
