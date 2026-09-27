@@ -422,6 +422,20 @@ export default function MoftPreview({
     showToast("به سبد خرید اضافه شد.", "success");
   };
 
+  const handleDecrementFromCart = (offerId: string) => {
+    setCartItems((prev) => {
+      const found = prev.find((item) => item.offer.id === offerId);
+      if (!found) return prev;
+      if (found.quantity <= 1) {
+        showToast("از سبد خرید حذف شد.", "info");
+        return prev.filter((item) => item.offer.id !== offerId);
+      }
+      return prev.map((item) =>
+        item.offer.id === offerId ? { ...item, quantity: item.quantity - 1 } : item
+      );
+    });
+  };
+
   const handleUpdateCartQuantity = (offerId: string, q: number) => {
     setCartItems((prev) =>
       prev.map((item) => (item.offer.id === offerId ? { ...item, quantity: q } : item))
@@ -801,7 +815,8 @@ export default function MoftPreview({
           favorite={favorites.has(selected.id)}
           onFavorite={toggleFavorite}
           onClose={closeOffer}
-          onReserve={openReservation}
+          onIncrement={openReservation}
+          onDecrement={() => handleDecrementFromCart(selected.id)}
           inCartQuantity={cartItems.find((it) => it.offer.id === selected.id)?.quantity ?? 0}
           onOpenMerchant={openMerchant}
           related={offers.filter((offer) => offer.category === selected.category && offer.id !== selected.id).slice(0, 2)}
@@ -2691,7 +2706,8 @@ function EditProfileDialog({
 function OfferDetails({
   offer,
   onClose,
-  onReserve,
+  onIncrement,
+  onDecrement,
   inCartQuantity = 0,
   onOpenMerchant,
   related,
@@ -2703,7 +2719,8 @@ function OfferDetails({
   favorite?: boolean;
   onFavorite: (id: string) => void;
   onClose: () => void;
-  onReserve: () => void;
+  onIncrement: () => void;
+  onDecrement: () => void;
   inCartQuantity?: number;
   onOpenMerchant?: (offer: Offer) => void;
   related: Offer[];
@@ -2856,39 +2873,55 @@ function OfferDetails({
         </div>
       </div>
 
-      {/* Sticky Bottom Reservation Bar */}
+      {/* Sticky Bottom Reservation Bar with Live Price & Stepper CTA */}
       <div className="sticky bottom-0 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] border-t border-line bg-surface/95 backdrop-blur-md flex items-center justify-between gap-4">
-        <div>
-          <del className="block text-xs text-muted line-through">{money(offer.originalPrice)}</del>
-          <strong className="block text-sm font-black text-ink">{money(offer.price)}</strong>
-          <small className="block text-[10px] text-muted">برای هر جعبه</small>
+        <div className="min-w-0">
+          <del className="block text-xs text-muted line-through">
+            {money(offer.originalPrice * (inCartQuantity > 0 ? inCartQuantity : 1))}
+          </del>
+          <strong className="block text-sm sm:text-base font-black text-ink">
+            {money(offer.price * (inCartQuantity > 0 ? inCartQuantity : 1))}
+          </strong>
+          <small className="block text-[10.5px] text-muted">
+            {inCartQuantity > 1 ? `برای ${numberFa(inCartQuantity)} جعبه` : "برای هر جعبه"}
+          </small>
         </div>
-        <button
-          className={`inline-flex items-center justify-center gap-1.5 min-w-[140px] sm:min-w-[170px] h-12 min-h-[48px] px-6 sm:px-8 text-xs sm:text-sm font-bold rounded-2xl shadow-xs transition-all active:scale-[0.98] cursor-pointer disabled:opacity-50 ${
-            inCartQuantity > 0
-              ? "bg-emerald-600 hover:bg-emerald-700 text-white"
-              : "bg-brand-2 text-white hover:opacity-90"
-          }`}
-          type="button"
-          disabled={offer.quantityLeft < 1}
-          onClick={onReserve}
-        >
-          {offer.quantityLeft < 1 ? (
-            "تمام شد"
-          ) : inCartQuantity > 0 ? (
-            <>
-              <Icon name="check" className="w-4 h-4 text-white shrink-0" />
-              <span>به سبد خرید اضافه شد</span>
-              {inCartQuantity > 1 && (
-                <span className="text-[11px] bg-white/25 px-1.5 py-0.2 rounded-full ms-0.5 font-bold">
-                  ({numberFa(inCartQuantity)})
-                </span>
-              )}
-            </>
-          ) : (
-            "رزرو جعبه"
-          )}
-        </button>
+
+        {inCartQuantity > 0 ? (
+          <div className="inline-flex items-center justify-between min-w-[140px] sm:min-w-[160px] h-12 min-h-[48px] px-2.5 rounded-2xl bg-brand-2 text-white shadow-xs transition-all">
+            <button
+              type="button"
+              onClick={onIncrement}
+              disabled={inCartQuantity >= Math.min(3, offer.quantityLeft)}
+              aria-label="افزایش تعداد"
+              className="w-8 h-8 rounded-xl bg-white/20 hover:bg-white/30 active:scale-95 disabled:opacity-40 transition-all flex items-center justify-center text-white cursor-pointer"
+            >
+              <Icon name="plus" className="w-4 h-4" />
+            </button>
+
+            <span className="font-[family-name:var(--font-vazirmatn)] font-black text-sm text-white px-2 select-none">
+              <AnimatedNumber value={inCartQuantity} />
+            </span>
+
+            <button
+              type="button"
+              onClick={onDecrement}
+              aria-label={inCartQuantity === 1 ? "حذف از سبد خرید" : "کاهش تعداد"}
+              className="w-8 h-8 rounded-xl bg-white/20 hover:bg-white/30 active:scale-95 transition-all flex items-center justify-center text-white cursor-pointer"
+            >
+              <Icon name={inCartQuantity === 1 ? "trash" : "minus"} className="w-4 h-4" />
+            </button>
+          </div>
+        ) : (
+          <button
+            className="inline-flex items-center justify-center min-w-[140px] sm:min-w-[160px] h-12 min-h-[48px] px-8 text-xs sm:text-sm font-bold rounded-2xl bg-brand-2 text-white hover:opacity-90 shadow-xs transition-all disabled:opacity-50 active:scale-[0.98] cursor-pointer"
+            type="button"
+            disabled={offer.quantityLeft < 1}
+            onClick={onIncrement}
+          >
+            {offer.quantityLeft < 1 ? "تمام شد" : "رزرو جعبه"}
+          </button>
+        )}
       </div>
     </DialogShell>
   );
