@@ -174,6 +174,7 @@ export default function MoftPreview({
   const [favoritesOnly, setFavoritesOnly] = useState(initialFavoritesOnly);
   const [location, setLocation] = useState("تهران، ونک");
   const [searchVisible, setSearchVisible] = useState(true);
+  const [ordersSubTab, setOrdersSubTab] = useState<"active" | "history">("active");
   const lastScrollYRef = useRef(0);
   const isInputFocusedRef = useRef(false);
   const routeHandledRef = useRef(false);
@@ -288,6 +289,10 @@ export default function MoftPreview({
   }, [initialOfferId, offers]);
 
   const activeReservations = reservations.filter((item) => item.status === "active");
+  const pastReservations = useMemo(
+    () => reservations.filter((item) => item.status !== "active"),
+    [reservations]
+  );
   const favoriteSet = favorites;
 
   const baseFilteredOffers = useMemo(() => {
@@ -464,8 +469,8 @@ export default function MoftPreview({
     .reduce((sum, item) => sum + item.quantity, 0);
 
   return (
-    <div className="min-h-screen bg-canvas text-ink font-sans w-full max-w-full overflow-x-hidden">
-      <main className={`w-full max-w-full overflow-x-hidden ${tab === "discover" ? "h-dvh max-h-dvh overflow-hidden pb-0 overscroll-none select-none" : "pb-28 sm:pb-32"}`}>
+    <div className="min-h-screen bg-canvas text-ink font-sans w-full max-w-full overflow-x-clip">
+      <main className={`w-full max-w-full overflow-x-clip ${tab === "discover" ? "h-dvh max-h-dvh overflow-hidden pb-0 overscroll-none select-none" : "pb-28 sm:pb-32"}`}>
         <a
         className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:start-2 focus:z-50 px-3 py-1 bg-surface text-ink rounded-lg border border-line"
         href="#main-content"
@@ -508,7 +513,7 @@ export default function MoftPreview({
         <div className="max-w-md mx-auto px-4">
           <header className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 min-h-[56px] sm:min-h-[60px] py-3">
             <div className="flex items-center justify-start">
-              {tab === "reservations" || tab === "cart" ? (
+              {tab === "reservations" || tab === "orders" || tab === "cart" ? (
                 <button
                   type="button"
                   onClick={handleBackFromReservations}
@@ -570,7 +575,7 @@ export default function MoftPreview({
             )}
 
             <div className="flex justify-end">
-              {tab !== "reservations" && tab !== "cart" ? (
+              {tab !== "reservations" && tab !== "orders" && tab !== "cart" ? (
                 <button
                   className="relative w-11 h-11 rounded-2xl transition-all active:scale-95 cursor-pointer grid place-items-center bg-transparent text-ink hover:text-brand-2 hover:bg-surface/60"
                   type="button"
@@ -613,6 +618,36 @@ export default function MoftPreview({
               />
             </div>
           )}
+
+          {/* Fixed Sub-tab segmented control (orders/reservations tab) */}
+          {(tab === "reservations" || tab === "orders") && (
+            <div className="pb-3">
+              <div className="flex items-center p-1 rounded-2xl bg-surface border border-line overflow-hidden shadow-2xs">
+                <button
+                  type="button"
+                  onClick={() => setOrdersSubTab("active")}
+                  className={`flex-1 min-w-0 min-h-[38px] rounded-xl text-xs font-bold transition-all cursor-pointer text-center truncate px-2 ${
+                    ordersSubTab === "active"
+                      ? "bg-brand-soft text-brand-2 font-black shadow-2xs"
+                      : "text-muted hover:text-ink"
+                  }`}
+                >
+                  سفارش‌های جاری ({numberFa(activeReservations.length)})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setOrdersSubTab("history")}
+                  className={`flex-1 min-w-0 min-h-[38px] rounded-xl text-xs font-bold transition-all cursor-pointer text-center truncate px-2 ${
+                    ordersSubTab === "history"
+                      ? "bg-brand-soft text-brand-2 font-black shadow-2xs"
+                      : "text-muted hover:text-ink"
+                  }`}
+                >
+                  تاریخچه ({numberFa(pastReservations.length)})
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -653,6 +688,7 @@ export default function MoftPreview({
               <OrdersPage
                 active={activeReservations}
                 reservations={reservations}
+                subTab={ordersSubTab}
                 onCancel={requestCancel}
                 onReview={requestReview}
                 onDiscover={() => switchTab("discover")}
@@ -1799,6 +1835,7 @@ function DiscoverPage({
 function OrdersPage({
   active,
   reservations,
+  subTab = "active",
   onCancel,
   onReview,
   onDiscover,
@@ -1807,13 +1844,13 @@ function OrdersPage({
 }: {
   active: Reservation[];
   reservations: Reservation[];
+  subTab?: "active" | "history";
   onCancel: (id: string) => void;
   onReview: (id: string) => void;
   onDiscover: () => void;
   onDirections: () => void;
   onTrackPipeline?: (reservationId: string) => void;
 }) {
-  const [subTab, setSubTab] = useState<"active" | "history">("active");
   const pastOrders = useMemo(
     () => reservations.filter((item) => item.status !== "active"),
     [reservations]
@@ -1821,32 +1858,6 @@ function OrdersPage({
 
   return (
     <div className="space-y-4">
-      {/* Sub-tab segmented control */}
-      <div className="flex items-center p-1 rounded-2xl bg-surface border border-line overflow-hidden">
-        <button
-          type="button"
-          onClick={() => setSubTab("active")}
-          className={`flex-1 min-w-0 min-h-[38px] rounded-xl text-xs font-bold transition-all cursor-pointer text-center truncate px-2 ${
-            subTab === "active"
-              ? "bg-brand-soft text-brand-2 font-black shadow-2xs"
-              : "text-muted hover:text-ink"
-          }`}
-        >
-          سفارش‌های جاری ({numberFa(active.length)})
-        </button>
-        <button
-          type="button"
-          onClick={() => setSubTab("history")}
-          className={`flex-1 min-w-0 min-h-[38px] rounded-xl text-xs font-bold transition-all cursor-pointer text-center truncate px-2 ${
-            subTab === "history"
-              ? "bg-brand-soft text-brand-2 font-black shadow-2xs"
-              : "text-muted hover:text-ink"
-          }`}
-        >
-          تاریخچه ({numberFa(pastOrders.length)})
-        </button>
-      </div>
-
       {subTab === "active" ? (
         active.length ? (
           <div className="grid gap-3 min-w-0 w-full max-w-full">
