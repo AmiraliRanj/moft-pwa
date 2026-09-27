@@ -12,7 +12,7 @@ import type {
   Review,
 } from "@/types/demo";
 
-export const DEMO_STATE_VERSION = 3;
+export const DEMO_STATE_VERSION = 4;
 export const DEMO_STORAGE_KEY = "moft-unified-demo-v1";
 export const DEMO_BUSINESS_ID = "business-vienna";
 export const DEMO_CUSTOMER_ID = "customer-sara";
@@ -114,17 +114,77 @@ const orderStatuses: OrderStatus[] = [
   "ready_for_pickup", "paid", "reviewed", "preparing", "completed", "completed", "cancelled", "no_show", "under_review", "completed",
 ];
 
-const orders: Order[] = Array.from({ length: 25 }, (_, index) => {
-  const offer = businessOffers[index % businessOffers.length];
-  const quantity = index % 5 === 0 ? 2 : 1;
-  const status = orderStatuses[index % orderStatuses.length];
+const customerOrders: Order[] = [
+  // 1. Order for TODAY (Active - Ready for pickup tonight):
+  {
+    id: "order-001",
+    code: "MF-4829",
+    customerId: DEMO_CUSTOMER_ID,
+    customerName: "سارا احمدی",
+    businessId: DEMO_BUSINESS_ID,
+    branchId: businessOffers[0].branchId,
+    items: [{ offerId: businessOffers[0].id, title: businessOffers[0].title, unitPrice: businessOffers[0].salePrice, quantity: 1 }],
+    total: businessOffers[0].salePrice,
+    paymentStatus: "simulated_paid",
+    pickupDate: "today",
+    pickupStart: "۲۰:۰۰",
+    pickupEnd: "۲۱:۰۰",
+    pickupCode: {
+      value: "482913",
+      usedAt: null,
+      status: "active",
+    },
+    status: "ready_for_pickup",
+    createdAt: iso(0, 18, 30),
+    updatedAt: iso(0, 19, 15),
+    history: [
+      { status: "paid", at: iso(0, 18, 30), note: "پرداخت شبیه‌سازی‌شده انجام شد." },
+      { status: "preparing", at: iso(0, 18, 45), note: "فروشگاه بسته را کنار گذاشت." },
+      { status: "ready_for_pickup", at: iso(0, 19, 15), note: "بسته آماده تحویل حضوری است." },
+    ],
+  },
+  // 2. Order for the PAST (Completed & collected):
+  {
+    id: "order-002",
+    code: "MF-3101",
+    customerId: DEMO_CUSTOMER_ID,
+    customerName: "سارا احمدی",
+    businessId: DEMO_BUSINESS_ID,
+    branchId: businessOffers[1].branchId,
+    items: [{ offerId: businessOffers[1].id, title: businessOffers[1].title, unitPrice: businessOffers[1].salePrice, quantity: 1 }],
+    total: businessOffers[1].salePrice,
+    paymentStatus: "simulated_paid",
+    pickupDate: "2026-09-06",
+    pickupStart: "۱۹:۳۰",
+    pickupEnd: "۲۰:۳۰",
+    pickupCode: {
+      value: "518240",
+      usedAt: iso(-5, 20, 10),
+      status: "used",
+    },
+    status: "completed",
+    createdAt: iso(-5, 17, 20),
+    updatedAt: iso(-5, 20, 10),
+    history: [
+      { status: "paid", at: iso(-5, 17, 20), note: "پرداخت ثبت شد." },
+      { status: "completed", at: iso(-5, 20, 10), note: "بسته با موفقیت تحویل داده شد." },
+    ],
+  },
+];
+
+const otherCustomerNames = ["نگار مرادی", "پارسا شریفی", "رها کریمی", "آرین محمدی", "سحر ابراهیمی", "امیرحسین فلاحی"];
+
+const otherOrders: Order[] = Array.from({ length: 23 }, (_, index) => {
+  const offer = businessOffers[(index + 1) % businessOffers.length];
+  const quantity = index % 4 === 0 ? 2 : 1;
+  const status = orderStatuses[(index + 1) % orderStatuses.length];
   const createdAt = iso(-(index % 12), 9 + (index % 10), (index * 7) % 60);
   const completed = status === "completed";
   return {
-    id: `order-${String(index + 1).padStart(3, "0")}`,
-    code: `MF-${String(3100 + index)}`,
-    customerId: index < 6 ? DEMO_CUSTOMER_ID : `customer-${index + 1}`,
-    customerName: index < 6 ? "سارا احمدی" : ["نگار مرادی", "پارسا شریفی", "رها کریمی", "آرین محمدی"][index % 4],
+    id: `order-${String(index + 3).padStart(3, "0")}`,
+    code: `MF-${String(3102 + index)}`,
+    customerId: `customer-${index + 2}`,
+    customerName: otherCustomerNames[index % otherCustomerNames.length],
     businessId: DEMO_BUSINESS_ID,
     branchId: offer.branchId,
     items: [{ offerId: offer.id, title: offer.title, unitPrice: offer.salePrice, quantity }],
@@ -134,7 +194,7 @@ const orders: Order[] = Array.from({ length: 25 }, (_, index) => {
     pickupStart: offer.pickupStart,
     pickupEnd: offer.pickupEnd,
     pickupCode: {
-      value: index === 0 ? "482913" : String(510000 + index * 137).slice(0, 6),
+      value: String(520000 + index * 149).slice(0, 6),
       usedAt: completed ? iso(-(index % 10), 20) : null,
       status: completed ? "used" : status === "cancelled" ? "invalidated" : "active",
     },
@@ -148,23 +208,41 @@ const orders: Order[] = Array.from({ length: 25 }, (_, index) => {
   };
 });
 
-const reviews: Review[] = Array.from({ length: 15 }, (_, index) => {
-  const order = orders[(index * 3 + 4) % orders.length];
-  return {
-    id: `review-${index + 1}`,
-    orderId: order.id,
-    offerId: order.items[0].offerId,
+const orders: Order[] = [...customerOrders, ...otherOrders];
+
+const reviews: Review[] = [
+  {
+    id: "review-customer-1",
+    orderId: "order-002",
+    offerId: businessOffers[1].id,
     businessId: DEMO_BUSINESS_ID,
-    branchId: order.branchId,
-    customerId: order.customerId,
-    customerName: order.customerName,
-    rating: [5, 4, 5, 3, 4][index % 5],
-    comment: ["بسته تازه و خوشمزه بود.", "تحویل سریع انجام شد، ممنون.", "ارزش خرید خیلی خوبی داشت.", "تنوع بسته می‌توانست بهتر باشد.", "برخورد کارکنان عالی بود."][index % 5],
-    response: index % 3 === 0 ? "ممنون که تجربه‌تان را با ما به اشتراک گذاشتید." : "",
-    respondedAt: index % 3 === 0 ? iso(-(index % 8), 15) : null,
-    createdAt: iso(-(index + 1), 14),
-  };
-});
+    branchId: businessOffers[1].branchId,
+    customerId: DEMO_CUSTOMER_ID,
+    customerName: "سارا احمدی",
+    rating: 5,
+    comment: "بسته بسیار تازه و باکیفیت بود، نان‌ها و شیرینی‌ها عالی بودند و از اسراف جلوگیری شد.",
+    response: "ممنون سارا عزیز، خوشحالیم که از بسته روز راضی بودید!",
+    respondedAt: iso(-4, 11),
+    createdAt: iso(-5, 21),
+  },
+  ...Array.from({ length: 14 }, (_, index) => {
+    const order = otherOrders[index % otherOrders.length];
+    return {
+      id: `review-${index + 2}`,
+      orderId: order.id,
+      offerId: order.items[0].offerId,
+      businessId: DEMO_BUSINESS_ID,
+      branchId: order.branchId,
+      customerId: order.customerId,
+      customerName: order.customerName,
+      rating: [5, 4, 5, 4, 5][index % 5],
+      comment: ["بسته تازه و خوشمزه بود.", "تحویل سریع انجام شد، ممنون.", "ارزش خرید خیلی خوبی داشت.", "تنوع بسته می‌توانست بهتر باشد.", "برخورد کارکنان عالی بود."][index % 5],
+      response: index % 2 === 0 ? "ممنون که تجربه‌تان را با ما به اشتراک گذاشتید." : "",
+      respondedAt: index % 2 === 0 ? iso(-(index % 8), 15) : null,
+      createdAt: iso(-(index + 1), 14),
+    };
+  }),
+];
 
 const complaintCategories: Complaint["category"][] = ["quality", "quantity", "description", "pickup", "behavior", "payment"];
 const complaintStatuses: Complaint["status"][] = ["new", "reviewing", "responded", "escalated", "closed", "new"];

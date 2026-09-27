@@ -77,6 +77,11 @@ const faJalaliDate = new Intl.DateTimeFormat("fa-IR-u-ca-persian", { day: "numer
 
 export function formatJalaliDate(dateInput: string | Date): string {
   try {
+    if (typeof dateInput === "string") {
+      const trimmed = dateInput.trim().toLowerCase();
+      if (trimmed === "today" || trimmed === "امروز") return "امروز";
+      if (trimmed === "yesterday" || trimmed === "دیروز") return "دیروز";
+    }
     let d: Date;
     if (typeof dateInput === "string") {
       const asciiDate = dateInput.replace(/[۰-۹]/g, (w) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(w)));
