@@ -103,7 +103,7 @@ export function DialogShell({
               ? "bg-black/50 hover:bg-black/70 text-white backdrop-blur-md border border-white/20 shadow-md"
               : size === "detail"
               ? "bg-surface/80 border border-line backdrop-blur-md text-muted hover:text-ink"
-              : "text-muted hover:text-ink hover:bg-canvas"
+              : "bg-surface/90 hover:bg-canvas border border-line/60 text-muted hover:text-ink shadow-2xs backdrop-blur-sm"
           }`}
           type="button"
           onClick={onClose}

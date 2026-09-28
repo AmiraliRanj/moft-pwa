@@ -25,9 +25,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Toaster, toast as toastManager } from "@/components/ui/toast";
 import { useDemo } from "@/demo/DemoProvider";
 import { remainingQuantity } from "@/lib/demo-format";
-import { decimalFa, discountPercent, distanceFa, formatJalaliDate, formatMerchantWithCategory, formatPickupDate, money, moneyCompact, numberFa } from "@/lib/moft-format";
+import { decimalFa, discountPercent, distanceFa, formatJalaliDate, formatMerchantWithCategory, formatPickupDate, groupReservationsByMerchant, money, moneyCompact, numberFa, toGroupedReservation } from "@/lib/moft-format";
 import type { MarketplaceOffer, Order } from "@/types/demo";
-import type { AppTab, CategoryId, Offer, PickupPeriod, Reservation, ThemePreference } from "@/types/moft";
+import type { AppTab, CategoryId, GroupedReservation, Offer, PickupPeriod, Reservation, ThemePreference } from "@/types/moft";
 
 type InstallPromptEvent = Event & {
   prompt: () => Promise<void>;
@@ -138,6 +138,12 @@ export default function MoftPreview({
   const { state, placeOrder, transitionOrder, submitReview } = useDemo();
   const [tab, setTab] = useState<AppTab>(initialTab);
   const [discoverMode, setDiscoverMode] = useState<"feed" | "map">("feed");
+  const handleDiscoverModeChange = useCallback((nextMode: "feed" | "map") => {
+    if (nextMode === "map") {
+      window.scrollTo({ top: 0, behavior: "instant" });
+    }
+    setDiscoverMode(nextMode);
+  }, []);
   const [previousTab, setPreviousTab] = useState<AppTab>("home");
   const [cartClosing, setCartClosing] = useState(false);
   const [category, setCategory] = useState<CategoryId>("all");
@@ -164,7 +170,7 @@ export default function MoftPreview({
   const [successReservation, setSuccessReservation] = useState<Reservation | null>(null);
   const [cancelId, setCancelId] = useState<string | null>(null);
   const [reviewOrderId, setReviewOrderId] = useState<string | null>(null);
-  const [receiptReservation, setReceiptReservation] = useState<Reservation | null>(null);
+  const [receiptReservation, setReceiptReservation] = useState<GroupedReservation | Reservation | null>(null);
   const [storageWarning, setStorageWarning] = useState(false);
   const [online, setOnline] = useState(true);
   const [notifications, setNotifications] = useState(true);
@@ -298,6 +304,14 @@ export default function MoftPreview({
   const pastReservations = useMemo(
     () => reservations.filter((item) => item.status !== "active"),
     [reservations]
+  );
+  const activeReservationGroups = useMemo(
+    () => groupReservationsByMerchant(activeReservations),
+    [activeReservations]
+  );
+  const pastReservationGroups = useMemo(
+    () => groupReservationsByMerchant(pastReservations),
+    [pastReservations]
   );
   const favoriteSet = favorites;
 
@@ -448,8 +462,8 @@ export default function MoftPreview({
     setCartItems([]);
   };
 
-  const openReceipt = (reservation: Reservation) => {
-    setReceiptReservation(reservation);
+  const openReceipt = (target: Reservation | GroupedReservation) => {
+    setReceiptReservation(target);
     setLayer("receipt");
   };
 
@@ -482,12 +496,16 @@ export default function MoftPreview({
 
   const confirmCancel = () => {
     if (!cancelId) return;
-    const result = transitionOrder(cancelId, "cancelled");
-    if (!result.ok) {
-      showToast(result.error);
-      setLayer(null);
-      setCancelId(null);
-      return;
+    const targetReservation = reservations.find((r) => r.id === cancelId);
+    if (targetReservation) {
+      const siblings = reservations.filter(
+        (r) => r.merchantName === targetReservation.merchantName && r.status === "active"
+      );
+      for (const sib of siblings) {
+        transitionOrder(sib.id, "cancelled");
+      }
+    } else {
+      transitionOrder(cancelId, "cancelled");
     }
     setLayer(null);
     setCancelId(null);
@@ -682,7 +700,7 @@ export default function MoftPreview({
                       : "text-muted hover:text-ink"
                   }`}
                 >
-                  سفارش‌های جاری ({numberFa(activeReservations.length)})
+                  سفارش‌های جاری ({numberFa(activeReservationGroups.length)})
                 </button>
                 <button
                   type="button"
@@ -693,7 +711,7 @@ export default function MoftPreview({
                       : "text-muted hover:text-ink"
                   }`}
                 >
-                  تاریخچه ({numberFa(pastReservations.length)})
+                  تاریخچه ({numberFa(pastReservationGroups.length)})
                 </button>
               </div>
             </div>
@@ -719,7 +737,7 @@ export default function MoftPreview({
             showToast={showToast}
             onFilters={() => setLayer("filters")}
             mode={discoverMode}
-            onModeChange={setDiscoverMode}
+            onModeChange={handleDiscoverModeChange}
             searchVisible={searchVisible}
           />
         </div>
@@ -904,7 +922,8 @@ export default function MoftPreview({
       )}
       {layer === "receipt" && receiptReservation && (
         <OrderReceiptModal
-          reservation={receiptReservation}
+          group={"items" in receiptReservation ? receiptReservation : undefined}
+          reservation={!("items" in receiptReservation) ? receiptReservation : undefined}
           onClose={() => {
             setLayer(null);
             setReceiptReservation(null);
@@ -1489,7 +1508,11 @@ function DiscoverPage({
   return (
     <div className={`relative w-full ${mode === "map" ? "h-full overflow-hidden bg-[#edf1ed] dark:bg-[#121316]" : "min-h-full"} flex flex-col`}>
       {/* Top Header Panel: View Switcher (Feed vs Map) and Category / Smart Filters */}
-      <div className="w-full bg-canvas/95 backdrop-blur-xl border-b border-line shadow-2xs px-4 py-2 z-20 shrink-0 sticky top-[56px] sm:top-[60px]">
+      <div
+        className={`w-full bg-canvas/95 backdrop-blur-xl border-b border-line shadow-2xs px-4 py-2 z-20 shrink-0 ${
+          mode === "map" ? "sticky top-0" : "sticky top-[56px] sm:top-[60px]"
+        }`}
+      >
         <div className="max-w-md mx-auto">
           {/* Row 1: Segmented Switcher & Filter Button (collapsible on scroll like search bar) */}
           <div
@@ -2148,7 +2171,7 @@ function DiscoverPage({
                 <Icon name="flame" className="w-4 h-4" />
               </span>
               <div>
-                <h2 id="hot-heading" className="text-sm font-black text-ink tracking-tight">
+                <h2 id="hot-heading" className="text-sm sm:text-base font-black text-ink font-morabba tracking-tight">
                   شکار داغ امروز
                 </h2>
                 <p className="text-[11px] text-muted">بیشترین تخفیف‌های نجات غذا در ونک</p>
@@ -2212,58 +2235,76 @@ function DiscoverPage({
           )}
         </section>
 
-        {/* Section 3: رادار پیاده‌روی و دسترسی سریع | Walking Proximity Radar */}
-        <div className="p-3.5 rounded-2xl bg-surface border border-line flex items-center justify-between gap-3 shadow-2xs">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <span className="w-8 h-8 rounded-xl bg-brand-soft text-brand-2 grid place-items-center shrink-0">
-              <Icon name="route" className="w-4 h-4" />
-            </span>
-            <div className="min-w-0">
-              <strong className="block text-xs font-black text-ink truncate">رادار فاصلهٔ پیاده‌روی</strong>
-              <small className="block text-[10.5px] text-muted truncate">موقعیت مرجع: تهران، میدان ونک</small>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-1 shrink-0">
-            {[
-              { label: "همه", val: null },
-              { label: "۱.۵ ک‌م", val: 1.5 },
-              { label: "۳ ک‌م", val: 3 },
-            ].map((item) => (
-              <button
-                key={item.label}
-                type="button"
-                onClick={() => setWalkRadius(item.val)}
-                className={`px-2.5 py-1 min-h-[30px] rounded-lg text-[10.5px] font-bold transition-all cursor-pointer ${
-                  walkRadius === item.val
-                    ? "bg-brand-2 text-white font-black shadow-2xs"
-                    : "bg-canvas text-muted hover:text-ink border border-line/60"
-                }`}
-              >
-                {item.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Section 4: فهرست جعبه‌های کاوش | Discovery Offers Grid */}
+        {/* Section 3: فهرست جعبه‌های کاوش به همراه رادار پیاده‌روی | Discovery Offers Grid with Integrated Walking Radar */}
         <section className="space-y-3" aria-labelledby="feed-offers-heading">
-          <div className="flex items-center justify-between">
-            <h2 id="feed-offers-heading" className="text-xs font-bold text-muted">
-              {numberFa(feedOffers.length)} جعبه برای نجات در اطراف شما
-            </h2>
-            {smartFilter !== "all" && (
-              <button
-                type="button"
-                onClick={() => {
-                  setSmartFilter("all");
-                  setWalkRadius(null);
-                }}
-                className="text-[11px] font-bold text-brand-2 hover:underline cursor-pointer"
-              >
-                پاک کردن فیلترها
-              </button>
-            )}
+          {/* Unified Container: Walking Proximity Radar & Results Counter */}
+          <div className="p-3.5 sm:p-4 rounded-3xl bg-surface border border-line shadow-2xs space-y-3">
+            {/* Top Row: Walking Proximity Radar & Distance Filters */}
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2 min-w-0">
+                <Icon name="route" className="w-5 h-5 text-brand-2 shrink-0" />
+                <div className="min-w-0">
+                  <strong className="block text-xs sm:text-sm font-black text-ink font-morabba truncate">
+                    رادار فاصلهٔ پیاده‌روی
+                  </strong>
+                  <small className="block text-[10.5px] sm:text-xs text-muted font-[family-name:var(--font-vazirmatn)] truncate">
+                    موقعیت مرجع: تهران، میدان ونک
+                  </small>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-1.5 shrink-0">
+                {[
+                  { label: "همه", val: null },
+                  { label: "۱.۵ ک‌م", val: 1.5 },
+                  { label: "۳ ک‌م", val: 3 },
+                ].map((item) => (
+                  <button
+                    key={item.label}
+                    type="button"
+                    onClick={() => setWalkRadius(item.val)}
+                    className={`inline-flex items-center justify-center px-2.5 sm:px-3 py-1 min-h-[30px] rounded-full text-[11px] font-bold whitespace-nowrap transition-all shadow-2xs cursor-pointer active:scale-95 border ${
+                      walkRadius === item.val
+                        ? "bg-ink text-canvas border-ink shadow-xs font-black"
+                        : "bg-surface text-ink border-line hover:bg-surface-raised"
+                    }`}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Bottom Row: Directly Integrated Result Count & Filter Status */}
+            <div className="pt-2.5 border-t border-line/60 flex items-center justify-between text-xs">
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="w-2 h-2 rounded-full bg-brand-2 shrink-0 animate-pulse" />
+                <h2 id="feed-offers-heading" className="text-xs sm:text-sm font-black text-ink truncate">
+                  <span className="text-brand-2 dark:text-[#FDA74D] font-[family-name:var(--font-vazirmatn)] font-black text-sm ms-0.5">
+                    {numberFa(feedOffers.length)}
+                  </span>{" "}
+                  جعبه برای نجات در اطراف شما
+                </h2>
+                {walkRadius !== null && (
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-brand-soft text-brand-2 shrink-0">
+                    تا {numberFa(walkRadius)} ک‌م
+                  </span>
+                )}
+              </div>
+
+              {(smartFilter !== "all" || walkRadius !== null) && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSmartFilter("all");
+                    setWalkRadius(null);
+                  }}
+                  className="text-[11px] font-bold text-brand-2 hover:underline cursor-pointer shrink-0"
+                >
+                  پاک کردن فیلترها
+                </button>
+              )}
+            </div>
           </div>
 
           {feedOffers.length > 0 ? (
@@ -2311,36 +2352,43 @@ function OrdersPage({
   subTab?: "active" | "history";
   onCancel: (id: string) => void;
   onReview: (id: string) => void;
-  onReceipt?: (reservation: Reservation) => void;
+  onReceipt?: (reservation: Reservation | GroupedReservation) => void;
   onDiscover: () => void;
   onDirections: () => void;
   onTrackPipeline?: (reservationId: string) => void;
 }) {
-  const [timelineReservation, setTimelineReservation] = useState<Reservation | null>(null);
+  const [timelineGroup, setTimelineGroup] = useState<GroupedReservation | null>(null);
 
+  const activeGroups = useMemo(() => groupReservationsByMerchant(active), [active]);
   const pastOrders = useMemo(
     () => reservations.filter((item) => item.status !== "active"),
     [reservations]
   );
+  const pastGroups = useMemo(() => groupReservationsByMerchant(pastOrders), [pastOrders]);
 
   const handleTrack = (id: string) => {
-    const target = reservations.find((r) => r.id === id);
-    if (target) {
-      setTimelineReservation(target);
-    } else if (onTrackPipeline) {
-      onTrackPipeline(id);
+    const targetGroup = activeGroups.find((g) => g.allReservations.some((r) => r.id === id));
+    if (targetGroup) {
+      setTimelineGroup(targetGroup);
+    } else {
+      const target = reservations.find((r) => r.id === id);
+      if (target) {
+        setTimelineGroup(toGroupedReservation(target));
+      } else if (onTrackPipeline) {
+        onTrackPipeline(id);
+      }
     }
   };
 
   return (
     <div className="space-y-4">
       {subTab === "active" ? (
-        active.length ? (
+        activeGroups.length ? (
           <div className="grid gap-3 min-w-0 w-full max-w-full">
-            {active.map((reservation) => (
+            {activeGroups.map((group) => (
               <ReservationCard
-                key={reservation.id}
-                reservation={reservation}
+                key={group.groupKey}
+                group={group}
                 onCancel={onCancel}
                 onReview={onReview}
                 onReceipt={onReceipt}
@@ -2358,12 +2406,12 @@ function OrdersPage({
             onAction={onDiscover}
           />
         )
-      ) : pastOrders.length ? (
+      ) : pastGroups.length ? (
         <div className="grid gap-3 min-w-0 w-full max-w-full">
-          {pastOrders.map((reservation) => (
+          {pastGroups.map((group) => (
             <ReservationCard
-              key={reservation.id}
-              reservation={reservation}
+              key={group.groupKey}
+              group={group}
               onCancel={onCancel}
               onReview={onReview}
               onReceipt={onReceipt}
@@ -2382,10 +2430,10 @@ function OrdersPage({
       )}
 
       {/* Order Stage Timeline Popup */}
-      {timelineReservation && (
+      {timelineGroup && (
         <OrderTimelineDialog
-          reservation={timelineReservation}
-          onClose={() => setTimelineReservation(null)}
+          group={timelineGroup}
+          onClose={() => setTimelineGroup(null)}
         />
       )}
     </div>
@@ -2394,15 +2442,20 @@ function OrdersPage({
 
 function OrderTimelineDialog({
   reservation,
+  group: incomingGroup,
   onClose,
 }: {
-  reservation: Reservation;
+  reservation?: Reservation;
+  group?: GroupedReservation;
   onClose: () => void;
 }) {
-  const isCollected = reservation.status === "collected";
+  const group = incomingGroup ?? (reservation ? toGroupedReservation(reservation) : null);
+  if (!group) return null;
+
+  const isCollected = group.status === "collected";
 
   const copyCode = () => {
-    navigator.clipboard?.writeText(reservation.code);
+    navigator.clipboard?.writeText(group.code);
     toastManager.add({ title: "کد تحویل کپی شد.", type: "success" });
   };
 
@@ -2420,30 +2473,48 @@ function OrderTimelineDialog({
         </div>
 
         {/* Order Brief Info */}
-        <div className="flex items-center gap-3 p-3 rounded-2xl bg-canvas border border-line">
-          <div className="relative w-12 h-12 rounded-xl bg-surface border border-line/60 overflow-hidden shrink-0">
-            <Image
-              src={reservation.image || "/images/products/dibz-dessert-box-cutout.png"}
-              alt={reservation.title}
-              fill
-              sizes="48px"
-              className="object-contain p-1"
-            />
-          </div>
-          <div className="min-w-0 flex-1">
-            <strong className="text-xs font-bold text-ink block truncate">{reservation.merchantName}</strong>
-            <h3 className="text-xs sm:text-sm font-black text-ink truncate leading-tight mt-0.5">
-              {reservation.title}
-            </h3>
-            <div className="flex items-center gap-2 text-[11px] text-muted mt-1 truncate">
-              <span className="flex items-center gap-1 shrink-0">
-                <Icon name="clock" className="w-3.5 h-3.5 text-muted" />
-                <span>{reservation.pickup}</span>
-              </span>
-              <span>•</span>
-              <strong className="text-brand-2 font-bold shrink-0">{money(reservation.total)}</strong>
+        <div className="p-3 sm:p-3.5 rounded-2xl bg-canvas border border-line space-y-2.5">
+          <div className="flex items-center justify-between gap-2 pb-2 border-b border-line/50">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <MerchantLogo name={group.merchantName} category={group.category} size="sm" />
+              <strong className="text-xs sm:text-sm font-black text-ink truncate">{group.merchantName}</strong>
             </div>
+            <span className="text-[11px] font-bold text-muted shrink-0 flex items-center gap-1">
+              <Icon name="clock" className="w-3.5 h-3.5" />
+              <span>{formatPickupDate(group.pickup)}</span>
+            </span>
           </div>
+
+          {/* Items in this order */}
+          <div className="space-y-2">
+            {group.items.map((it) => (
+              <div key={it.id} className="flex items-center justify-between gap-2.5 text-xs">
+                <div className="flex items-center gap-2 min-w-0 flex-1">
+                  <div className="relative w-8 h-8 rounded-lg bg-surface border border-line/60 overflow-hidden shrink-0">
+                    <Image
+                      src={it.image || "/images/products/dibz-dessert-box-cutout.png"}
+                      alt={it.title}
+                      fill
+                      sizes="32px"
+                      className="object-contain p-0.5"
+                    />
+                  </div>
+                  <span className="font-bold text-ink truncate">{it.title}</span>
+                  {it.quantity > 1 && (
+                    <span className="text-[10px] text-muted font-bold shrink-0">× {numberFa(it.quantity)}</span>
+                  )}
+                </div>
+                <strong className="text-brand-2 font-bold shrink-0">{money(it.total)}</strong>
+              </div>
+            ))}
+          </div>
+
+          {group.items.length > 1 && (
+            <div className="pt-2 border-t border-line/50 flex items-center justify-between text-xs font-black">
+              <span className="text-muted">مجموع پرداختی سفارش:</span>
+              <strong className="text-ink">{money(group.total)}</strong>
+            </div>
+          )}
         </div>
 
         {/* Two-Step Timeline */}
@@ -2454,21 +2525,16 @@ function OrderTimelineDialog({
             {/* Step 1: پرداخت غذا */}
             <div className="relative flex items-start gap-3">
               {/* Connecting Line between Step 1 and Step 2 */}
-              <div className="absolute top-8 start-4 -translate-x-1/2 w-0.5 h-12 bg-brand-2" aria-hidden="true" />
+              <div className="absolute top-8 start-4 -translate-x-1/2 w-0.5 h-12 bg-emerald-500/30" aria-hidden="true" />
 
-              <div className="w-8 h-8 rounded-full bg-brand-2 text-white grid place-items-center shrink-0 shadow-xs z-10">
+              <div className="w-8 h-8 rounded-full bg-emerald-500 text-white grid place-items-center shrink-0 shadow-xs z-10">
                 <Icon name="check" className="w-4 h-4 stroke-[3]" />
               </div>
 
               <div className="min-w-0 flex-1 pt-0.5">
-                <div className="flex items-center justify-between gap-2">
-                  <strong className="text-xs sm:text-sm font-black text-ink">۱. پرداخت غذا</strong>
-                  <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-500/10 px-2 py-0.5 rounded-full">
-                    انجام شد
-                  </span>
-                </div>
+                <strong className="text-xs sm:text-sm font-black text-ink block">۱. پرداخت غذا</strong>
                 <p className="text-[11px] text-muted mt-1 leading-relaxed">
-                  مبلغ {money(reservation.total)} با موفقیت پرداخت و رزرو شما ثبت شد.
+                  مبلغ {money(group.total)} با موفقیت پرداخت و رزرو شما ثبت شد.
                 </p>
               </div>
             </div>
@@ -2478,7 +2544,7 @@ function OrderTimelineDialog({
               <div
                 className={`w-8 h-8 rounded-full grid place-items-center shrink-0 shadow-xs z-10 ${
                   isCollected
-                    ? "bg-brand-2 text-white"
+                    ? "bg-emerald-500 text-white"
                     : "bg-brand-soft text-brand-2 border-2 border-brand-2"
                 }`}
               >
@@ -2490,34 +2556,23 @@ function OrderTimelineDialog({
               </div>
 
               <div className="min-w-0 flex-1 pt-0.5">
-                <div className="flex items-center justify-between gap-2">
-                  <strong className="text-xs sm:text-sm font-black text-ink">
-                    ۲. مراجعه به رستوران و تحویل کد سفارش
-                  </strong>
-                  <span
-                    className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                      isCollected
-                        ? "text-emerald-700 dark:text-emerald-300 bg-emerald-500/10"
-                        : "text-amber-700 dark:text-amber-300 bg-amber-500/10"
-                    }`}
-                  >
-                    {isCollected ? "تحویل گرفته شد" : "مرحله جاری"}
-                  </span>
-                </div>
+                <strong className="text-xs sm:text-sm font-black text-ink block">
+                  ۲. مراجعه به رستوران و تحویل کد سفارش
+                </strong>
 
                 <p className="text-[11px] text-muted mt-1 leading-relaxed">
                   {isCollected
                     ? "سفارش با ارائه کد تحویل به فروشگاه با موفقیت تحویل گرفته شد."
-                    : `در بازهٔ زمانی (${reservation.pickup}) به ${reservation.merchantName} مراجعه کرده و کد تحویل زیر را اعلام فرمایید:`}
+                    : `در بازهٔ زمانی (${formatPickupDate(group.pickup)}) به ${group.merchantName} مراجعه کرده و کد تحویل زیر را اعلام فرمایید:`}
                 </p>
 
                 {/* Delivery Code Box */}
                 {!isCollected && (
                   <div className="mt-3 p-3.5 rounded-2xl bg-canvas border border-dashed border-brand-2/40 flex items-center justify-between gap-2">
                     <div>
-                      <span className="text-[11px] text-muted font-bold block">کد تحویل شما:</span>
+                      <span className="text-[11px] text-muted font-bold block">کد تحویل شما به فروشگاه:</span>
                       <strong className="text-2xl font-[family-name:var(--font-vazirmatn)] font-black text-brand-2 tracking-widest select-all">
-                        {faDigits(reservation.code)}
+                        {faDigits(group.code)}
                       </strong>
                     </div>
 
@@ -2536,14 +2591,14 @@ function OrderTimelineDialog({
         </div>
 
         {/* Store Address & Directions */}
-        {reservation.address && (
+        {group.address && (
           <div className="p-3 rounded-2xl bg-canvas border border-line/60 flex items-center justify-between gap-2 text-xs">
             <div className="flex items-center gap-2 min-w-0">
               <Icon name="pin" className="w-4 h-4 text-brand-2 shrink-0" />
-              <span className="text-muted truncate">{reservation.address}</span>
+              <span className="text-muted truncate">{group.address}</span>
             </div>
             <a
-              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(reservation.merchantName + " " + reservation.address)}`}
+              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(group.merchantName + " " + group.address)}`}
               target="_blank"
               rel="noopener noreferrer"
               className="text-brand-2 font-bold shrink-0 hover:underline inline-flex items-center gap-1"
@@ -2569,19 +2624,22 @@ function OrderTimelineDialog({
 
 function ReservationCard({
   reservation,
+  group: incomingGroup,
   onCancel,
   onReview,
   onReceipt,
   onDirections,
   onTrackPipeline,
 }: {
-  reservation: Reservation;
+  reservation?: Reservation;
+  group?: GroupedReservation;
   onCancel: (id: string) => void;
   onReview: (id: string) => void;
-  onReceipt?: (reservation: Reservation) => void;
+  onReceipt?: (reservation: Reservation | GroupedReservation) => void;
   onDirections: () => void;
   onTrackPipeline?: (reservationId: string) => void;
 }) {
+  const group = incomingGroup ?? (reservation ? toGroupedReservation(reservation) : null);
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -2603,9 +2661,11 @@ function ReservationCard({
     };
   }, [menuOpen]);
 
-  const cancellable = reservation.orderStatus
-    ? ["paid", "reviewed", "preparing", "ready_for_pickup"].includes(reservation.orderStatus)
-    : reservation.status === "active";
+  if (!group) return null;
+
+  const cancellable = group.orderStatus
+    ? ["paid", "reviewed", "preparing", "ready_for_pickup"].includes(group.orderStatus)
+    : group.status === "active";
 
   return (
     <article className="w-full max-w-full min-w-0 overflow-hidden rounded-3xl bg-surface border border-line p-3.5 sm:p-4 shadow-xs space-y-3 transition-all hover:shadow-sm">
@@ -2614,23 +2674,30 @@ function ReservationCard({
         <div className="flex items-start gap-2.5 min-w-0 flex-1">
           <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full overflow-hidden shrink-0 border border-line/60 shadow-2xs mt-0.5">
             <MerchantLogo
-              name={reservation.merchantName}
-              category={reservation.category}
+              name={group.merchantName}
+              category={group.category}
               size="md"
               className="!rounded-none !border-0"
             />
           </div>
           <div className="min-w-0 flex-1 space-y-1">
-            <h2 className="text-sm sm:text-base font-black text-ink truncate leading-tight">
-              {reservation.merchantName}
-            </h2>
+            <div className="flex items-center gap-2 min-w-0">
+              <h2 className="text-sm sm:text-base font-black text-ink truncate leading-tight">
+                {group.merchantName}
+              </h2>
+              {group.items.length > 1 && (
+                <span className="shrink-0 px-2 py-0.5 rounded-full bg-brand-soft text-brand-2 text-[10px] font-black border border-brand-2/20">
+                  {numberFa(group.items.length)} بسته سفارش
+                </span>
+              )}
+            </div>
             <div className="flex items-center gap-1 text-[11px] sm:text-xs text-muted">
               <Icon name="clock" className="w-3.5 h-3.5 text-muted shrink-0" />
-              <span>{formatPickupDate(reservation.pickup)}</span>
+              <span>{formatPickupDate(group.pickup)}</span>
             </div>
             <div className="flex items-center gap-1 text-[11px] sm:text-xs text-muted min-w-0">
               <Icon name="pin" className="w-3.5 h-3.5 text-muted shrink-0" />
-              <span className="truncate">{reservation.address}</span>
+              <span className="truncate">{group.address}</span>
             </div>
           </div>
         </div>
@@ -2654,7 +2721,7 @@ function ReservationCard({
                   type="button"
                   onClick={() => {
                     setMenuOpen(false);
-                    onReceipt(reservation);
+                    onReceipt(group);
                   }}
                   className="w-full flex items-center gap-2 px-2.5 py-2 text-xs font-bold text-ink hover:bg-canvas rounded-xl transition-colors cursor-pointer text-start"
                 >
@@ -2680,7 +2747,7 @@ function ReservationCard({
                   type="button"
                   onClick={() => {
                     setMenuOpen(false);
-                    onCancel(reservation.id);
+                    onCancel(group.primaryReservation.id);
                   }}
                   className="w-full flex items-center gap-2 px-2.5 py-2 text-xs font-bold text-rose-500 hover:bg-rose-500/10 rounded-xl transition-colors cursor-pointer text-start"
                 >
@@ -2693,92 +2760,143 @@ function ReservationCard({
         </div>
       </div>
 
-      {/* 2. Middle Row: Product Cutout with Quantity Badge + Title | Price */}
-      <div className="flex items-center justify-between gap-3 pt-2.5 border-t border-line/60 min-w-0">
-        <div className="flex items-center gap-2.5 min-w-0 flex-1">
-          {/* Food Cutout with Quantity Circle Badge */}
-          <div className="relative w-12 h-12 sm:w-14 sm:h-14 shrink-0 rounded-2xl bg-canvas border border-line/60 overflow-visible">
-            <div className="relative w-full h-full p-1">
-              <div className="relative w-full h-full">
-                <Image
-                  src={reservation.image || "/images/products/dibz-dessert-box-cutout.png"}
-                  alt={reservation.title}
-                  fill
-                  sizes="56px"
-                  className="object-contain"
-                />
+      {/* 2. Middle Row: Product Cutouts with Quantity Badge + Title | Price */}
+      {group.items.length === 1 ? (
+        <div className="flex items-center justify-between gap-3 pt-2.5 border-t border-line/60 min-w-0">
+          <div className="flex items-center gap-2.5 min-w-0 flex-1">
+            <div className="relative w-12 h-12 sm:w-14 sm:h-14 shrink-0 rounded-2xl bg-canvas border border-line/60 overflow-visible">
+              <div className="relative w-full h-full p-1">
+                <div className="relative w-full h-full">
+                  <Image
+                    src={group.items[0].image || "/images/products/dibz-dessert-box-cutout.png"}
+                    alt={group.items[0].title}
+                    fill
+                    sizes="56px"
+                    className="object-contain"
+                  />
+                </div>
               </div>
+              <span className="absolute -top-1 -end-1 w-4.5 h-4.5 rounded-full bg-surface border border-line/80 shadow-2xs flex items-center justify-center text-[10px] font-black text-ink z-10">
+                {numberFa(group.items[0].quantity || 1)}
+              </span>
             </div>
-            {/* RTL-aware quantity badge */}
-            <span className="absolute -top-1 -end-1 w-4.5 h-4.5 rounded-full bg-surface border border-line/80 shadow-2xs flex items-center justify-center text-[10px] font-black text-ink z-10">
-              {numberFa(reservation.quantity || 1)}
-            </span>
+
+            <h3 className="text-xs sm:text-sm font-black text-ink truncate leading-tight min-w-0 flex-1">
+              {group.items[0].title}
+            </h3>
           </div>
 
-          <h3 className="text-xs sm:text-sm font-black text-ink truncate leading-tight min-w-0 flex-1">
-            {reservation.title}
-          </h3>
+          <div className="shrink-0 text-start sm:text-end">
+            <span className="text-sm sm:text-base font-black text-ink whitespace-nowrap">
+              {money(group.total)}
+            </span>
+          </div>
         </div>
+      ) : (
+        <div className="space-y-3 pt-2.5 border-t border-line/60">
+          {group.items.map((item) => (
+            <div key={item.id} className="flex items-center justify-between gap-3 min-w-0">
+              <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                <div className="relative w-12 h-12 sm:w-14 sm:h-14 shrink-0 rounded-2xl bg-canvas border border-line/60 overflow-visible">
+                  <div className="relative w-full h-full p-1">
+                    <div className="relative w-full h-full">
+                      <Image
+                        src={item.image || "/images/products/dibz-dessert-box-cutout.png"}
+                        alt={item.title}
+                        fill
+                        sizes="56px"
+                        className="object-contain"
+                      />
+                    </div>
+                  </div>
+                  <span className="absolute -top-1 -end-1 w-4.5 h-4.5 rounded-full bg-surface border border-line/80 shadow-2xs flex items-center justify-center text-[10px] font-black text-ink z-10">
+                    {numberFa(item.quantity || 1)}
+                  </span>
+                </div>
 
-        {/* Total Price */}
-        <div className="shrink-0 text-start sm:text-end">
-          <span className="text-sm sm:text-base font-black text-ink whitespace-nowrap">
-            {money(reservation.total)}
-          </span>
+                <div className="min-w-0 flex-1">
+                  <h3 className="text-xs sm:text-sm font-black text-ink truncate leading-tight">
+                    {item.title}
+                  </h3>
+                  {item.quantity > 1 && (
+                    <span className="text-[10px] text-muted font-medium block mt-0.5">
+                      {numberFa(item.quantity)} عدد × {money(Math.round(item.total / item.quantity))}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              <div className="shrink-0 text-start sm:text-end">
+                <span className="text-xs sm:text-sm font-black text-ink whitespace-nowrap">
+                  {money(item.total)}
+                </span>
+              </div>
+            </div>
+          ))}
+
+          {/* Combined Total Row for Restaurant */}
+          <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-canvas border border-line/50 text-xs font-bold">
+            <span className="text-muted">
+              مجموع پرداختی به رستوران ({numberFa(group.items.reduce((acc, it) => acc + (it.quantity || 1), 0))} قلم):
+            </span>
+            <strong className="text-sm sm:text-base font-black text-ink">
+              {money(group.total)}
+            </strong>
+          </div>
         </div>
-      </div>
+      )}
 
-      {/* 3. Delivery Code Ticket Voucher (Clean, Prominent & Bold Vazir Font) - Only shown for active orders */}
-      {reservation.status === "active" && (
+      {/* 3. Delivery Code Ticket Voucher - One ticket for the restaurant order */}
+      {group.status === "active" && (
         <div className="flex items-center justify-between px-3.5 py-2.5 rounded-2xl bg-brand-soft/40 dark:bg-[#F87F45]/10 border border-dashed border-brand-2/30 dark:border-[#F87F45]/25 min-w-0">
           <div className="flex items-center gap-2 min-w-0">
             <span className="w-7 h-7 rounded-xl bg-brand-soft dark:bg-[#F87F45]/20 text-brand-2 dark:text-[#FDA74D] grid place-items-center shrink-0 shadow-2xs">
               <Icon name="receipt" className="w-4 h-4" />
             </span>
-            <span className="text-xs font-bold text-muted shrink-0">کد تحویل:</span>
+            <span className="text-xs font-bold text-muted shrink-0">کد تحویل به فروشگاه:</span>
           </div>
 
           <span className="font-[family-name:var(--font-vazirmatn)] font-black text-xl sm:text-2xl text-brand-2 dark:text-[#FDA74D] tracking-wide select-all">
-            {faDigits(reservation.code)}
+            {faDigits(group.code)}
           </span>
         </div>
       )}
 
-      {reservation.reviewResponse && (
+      {group.reviewResponse && (
         <blockquote className="p-3 rounded-2xl bg-brand-soft/60 border-s-2 border-brand-2 text-xs text-ink space-y-1">
           <strong className="block font-bold text-brand-2">پاسخ فروشگاه</strong>
-          <p className="opacity-90">{reservation.reviewResponse}</p>
+          <p className="opacity-90">{group.reviewResponse}</p>
         </blockquote>
       )}
 
       {/* 4. Bottom Row: Primary Actions */}
-      {reservation.status === "active" && onTrackPipeline ? (
+      {group.status === "active" && onTrackPipeline ? (
         <div className="pt-2 border-t border-line/60">
           <button
             type="button"
-            onClick={() => onTrackPipeline(reservation.id)}
+            onClick={() => onTrackPipeline(group.primaryReservation.id)}
             className="w-full min-h-[44px] inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs sm:text-sm font-bold rounded-2xl bg-brand-2 text-white hover:bg-brand-2/95 transition-all shadow-xs cursor-pointer active:scale-[0.98]"
           >
             <span>پیگیری مراحل</span>
             <Icon name="arrow" className="w-3.5 h-3.5 rtl:rotate-180 shrink-0" />
           </button>
         </div>
-      ) : reservation.status === "collected" ? (
+      ) : group.status === "collected" ? (
         <div className="pt-2 border-t border-line/60 grid grid-cols-2 gap-2">
           {onReceipt && (
             <button
               type="button"
-              onClick={() => onReceipt(reservation)}
+              onClick={() => onReceipt(group)}
               className="min-h-[44px] inline-flex items-center justify-center px-3 py-2 text-xs sm:text-sm font-bold rounded-2xl bg-surface border border-line text-ink hover:bg-canvas transition-colors cursor-pointer active:scale-[0.98]"
             >
               <span>مشاهده رسید</span>
             </button>
           )}
 
-          {!reservation.hasReview ? (
+          {!group.hasReview ? (
             <button
               type="button"
-              onClick={() => onReview(reservation.id)}
+              onClick={() => onReview(group.primaryReservation.id)}
               className={`min-h-[44px] inline-flex items-center justify-center px-3 py-2 text-xs sm:text-sm font-bold rounded-2xl bg-brand-2 text-white hover:opacity-95 transition-opacity cursor-pointer active:scale-[0.98] shadow-xs ${!onReceipt ? "col-span-2 w-full" : ""}`}
             >
               <span>ثبت نظر</span>
@@ -2790,11 +2908,11 @@ function ReservationCard({
             </span>
           )}
         </div>
-      ) : reservation.status !== "active" && onReceipt ? (
+      ) : group.status !== "active" && onReceipt ? (
         <div className="pt-2 border-t border-line/60">
           <button
             type="button"
-            onClick={() => onReceipt(reservation)}
+            onClick={() => onReceipt(group)}
             className="w-full min-h-[44px] inline-flex items-center justify-center px-3 py-2 text-xs sm:text-sm font-bold rounded-2xl bg-surface border border-line text-ink hover:bg-canvas transition-colors cursor-pointer active:scale-[0.98]"
           >
             <span>مشاهده رسید</span>
@@ -2835,7 +2953,7 @@ function ProfilePage({
   showToast: (message: string) => void;
   onCancel: (id: string) => void;
   onReview: (id: string) => void;
-  onReceipt?: (reservation: Reservation) => void;
+  onReceipt?: (reservation: Reservation | GroupedReservation) => void;
   onDirections: () => void;
 }) {
   const { state, updateCustomer } = useDemo();
@@ -2848,6 +2966,10 @@ function ProfilePage({
   const historyReservations = useMemo(
     () => reservations.filter((item) => item.status !== "active"),
     [reservations]
+  );
+  const historyGroups = useMemo(
+    () => groupReservationsByMerchant(historyReservations),
+    [historyReservations]
   );
 
   if (profileSubpage === "history") {
@@ -2864,7 +2986,7 @@ function ProfilePage({
             <span>پروفایل و گزینه‌ها</span>
           </button>
           <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-surface border border-line text-muted">
-            {numberFa(historyReservations.length)} سفارش گذشته
+            {numberFa(historyGroups.length)} سفارش گذشته
           </span>
         </div>
 
@@ -2873,12 +2995,12 @@ function ProfilePage({
           <p className="text-xs text-muted mt-0.5">سفارش‌های قبلی، دریافت‌شده و سوابق خرید شما</p>
         </div>
 
-        {historyReservations.length ? (
+        {historyGroups.length ? (
           <div className="grid gap-3.5">
-            {historyReservations.map((reservation) => (
+            {historyGroups.map((group) => (
               <ReservationCard
-                key={reservation.id}
-                reservation={reservation}
+                key={group.groupKey}
+                group={group}
                 onCancel={onCancel}
                 onReview={onReview}
                 onReceipt={onReceipt}
@@ -3811,76 +3933,133 @@ function ReservationFlow({
 
 function SuccessState({
   reservation,
-  onDirections,
   onCalendar,
   onDone,
 }: {
   reservation: Reservation;
-  onDirections: () => void;
+  onDirections?: () => void;
   onCalendar: () => void;
   onDone: () => void;
 }) {
   return (
-    <div className="text-center space-y-4 py-2">
-      <div className="w-14 h-14 mx-auto rounded-full bg-brand-soft text-brand-2 dark:bg-[#F87F45]/15 dark:text-[#FDA74D] grid place-items-center">
-        <SuccessCheck />
-      </div>
-      <div>
-        <p className="text-[11px] font-bold uppercase tracking-wider text-brand-2">رزرو با موفقیت انجام شد</p>
-        <h2 id="reservation-title" className="text-base font-black text-ink mt-0.5">جعبه‌ات کنار گذاشته شد!</h2>
-        <p className="text-xs text-muted mt-1 leading-relaxed">در بازهٔ تعیین‌شده به فروشگاه برو و کد دریافت را نشان بده.</p>
+    <div className="space-y-4 py-1 text-start" dir="rtl">
+      {/* 1. Header: Checkmark + Titles */}
+      <div className="flex items-start gap-3 pb-3 border-b border-line">
+        <span className="w-12 h-12 rounded-2xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 grid place-items-center shrink-0 border border-emerald-500/20 shadow-2xs">
+          <SuccessCheck />
+        </span>
+        <div className="min-w-0 flex-1 space-y-0.5">
+          <h2 id="reservation-title" className="text-base sm:text-lg font-black text-ink font-morabba leading-tight">
+            رزرو با موفقیت انجام شد!
+          </h2>
+        </div>
       </div>
 
-      <div className="p-4 rounded-2xl bg-canvas border border-line text-start space-y-3">
-        <div className="flex items-center gap-2">
-          <Image src="/icons/dibz-ios-dark.png" alt="" width={24} height={24} className="rounded-md" />
-          <small className="text-[11px] font-bold text-muted">برگهٔ دریافت دیبز</small>
+      {/* 2. Delivery Code Box */}
+      <div className="p-3.5 sm:p-4 rounded-2xl bg-brand-soft/50 dark:bg-brand-soft/20 border border-dashed border-brand-2/40 space-y-2">
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-bold text-muted">کد تحویل به فروشگاه:</span>
         </div>
-        <div>
-          <strong className="block text-xs font-bold text-ink">{reservation.merchantName}</strong>
-          <small className="block text-[11px] text-muted mt-0.5">{reservation.pickup}</small>
-        </div>
-        <div className="flex items-center justify-between p-3 rounded-xl bg-surface border border-line">
-          <div>
-            <small className="block text-[10px] text-muted">کد دریافت</small>
-            <strong className="block text-lg font-mono font-black text-ink">{reservation.code}</strong>
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-baseline gap-2">
+            <strong className="font-[family-name:var(--font-vazirmatn)] font-black text-3xl sm:text-4xl text-brand-2 dark:text-[#FDA74D] tracking-wider select-all">
+              {faDigits(reservation.code)}
+            </strong>
           </div>
           <MiniQr code={reservation.code} />
         </div>
-        <p className="text-xs text-muted">{reservation.address}</p>
+        <div className="flex items-center gap-1 text-[11px] font-bold text-muted">
+          <Icon name="clock" className="w-3.5 h-3.5 text-muted" />
+          <span>{reservation.pickup}</span>
+        </div>
+        <p className="text-[11px] text-muted leading-relaxed pt-1 border-t border-brand-2/20">
+          هنگام مراجعه به <strong className="text-ink font-bold">{reservation.merchantName}</strong> این کد را جهت تحویل بسته نشان دهید.
+        </p>
       </div>
 
-      <div className="flex items-center justify-between p-3 rounded-xl bg-brand-soft text-brand-2 text-xs font-bold">
-        <span>تا شروع زمان دریافت</span>
-        <span>۲ ساعت و ۱۲ دقیقه</span>
+      {/* 3. Restaurant Information & Order Item Merged in One Container */}
+      <div className="p-3.5 sm:p-4 rounded-2xl bg-canvas border border-line space-y-3">
+        <div className="flex items-center justify-between gap-2.5">
+          <div className="flex items-center gap-2.5 min-w-0 flex-1">
+            <MerchantLogo name={reservation.merchantName} category={reservation.category} size="sm" />
+            <div className="min-w-0 flex-1">
+              <strong className="block text-sm sm:text-base font-black text-ink truncate leading-tight">
+                {reservation.merchantName}
+              </strong>
+              <span className="block text-[11px] text-muted font-medium mt-0.5 truncate">
+                {reservation.pickup}
+              </span>
+            </div>
+          </div>
+
+          {reservation.address && (
+            <a
+              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${reservation.merchantName} ${reservation.address}`)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-brand-soft/80 dark:bg-brand-soft/20 border border-brand-2/30 text-xs font-bold text-brand-2 dark:text-[#FDA74D] hover:bg-brand-soft transition-all cursor-pointer active:scale-95 shrink-0"
+              aria-label="مسیریابی روی نقشه"
+            >
+              <Icon name="pin" className="w-3.5 h-3.5 text-brand-2 dark:text-[#FDA74D]" />
+              <span>مسیریابی</span>
+              <Icon name="arrow" className="w-3 h-3 rtl:rotate-180 opacity-70" />
+            </a>
+          )}
+        </div>
+
+        {reservation.address && (
+          <div className="flex items-center gap-1.5 text-xs text-muted">
+            <Icon name="pin" className="w-3.5 h-3.5 text-brand-2 shrink-0" />
+            <span className="truncate">{reservation.address}</span>
+          </div>
+        )}
+
+        {/* Item details */}
+        <div className="pt-3 border-t border-line/60 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5 min-w-0 flex-1">
+            <div className="relative w-12 h-12 rounded-xl overflow-hidden bg-surface border border-line/60 shrink-0">
+              <Image
+                src={reservation.image || "/images/products/dibz-dessert-box-cutout.png"}
+                alt={reservation.title}
+                fill
+                sizes="48px"
+                className="object-contain p-1"
+              />
+            </div>
+            <div className="min-w-0 flex-1">
+              <strong className="block text-xs sm:text-sm font-black text-ink truncate">
+                {reservation.title}
+              </strong>
+              <span className="block text-[11px] text-muted font-medium mt-0.5">
+                تعداد: {numberFa(reservation.quantity || 1)} عدد
+              </span>
+            </div>
+          </div>
+
+          <span className="text-sm sm:text-base font-black text-brand-2 dark:text-[#FDA74D] shrink-0">
+            {money(reservation.total)}
+          </span>
+        </div>
       </div>
 
-      <div className="flex gap-2">
-        <button
-          type="button"
-          onClick={onDirections}
-          className="flex-1 h-11 min-h-[44px] inline-flex items-center justify-center gap-1.5 text-xs font-semibold rounded-xl bg-canvas border border-line text-ink hover:bg-surface-raised transition-colors"
-        >
-          <Icon name="route" className="w-4 h-4 text-muted" />
-          <span>مسیریابی</span>
-        </button>
+      {/* 5. Actions */}
+      <div className="flex flex-col gap-2 pt-2 border-t border-line/60">
         <button
           type="button"
           onClick={onCalendar}
-          className="flex-1 h-11 min-h-[44px] inline-flex items-center justify-center gap-1.5 text-xs font-semibold rounded-xl bg-canvas border border-line text-ink hover:bg-surface-raised transition-colors"
+          className="w-full min-h-[44px] inline-flex items-center justify-center gap-1.5 text-xs font-bold rounded-xl bg-canvas border border-line text-ink hover:bg-surface-raised transition-colors active:scale-95"
         >
           <Icon name="calendar" className="w-4 h-4 text-muted" />
           <span>افزودن به تقویم</span>
         </button>
+        <button
+          type="button"
+          onClick={onDone}
+          className="w-full min-h-[48px] inline-flex items-center justify-center text-xs sm:text-sm font-black rounded-2xl bg-brand-2 text-white hover:brightness-105 shadow-xs transition-all active:scale-[0.98]"
+        >
+          مشاهده در سفارش‌های من
+        </button>
       </div>
-
-      <button
-        className="w-full h-11 min-h-[44px] inline-flex items-center justify-center text-xs font-bold rounded-xl bg-brand-2 text-white hover:opacity-90 shadow-xs transition-opacity"
-        type="button"
-        onClick={onDone}
-      >
-        دیدن در رزروهای من
-      </button>
     </div>
   );
 }
@@ -4155,43 +4334,63 @@ function CancelDialog({ onClose, onConfirm }: { onClose: () => void; onConfirm: 
 
 function OrderReceiptModal({
   reservation,
+  group: incomingGroup,
   onClose,
 }: {
-  reservation: Reservation;
+  reservation?: Reservation;
+  group?: GroupedReservation;
   onClose: () => void;
 }) {
+  const group = incomingGroup ?? (reservation ? toGroupedReservation(reservation) : null);
+  if (!group) return null;
+
   return (
     <DialogShell onClose={onClose} label="رسید الکترونیکی سفارش">
       <div className="p-4 sm:p-5 space-y-4 max-h-[82vh] overflow-y-auto text-start">
         {/* Header receipt badge & store */}
-        <div className="text-center space-y-2 pt-1 pb-3 border-b border-dashed border-line">
-          <div className="w-12 h-12 mx-auto rounded-2xl bg-brand-soft text-brand-2 dark:bg-[#F87F45]/15 dark:text-[#FDA74D] grid place-items-center shadow-2xs">
-            <Icon name="receipt" className="w-6 h-6" />
-          </div>
-          <div>
-            <h2 className="text-base sm:text-lg font-black text-ink font-morabba">رسید سفارش دیبز</h2>
-            <p className="text-xs font-bold text-muted mt-0.5">{reservation.merchantName}</p>
+        <div className="text-start space-y-3 pt-1 pb-3.5 border-b border-dashed border-line pe-12">
+          <div className="flex items-center gap-3">
+            <MerchantLogo name={group.merchantName} category={group.category} size="md" />
+            <div className="min-w-0 flex-1">
+              <h2 className="text-base sm:text-lg font-black text-ink font-morabba leading-tight">رسید سفارش دیبز</h2>
+              <p className="text-xs font-bold text-muted mt-0.5 truncate">{group.merchantName}</p>
+            </div>
           </div>
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-canvas border border-line text-[11px] font-bold text-muted">
             <span>شناسه سفارش:</span>
-            <span className="font-mono text-ink font-black">#{faDigits(reservation.id.replace("order-", ""))}</span>
+            <span className="font-mono text-ink font-black">#{faDigits(group.primaryReservation.id.replace("order-", ""))}</span>
           </div>
         </div>
 
-        {/* Date and Time Details */}
+        {/* Date, Time & Address Details */}
         <div className="p-3.5 rounded-2xl bg-canvas border border-line space-y-2.5 text-xs">
           <div className="flex items-center justify-between">
             <span className="text-muted font-bold">زمان و بازه تحویل:</span>
-            <span className="font-bold text-ink">{reservation.pickup}</span>
+            <span className="font-bold text-ink">{formatPickupDate(group.pickup)}</span>
           </div>
           <div className="flex items-start justify-between gap-2">
             <span className="text-muted font-bold shrink-0">آدرس دریافت:</span>
-            <span className="font-bold text-ink text-end leading-tight">{reservation.address}</span>
+            <span className="font-bold text-ink text-end leading-tight">{group.address}</span>
           </div>
-          {reservation.createdAt && (
+          {group.address && (
+            <div className="pt-2 border-t border-line/60 flex items-center justify-between gap-2">
+              <span className="text-muted font-bold shrink-0">مسیریابی فروشگاه:</span>
+              <a
+                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${group.merchantName} ${group.address}`)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-xs font-bold text-brand-2 dark:text-[#FDA74D] hover:underline"
+              >
+                <Icon name="pin" className="w-3.5 h-3.5" />
+                <span>مسیریابی روی نقشه</span>
+                <Icon name="arrow" className="w-3 h-3 rtl:rotate-180 opacity-70" />
+              </a>
+            </div>
+          )}
+          {group.createdAt && (
             <div className="flex items-center justify-between">
               <span className="text-muted font-bold">تاریخ ثبت سفارش:</span>
-              <span className="font-bold text-muted">{formatJalaliDate(reservation.createdAt)}</span>
+              <span className="font-bold text-muted">{formatJalaliDate(group.createdAt)}</span>
             </div>
           )}
           <div className="flex items-center justify-between">
@@ -4203,10 +4402,27 @@ function OrderReceiptModal({
           </div>
         </div>
 
-        {/* Food Name & Price */}
-        <div className="p-3.5 sm:p-4 rounded-2xl bg-canvas border border-line flex items-center justify-between gap-3">
-          <strong className="text-xs sm:text-sm font-black text-ink truncate leading-tight">{reservation.title}</strong>
-          <span className="text-xs sm:text-sm font-black text-ink shrink-0 whitespace-nowrap">{money(reservation.total)}</span>
+        {/* Order Items */}
+        <div className="space-y-3">
+          {group.items.map((item) => (
+            <div key={item.id} className="p-3.5 sm:p-4 rounded-2xl bg-canvas border border-line">
+              <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0 flex-1">
+                  <strong className="text-xs sm:text-sm font-black text-ink truncate leading-tight block">
+                    {item.title}
+                  </strong>
+                  {item.quantity > 1 && (
+                    <span className="text-[11px] text-muted font-bold mt-0.5 block">
+                      تعداد: {numberFa(item.quantity)} عدد
+                    </span>
+                  )}
+                </div>
+                <span className="text-xs sm:text-sm font-black text-ink shrink-0 whitespace-nowrap">
+                  {money(item.total)}
+                </span>
+              </div>
+            </div>
+          ))}
         </div>
 
         {/* Price Breakdown */}
@@ -4216,27 +4432,27 @@ function OrderReceiptModal({
             <span className="font-bold text-ink">پرداخت شبیه‌سازی‌شده (کیف پول دیبز)</span>
           </div>
 
-          {reservation.originalPrice && reservation.originalPrice > reservation.total && (
+          {group.originalTotal > group.total && (
             <div className="flex items-center justify-between text-muted">
-              <span>ارزش مرجع بسته:</span>
-              <del className="font-mono">{money(reservation.originalPrice)}</del>
+              <span>ارزش مرجع کل سفارش:</span>
+              <del className="font-mono">{money(group.originalTotal)}</del>
             </div>
           )}
 
           <div className="flex items-center justify-between pt-2 border-t border-line/60">
-            <span className="text-sm font-black text-ink">مبلغ پرداخت‌شده:</span>
+            <span className="text-sm font-black text-ink">مجموع پرداخت‌شده به رستوران:</span>
             <span className="text-base sm:text-lg font-black text-brand-2 dark:text-[#FDA74D]">
-              {money(reservation.total)}
+              {money(group.total)}
             </span>
           </div>
         </div>
 
         {/* Close Button */}
-        <div className="pt-1">
+        <div className="pt-2">
           <button
             type="button"
             onClick={onClose}
-            className="w-full min-h-[44px] py-2.5 px-4 rounded-2xl bg-surface border border-line text-ink font-black text-xs sm:text-sm hover:bg-canvas transition-colors cursor-pointer active:scale-[0.98]"
+            className="w-full min-h-[48px] py-3 px-4 rounded-2xl bg-brand-2 text-white font-black text-xs sm:text-sm hover:brightness-105 active:scale-[0.98] shadow-sm transition-all cursor-pointer flex items-center justify-center gap-2"
           >
             بستن رسید
           </button>
@@ -4247,7 +4463,6 @@ function OrderReceiptModal({
 }
 
 function ReviewDialog({
-  orderId,
   onClose,
   onSubmit,
 }: {
@@ -4256,6 +4471,7 @@ function ReviewDialog({
   onSubmit: (rating: number, comment: string) => boolean;
 }) {
   const [rating, setRating] = useState(5);
+  const [hoverRating, setHoverRating] = useState<number | null>(null);
   const [comment, setComment] = useState("");
 
   return (
@@ -4268,26 +4484,38 @@ function ReviewDialog({
         }}
       >
         <div>
-          <h2 id="customer-review-title" className="text-base font-black text-ink font-morabba">نظرت درباره این سفارش چیست؟</h2>
-          <p className="text-xs text-muted mt-1">پاسخ شما در پنل کیفیت کسب‌وکار دیده می‌شود. سفارش: <b className="font-mono">{orderId}</b></p>
+          <h2 id="customer-review-title" className="text-base font-black text-ink font-morabba">
+            نظرت درباره این سفارش چیست؟
+          </h2>
         </div>
 
-        <div className="flex items-center justify-center gap-2 py-2" role="radiogroup" aria-label="امتیاز از پنج">
-          {[1, 2, 3, 4, 5].map((value) => (
-            <button
-              type="button"
-              role="radio"
-              aria-checked={rating === value}
-              className={`min-w-[44px] min-h-[44px] grid place-items-center text-2xl transition-transform hover:scale-125 cursor-pointer ${
-                rating >= value ? "text-amber-500" : "text-muted/40"
-              }`}
-              onClick={() => setRating(value)}
-              key={value}
-              aria-label={`${value} ستاره`}
-            >
-              ★
-            </button>
-          ))}
+        <div
+          className="flex items-center justify-center gap-2 py-2"
+          dir="ltr"
+          role="radiogroup"
+          aria-label="امتیاز از پنج"
+        >
+          {[1, 2, 3, 4, 5].map((value) => {
+            const activeRating = hoverRating ?? rating;
+            const isFilled = activeRating >= value;
+            return (
+              <button
+                type="button"
+                role="radio"
+                aria-checked={rating === value}
+                className={`w-11 h-11 min-w-[44px] min-h-[44px] grid place-items-center text-3xl transition-transform hover:scale-125 active:scale-95 cursor-pointer select-none ${
+                  isFilled ? "text-amber-500" : "text-muted/30 hover:text-amber-300"
+                }`}
+                onClick={() => setRating(value)}
+                onMouseEnter={() => setHoverRating(value)}
+                onMouseLeave={() => setHoverRating(null)}
+                key={value}
+                aria-label={`${value} ستاره`}
+              >
+                ★
+              </button>
+            );
+          })}
         </div>
 
         <label className="flex flex-col gap-1.5">

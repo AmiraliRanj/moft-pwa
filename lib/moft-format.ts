@@ -1,3 +1,5 @@
+import type { Reservation, GroupedReservation, GroupedReservationItem } from "@/types/moft";
+
 const faNumber = new Intl.NumberFormat("fa-IR");
 const faDecimal = new Intl.NumberFormat("fa-IR", { maximumFractionDigits: 1 });
 
@@ -107,4 +109,113 @@ export function formatPickupDate(pickupText: string): string {
     return formatted || match;
   });
 }
+
+export function mergePickupTimes(p1: string, p2: string): string {
+  if (!p1) return p2;
+  if (!p2 || p1 === p2) return p1;
+  const parts1 = p1.split("،");
+  const parts2 = p2.split("،");
+  if (parts1.length === 2 && parts2.length === 2 && parts1[0].trim() === parts2[0].trim()) {
+    const datePrefix = parts1[0].trim();
+    const times1 = parts1[1].split("تا").map((s) => s.trim());
+    const times2 = parts2[1].split("تا").map((s) => s.trim());
+    if (times1.length === 2 && times2.length === 2) {
+      const toAscii = (s: string) => s.replace(/[۰-۹]/g, (d) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(d)));
+      const start = toAscii(times1[0]) < toAscii(times2[0]) ? times1[0] : times2[0];
+      const end = toAscii(times1[1]) > toAscii(times2[1]) ? times1[1] : times2[1];
+      return `${datePrefix}، ${start} تا ${end}`;
+    }
+  }
+  return p1;
+}
+
+export function toGroupedReservation(res: Reservation): GroupedReservation {
+  return {
+    groupKey: `${res.merchantName.trim()}___${res.status}___${res.id}`,
+    merchantName: res.merchantName,
+    category: res.category,
+    address: res.address,
+    pickup: res.pickup,
+    code: res.code,
+    status: res.status,
+    orderStatus: res.orderStatus,
+    items: [
+      {
+        id: res.id,
+        offerId: res.offerId,
+        title: res.title,
+        image: res.image,
+        quantity: res.quantity || 1,
+        total: res.total,
+        originalPrice: res.originalPrice,
+        description: res.description,
+        allergens: res.allergens,
+        category: res.category,
+        reservation: res,
+      },
+    ],
+    total: res.total,
+    originalTotal: res.originalPrice || res.total,
+    primaryReservation: res,
+    allReservations: [res],
+    hasReview: res.hasReview,
+    reviewResponse: res.reviewResponse,
+    createdAt: res.createdAt,
+  };
+}
+
+export function groupReservationsByMerchant(reservationsList: Reservation[]): GroupedReservation[] {
+  const groupsMap = new Map<string, GroupedReservation>();
+
+  for (const res of reservationsList) {
+    const key = `${res.merchantName.trim()}___${res.status}`;
+    const existing = groupsMap.get(key);
+
+    const item: GroupedReservationItem = {
+      id: res.id,
+      offerId: res.offerId,
+      title: res.title,
+      image: res.image,
+      quantity: res.quantity || 1,
+      total: res.total,
+      originalPrice: res.originalPrice,
+      description: res.description,
+      allergens: res.allergens,
+      category: res.category,
+      reservation: res,
+    };
+
+    if (existing) {
+      existing.items.push(item);
+      existing.total += res.total;
+      existing.originalTotal += res.originalPrice || res.total;
+      existing.allReservations.push(res);
+      if (res.hasReview) existing.hasReview = true;
+      if (res.reviewResponse && !existing.reviewResponse) existing.reviewResponse = res.reviewResponse;
+      existing.pickup = mergePickupTimes(existing.pickup, res.pickup);
+    } else {
+      groupsMap.set(key, {
+        groupKey: key,
+        merchantName: res.merchantName,
+        category: res.category,
+        address: res.address,
+        pickup: res.pickup,
+        code: res.code,
+        status: res.status,
+        orderStatus: res.orderStatus,
+        items: [item],
+        total: res.total,
+        originalTotal: res.originalPrice || res.total,
+        primaryReservation: res,
+        allReservations: [res],
+        hasReview: res.hasReview,
+        reviewResponse: res.reviewResponse,
+        createdAt: res.createdAt,
+      });
+    }
+  }
+
+  return Array.from(groupsMap.values());
+}
+
 

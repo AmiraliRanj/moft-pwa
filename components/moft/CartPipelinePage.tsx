@@ -35,6 +35,7 @@ interface CartPipelinePageProps {
 
 type CheckoutPhase = "cart" | "payment_method" | "confirm" | "success";
 
+
 export function CartPipelinePage({
   cartItems = [],
   onRemoveItem,
@@ -53,6 +54,7 @@ export function CartPipelinePage({
   const [allergiesAcknowledged, setAllergiesAcknowledged] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
   const [newlyCreatedReservation, setNewlyCreatedReservation] = useState<Reservation | null>(null);
+  const [orderedItems, setOrderedItems] = useState<CartItem[]>([]);
 
   // Selected reservation to track if user taps track from the active orders list
   const [trackingReservation, setTrackingReservation] = useState<Reservation | null>(null);
@@ -78,6 +80,7 @@ export function CartPipelinePage({
       return;
     }
     setIsProcessing(true);
+    setOrderedItems([...effectiveItems]);
     setTimeout(() => {
       onConfirmOrder(effectiveItems);
       setIsProcessing(false);
@@ -448,33 +451,180 @@ export function CartPipelinePage({
   }
 
   // -------------------------------------------------------------
-  // VIEW: Payment Success Screen
+  // VIEW: Payment Success Screen (RTL, Restaurant Info, Items & Drinks Breakdown)
   // -------------------------------------------------------------
   if (phase === "success" && newlyCreatedReservation) {
+    const successItems: CartItem[] =
+      orderedItems.length > 0
+        ? orderedItems
+        : effectiveItems.length > 0
+        ? effectiveItems
+        : [
+            {
+              offer: {
+                id: newlyCreatedReservation.offerId,
+                merchantName: newlyCreatedReservation.merchantName,
+                category: newlyCreatedReservation.category || "cafe",
+                categoryLabel: "کافه و رستوران",
+                title: newlyCreatedReservation.title,
+                description: newlyCreatedReservation.description || "",
+                address: newlyCreatedReservation.address,
+                neighborhood: "ونک",
+                coordinates: { lat: 35.759, lng: 51.402 },
+                distanceKm: 0.8,
+                rating: 4.8,
+                reviewCount: 120,
+                pickup: newlyCreatedReservation.pickup,
+                pickupPeriod: "evening",
+                quantityLeft: 1,
+                originalPrice: newlyCreatedReservation.originalPrice || newlyCreatedReservation.total * 1.5,
+                price: newlyCreatedReservation.total,
+                allergens: [],
+                image: newlyCreatedReservation.image || "/images/products/dibz-dessert-box-cutout.png",
+              },
+              quantity: newlyCreatedReservation.quantity || 1,
+            },
+          ];
+
+    const primaryOffer = successItems[0]?.offer;
+    const primaryMerchantName = primaryOffer?.merchantName || newlyCreatedReservation.merchantName;
+    const primaryCategory = primaryOffer?.category || newlyCreatedReservation.category;
+    const primaryCategoryLabel = primaryOffer?.categoryLabel || "کافه و رستوران";
+    const primaryAddress = primaryOffer?.address || newlyCreatedReservation.address;
+    const primaryNeighborhood = primaryOffer?.neighborhood;
+    const totalOrderedPacks = successItems.reduce((acc, it) => acc + it.quantity, 0);
+
     return (
-      <div className="space-y-4 pb-24 animate-in fade-in duration-200">
-        <div className="p-5 rounded-3xl bg-surface border border-line shadow-xs text-center space-y-4">
-          <div className="w-14 h-14 rounded-full bg-brand-soft text-brand-2 grid place-items-center mx-auto shadow-2xs">
-            <Icon name="check" className="w-7 h-7" />
-          </div>
-
-          <div className="space-y-1">
-            <h1 className="text-base sm:text-lg font-black text-ink">پرداخت با موفقیت انجام شد!</h1>
-            <p className="text-xs text-muted">سفارش شما در سیستم ثبت شد و کد تحویل اختصاصی صادر گردید.</p>
-          </div>
-
-          {/* Delivery Code Display */}
-          <div className="p-3.5 rounded-2xl bg-brand-soft/50 border border-dashed border-brand-2/30 space-y-1">
-            <span className="text-[11px] font-bold text-muted block">کد تحویل به فروشگاه:</span>
-            <span className="block font-[family-name:var(--font-vazirmatn)] font-black text-2xl sm:text-3xl text-brand-2 tracking-wide select-all">
-              {newlyCreatedReservation.code}
+      <div className="space-y-4 pt-2 sm:pt-3 pb-24 animate-in fade-in duration-200 text-start" dir="rtl">
+        <div className="p-4 sm:p-5 rounded-3xl bg-surface border border-line shadow-xs space-y-4">
+          {/* 1. Header: Checkmark badge + Title + Subtitle (RTL Aligned) */}
+          <div className="flex items-start gap-3 pb-3 border-b border-line">
+            <span className="w-12 h-12 rounded-2xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 grid place-items-center shrink-0 border border-emerald-500/20 shadow-2xs">
+              <Icon name="check" className="w-6 h-6" />
             </span>
-            <span className="text-[10px] text-muted block pt-0.5">
-              هنگام مراجعه به {newlyCreatedReservation.merchantName} این کد را نشان دهید.
-            </span>
+            <div className="min-w-0 flex-1 space-y-0.5">
+              <h1 className="text-base sm:text-lg font-black text-ink font-morabba leading-tight">
+                پرداخت با موفقیت انجام شد!
+              </h1>
+            </div>
           </div>
 
-          {/* Action Buttons */}
+          {/* 2. Delivery Code Box (RTL Aligned, High Affordance) */}
+          <div className="p-3.5 sm:p-4 rounded-2xl bg-brand-soft/50 dark:bg-brand-soft/20 border border-dashed border-brand-2/40 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-muted">کد تحویل به فروشگاه:</span>
+            </div>
+            <div className="flex items-baseline justify-between gap-3">
+              <span className="font-[family-name:var(--font-vazirmatn)] font-black text-3xl sm:text-4xl text-brand-2 dark:text-[#FDA74D] tracking-wider select-all">
+                {newlyCreatedReservation.code}
+              </span>
+              <span className="text-[11px] font-bold text-muted shrink-0 flex items-center gap-1">
+                <Icon name="clock" className="w-3.5 h-3.5 text-muted" />
+                <span>{newlyCreatedReservation.pickup}</span>
+              </span>
+            </div>
+            <p className="text-[11px] text-muted leading-relaxed pt-1 border-t border-brand-2/20">
+              هنگام مراجعه به <strong className="text-ink font-bold">{primaryMerchantName}</strong> این کد ۶ رقمی را جهت تحویل بسته نشان دهید.
+            </p>
+          </div>
+
+          {/* 3. Restaurant Information & Order Items Merged in One Container */}
+          <div className="p-3.5 sm:p-4 rounded-2xl bg-canvas border border-line space-y-3">
+            {/* Header: Restaurant name & category (right) + Compact Location button (left in one line) */}
+            <div className="flex items-center justify-between gap-2.5">
+              <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                <MerchantLogo name={primaryMerchantName} category={primaryCategory} size="sm" />
+                <div className="min-w-0 flex-1">
+                  <strong className="block text-sm sm:text-base font-black text-ink truncate leading-tight">
+                    {primaryMerchantName}
+                  </strong>
+                  <span className="block text-[11px] text-muted font-medium mt-0.5 truncate">
+                    {primaryNeighborhood ? `${primaryNeighborhood} · ` : ""}{primaryCategoryLabel}
+                  </span>
+                </div>
+              </div>
+
+              {primaryAddress && (
+                <a
+                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${primaryMerchantName} ${primaryAddress}`)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-brand-soft/80 dark:bg-brand-soft/20 border border-brand-2/30 text-xs font-bold text-brand-2 dark:text-[#FDA74D] hover:bg-brand-soft transition-all cursor-pointer active:scale-95 shrink-0"
+                  aria-label="مسیریابی روی نقشه"
+                >
+                  <Icon name="pin" className="w-3.5 h-3.5 text-brand-2 dark:text-[#FDA74D]" />
+                  <span>مسیریابی</span>
+                  <Icon name="arrow" className="w-3 h-3 rtl:rotate-180 opacity-70" />
+                </a>
+              )}
+            </div>
+
+            {/* Address */}
+            {primaryAddress && (
+              <div className="flex items-center gap-1.5 text-xs text-muted">
+                <Icon name="pin" className="w-3.5 h-3.5 text-brand-2 shrink-0" />
+                <span className="truncate">{primaryAddress}</span>
+              </div>
+            )}
+
+            {/* Order Items inside same container */}
+            <div className="pt-3 border-t border-line/60 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Icon name="bag" className="w-4 h-4 text-brand-2" />
+                  <h2 className="text-xs sm:text-sm font-black text-ink">
+                    اقلام سفارش ({numberFa(totalOrderedPacks)} بسته)
+                  </h2>
+                </div>
+              </div>
+
+              <div className="divide-y divide-line/60 space-y-3">
+                {successItems.map((item, idx) => (
+                  <div key={item.offer.id || idx} className="pt-3 first:pt-0">
+                    <div className="flex items-start gap-2.5">
+                      <div className="relative w-14 h-14 rounded-xl overflow-hidden bg-surface border border-line/60 shrink-0">
+                        <Image
+                          src={item.offer.image || "/images/products/dibz-dessert-box-cutout.png"}
+                          alt={item.offer.title}
+                          fill
+                          sizes="56px"
+                          className="object-contain p-1"
+                        />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-start justify-between gap-2">
+                          <h3 className="text-xs sm:text-sm font-black text-ink truncate leading-tight">
+                            {item.offer.title}
+                          </h3>
+                          <span className="text-xs font-black text-ink shrink-0">
+                            {money(item.offer.price * item.quantity)}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2 text-[11px] text-muted mt-1">
+                          <span className="font-bold text-brand-2 bg-brand-soft/60 px-2 py-0.5 rounded-md">
+                            تعداد: {numberFa(item.quantity)} عدد
+                          </span>
+                          {item.quantity > 1 && (
+                            <span>مبلغ واحد: {money(item.offer.price)}</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Total Paid Row */}
+              <div className="pt-2.5 border-t border-line/60 flex items-center justify-between text-xs">
+                <span className="font-bold text-muted">مبلغ کل پرداخت‌شده:</span>
+                <span className="text-sm sm:text-base font-black text-brand-2 dark:text-[#FDA74D]">
+                  {money(newlyCreatedReservation.total)}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* 5. Action Buttons (RTL) */}
           <div className="flex flex-col gap-2 pt-2 border-t border-line/60">
             <button
               type="button"
@@ -482,7 +632,7 @@ export function CartPipelinePage({
                 setPhase("cart");
                 onGoToOrders();
               }}
-              className="w-full min-h-[44px] rounded-2xl bg-brand-2 text-white text-xs font-black hover:bg-brand-2/95 transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer active:scale-[0.99]"
+              className="w-full min-h-[48px] rounded-2xl bg-brand-2 text-white text-xs sm:text-sm font-black hover:brightness-105 transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer active:scale-[0.99]"
             >
               <span>مشاهده در بخش سفارش‌ها</span>
               <Icon name="arrow" className="w-3.5 h-3.5 rtl:rotate-180" />
@@ -493,7 +643,7 @@ export function CartPipelinePage({
                 setPhase("cart");
                 onDiscover();
               }}
-              className="w-full min-h-[44px] rounded-2xl bg-canvas hover:bg-surface border border-line text-ink text-xs font-bold transition-all flex items-center justify-center cursor-pointer"
+              className="w-full min-h-[48px] rounded-2xl bg-canvas hover:bg-surface border border-line text-ink text-xs sm:text-sm font-bold transition-all flex items-center justify-center cursor-pointer active:scale-[0.99]"
             >
               بازگشت به کاوش جعبه‌ها
             </button>

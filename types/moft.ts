@@ -59,5 +59,39 @@ export type Reservation = {
   originalPrice?: number;
 };
 
+export type GroupedReservationItem = {
+  id: string;
+  offerId: string;
+  title: string;
+  image?: string;
+  quantity: number;
+  total: number;
+  originalPrice?: number;
+  description?: string;
+  allergens?: string[];
+  category?: OfferCategory;
+  reservation: Reservation;
+};
+
+export type GroupedReservation = {
+  groupKey: string;
+  merchantName: string;
+  category?: OfferCategory;
+  address: string;
+  pickup: string;
+  code: string;
+  status: ReservationStatus;
+  orderStatus?: import("@/types/demo").OrderStatus;
+  items: GroupedReservationItem[];
+  total: number;
+  originalTotal: number;
+  primaryReservation: Reservation;
+  allReservations: Reservation[];
+  hasReview?: boolean;
+  reviewResponse?: string;
+  createdAt: string;
+};
+
 export type ThemePreference = "light" | "dark" | "auto";
 export type AppTab = "home" | "discover" | "orders" | "reservations" | "cart" | "profile";
+
