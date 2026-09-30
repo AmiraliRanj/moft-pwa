@@ -24,24 +24,3 @@ export function CustomerSupportPage({ initialOrderId = "" }: { initialOrderId?: 
     </main>
   );
 }
-
-export function BusinessSupportPage() {
-  const { state } = useDemo();
-  const options = [
-    ...state.orders.slice(0, 20).map((order) => ({
-      value: order.id,
-      label: order.code,
-      description: `${order.customerName} · ${formatMoney(order.total)}`,
-    })),
-    ...state.settlements.map((settlement) => ({
-      value: settlement.id,
-      label: `تسویه ${settlement.period}`,
-      description: formatMoney(settlement.amount),
-    })),
-  ];
-  return (
-    <div className="space-y-6">
-      <SupportCenter scope="business" relatedOptions={options} />
-    </div>
-  );
-}

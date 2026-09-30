@@ -2,9 +2,16 @@
 
 ## Product
 
-Build and maintain **مفت (Moft)**, a Persian RTL marketplace preview for rescuing same-day surplus food and near-expiry grocery items through discounted surprise boxes.
+Build and maintain the customer PWA **مفت (Moft)**, a Persian RTL marketplace preview for rescuing same-day surplus food and near-expiry grocery items through discounted surprise boxes.
 
 This repository is a university-demo PWA first. Do not silently turn it into a production marketplace. Preserve mock data and clearly label simulated actions unless the task explicitly asks for a real backend.
+
+## App boundary
+
+- This repository owns `/customer/*`; the business UI lives in the independent sibling repository `moft-business-pwa`.
+- Preserve existing customer browser-storage keys and demo state version when changing the app boundary.
+- Legacy `/business/*` URLs redirect through `BUSINESS_PWA_URL`; configure the business origin before production builds.
+- Both previews keep independent mock data.
 
 ## Non-negotiable product rules
 

@@ -10,6 +10,7 @@ const required = [
   "app/manifest.ts",
   "app/offline/page.tsx",
   "components/MoftPreview.tsx",
+  "app/customer/[[...path]]/page.tsx",
   "components/ServiceWorkerRegister.tsx",
   "public/sw.js",
   "public/icons/dibz-ios-default-192-v2.png",
@@ -19,6 +20,9 @@ const required = [
 ];
 
 const errors = [];
+for (const file of ["components/business", "components/RoleSelector.tsx"]) {
+  if (existsSync(join(root, file))) errors.push(`Business UI must live in the separate business repository: ${file}`);
+}
 for (const file of required) if (!existsSync(join(root, file))) errors.push(`Missing: ${file}`);
 
 const packageJson = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));

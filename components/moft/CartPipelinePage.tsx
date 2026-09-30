@@ -19,7 +19,10 @@ interface CartPipelinePageProps {
   onUpdateQuantity?: (offerId: string, quantity: number) => void;
   onRemoveItem?: (offerId: string) => void;
   onClearCart?: () => void;
-  onConfirmOrder: (items: CartItem[]) => void;
+  onConfirmOrder: (items: CartItem[]) => {
+    succeededItems: CartItem[];
+    failedItems: Array<{ item: CartItem; error: string }>;
+  };
   pendingOffer?: Offer | null;
   activeReservations?: Reservation[];
   reservations?: Reservation[];
@@ -80,15 +83,22 @@ export function CartPipelinePage({
       return;
     }
     setIsProcessing(true);
-    setOrderedItems([...effectiveItems]);
     setTimeout(() => {
-      onConfirmOrder(effectiveItems);
+      const outcome = onConfirmOrder(effectiveItems);
       setIsProcessing(false);
+
+      if (outcome.succeededItems.length === 0) {
+        setPhase("cart");
+        showToast(outcome.failedItems[0]?.error || "سفارشی ثبت نشد؛ سبد خرید حفظ شد.", "error");
+        return;
+      }
+
+      setOrderedItems(outcome.succeededItems);
       
-      const firstItem = effectiveItems[0];
-      const hasMultiple = effectiveItems.length > 1;
+      const firstItem = outcome.succeededItems[0];
+      const hasMultiple = outcome.succeededItems.length > 1;
       const titleSummary = hasMultiple
-        ? `${firstItem.offer.title} (+${numberFa(effectiveItems.length - 1)} قلم دیگر)`
+        ? `${firstItem.offer.title} (+${numberFa(outcome.succeededItems.length - 1)} قلم دیگر)`
         : firstItem.offer.title;
       const merchantSummary = hasMultiple
         ? `${firstItem.offer.merchantName} و ...`
@@ -105,8 +115,8 @@ export function CartPipelinePage({
         pickup: firstItem.offer.pickup,
         address: firstItem.offer.address,
         code: `${Math.floor(100000 + Math.random() * 900000)}`.replace(/\d/g, (d) => "۰۱۲۳۴۵۶۷۸۹"[Number(d)]),
-        quantity: effectiveItems.reduce((acc, it) => acc + it.quantity, 0),
-        total: totalAmount,
+        quantity: outcome.succeededItems.reduce((acc, it) => acc + it.quantity, 0),
+        total: outcome.succeededItems.reduce((sum, it) => sum + it.offer.price * it.quantity, 0),
         status: "active",
         orderStatus: "paid",
         hasReview: false,
@@ -114,7 +124,11 @@ export function CartPipelinePage({
       };
       setNewlyCreatedReservation(simulatedRes);
       setPhase("success");
-      showToast("پرداخت با موفقیت انجام و سفارش ثبت شد.", "success");
+      if (outcome.failedItems.length > 0) {
+        showToast(`${numberFa(outcome.failedItems.length)} قلم ناموفق در سبد باقی ماند. ${outcome.failedItems[0].error}`, "warning");
+      } else {
+        showToast("پرداخت با موفقیت انجام و سفارش ثبت شد.", "success");
+      }
     }, 450);
   };
 

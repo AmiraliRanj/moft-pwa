@@ -1,17 +1,20 @@
 import type { Metadata } from "next";
-import { redirect } from "next/navigation";
-// [BUSINESS PANEL TEMPORARILY HIDDEN - WILL BE A SEPARATE APP - DO NOT DELETE CODEBASE]
-// import BusinessApp from "@/components/business/BusinessApp";
+import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "نسخه مشتری",
-  description: "دیبز - غذای خوب، نزدیک تو",
+  title: "پنل کسب‌وکار",
+  description: "پنل کسب‌وکار دیبز در برنامه‌ای جداگانه ارائه می‌شود.",
+  robots: { index: false, follow: false },
 };
 
 export default function BusinessPage() {
-  // Business panel is temporarily hidden as it will be in a separated app/panel.
-  // Codebase is preserved in components/business/ - DO NOT DELETE.
-  redirect("/customer");
-  // return <BusinessApp />;
+  // When BUSINESS_PWA_URL is set, next.config.ts redirects before this fallback renders.
+  return (
+    <main className="offline-page">
+      <div className="offline-card">
+        <h1>پنل کسب‌وکار به برنامه‌ای جدا منتقل شده است.</h1>
+        <Link className="primary-button" href="/customer">بازگشت به نسخه مشتری</Link>
+      </div>
+    </main>
+  );
 }
-

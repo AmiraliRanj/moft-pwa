@@ -1,133 +1,47 @@
-# دموی یکپارچه Dibz
+# PWA مشتری Dibz
 
-Dibz یک PWA فارسی و RTL برای نجات غذای سالمِ فروش‌نرفته است. این مخزن یک دموی دانشگاهی عمومی است و دو تجربه متصل را در یک پروژه Next.js و یک استقرار Vercel ارائه می‌کند:
+این مخزن نسخه مشتری دیبز، یک دموی دانشگاهی فارسی و RTL است. پرداخت، رزرو و پشتیبانی شبیه‌سازی می‌شوند و backend یا احراز هویت واقعی وجود ندارد.
 
-- نسخه مشتری برای کشف پیشنهاد، رزرو و پرداخت شبیه‌سازی‌شده، دریافت حضوری و ثبت نظر
-- پنل کسب‌وکار برای مدیریت پیشنهاد، موجودی، سفارش، تحویل، کیفیت، گزارش و امور مالی نمایشی
+پنل کسب‌وکار در مخزن مستقل `../moft-business-pwa` قرار دارد. داده دو برنامه همگام نمی‌شود؛ هر برنامه seed و `localStorage` مستقل دارد.
 
-هیچ پرداخت، احراز هویت، بانک یا backend واقعی در این نسخه وجود ندارد.
-
-## مسیرها
-
-| مسیر | کاربرد |
-| --- | --- |
-| `/` | انتخاب نوع ورود |
-| `/customer` | خانه مشتری |
-| `/customer/offers` | کشف و جست‌وجوی پیشنهادها |
-| `/customer/offers/[id]` | جزئیات مستقیم پیشنهاد |
-| `/customer/orders` | سفارش‌ها، وضعیت و کد دریافت |
-| `/customer/favorites` | علاقه‌مندی‌ها |
-| `/customer/profile` | پروفایل، پوسته و تغییر حالت دمو |
-| `/business` | داشبورد امروز |
-| `/business/orders` | مدیریت سفارش‌ها |
-| `/business/offers` | پیشنهاد و موجودی |
-| `/business/templates` | قالب‌های انتشار سریع |
-| `/business/pickup` | بررسی کد و تحویل |
-| `/business/analytics` | گزارش‌های تعاملی |
-| `/business/quality` | نظرها و پیگیری کیفیت |
-| `/business/finance` | تراکنش و تسویه نمایشی |
-| `/business/settings` | مجموعه، شعب، کارکنان و دسترسی‌ها |
-
-## نصب و اجرای محلی
-
-نیازمندی: Node.js 20.9 یا جدیدتر.
+## اجرا و بررسی
 
 ```bash
-npm install
+npm ci
 npm run dev
 ```
 
-سپس `http://localhost:3000` را باز کنید.
-
-بررسی کامل نسخه تولیدی:
+نسخه مشتری: `http://localhost:3000`. نسخه کسب‌وکار جداگانه روی پورت 3001 اجرا می‌شود.
 
 ```bash
 npm run validate
+npm test
 npm run lint
 npm run build
 npm run start
 ```
 
-در PowerShell ویندوزی که اجرای `npm.ps1` مسدود است، به‌جای `npm` از `npm.cmd` استفاده کنید.
+## مسیرها
 
-## هویت‌های دمو
+- `/` → `/customer`
+- `/customer/offers` و `/customer/offers/[id]`: کشف و جزئیات پیشنهاد
+- `/customer/favorites`: علاقه‌مندی‌ها
+- `/customer/cart`: سبد رزرو
+- `/customer/orders`: رزروها و کد دریافت
+- `/customer/profile`: پروفایل، پوسته و بازنشانی دمو
+- `/customer/support` و `/customer/support/[orderId]`: پشتیبانی نمایشی
+- `/offline`: صفحه آفلاین
 
-- مشتری: سارا احمدی — `09120000000`
-- کسب‌وکار: کافه ویونا
-- مالک: امیر رضایی
-- شعبه اصلی: شعبه جردن
-- کد دریافت معتبر seed: `482913`
+## داده و PWA
 
-از پایین نوار کناری Business می‌توان نقش فعال را میان مالک، مدیر شعبه و مسئول تحویل تغییر داد. دسترسی‌ها واقعاً روی عملیات پنل اثر می‌گذارند.
+کلیدهای قبلی مشتری (`moft-unified-demo-v1`، `moft-favorites-v2`، `moft-theme-v2` و `moft-support-v1`) و نسخه state حفظ شده‌اند تا اطلاعات ذخیره‌شده از دست نرود. مدل‌های مشترک دامنه و seed همچنان برای پیشنهادها و رزروهای مشتری استفاده می‌شوند.
 
-## داده مشترک و بازنشانی
+manifest مشتری و start URL قبلی حفظ شده‌اند. سرویس‌ورکر از cache با نام `dibz-customer-shell-v8` استفاده می‌کند؛ cacheهای قدیمی `dibz-shell-*` حذف می‌شوند و مسیرهای `/business/*` دیگر cache نمی‌شوند. سرویس‌ورکر فقط در اجرای production فعال است.
 
-seed اصلی در [`data/demo-seed.ts`](./data/demo-seed.ts) قرار دارد. `DemoProvider` در [`demo/DemoProvider.tsx`](./demo/DemoProvider.tsx) state مشترک را با کلید نسخه‌بندی‌شده `moft-unified-demo-v1` در `localStorage` نگه می‌دارد.
+## انتقال لینک‌های قدیمی و استقرار
 
-برای بازنشانی:
+در توسعه، `/business/*` به همان مسیر در `http://localhost:3001` منتقل می‌شود. برای production، متغیر `BUSINESS_PWA_URL` را پیش از build به origin واقعی کسب‌وکار تنظیم کنید؛ مثلاً `https://business.example.com`. متغیر فقط origin می‌پذیرد، نه مسیر `/business`. پارامترهای query و ادامه مسیر حفظ می‌شوند.
 
-1. در Customer به پروفایل بروید یا در Business پایین نوار کناری را باز کنید.
-2. «بازنشانی اطلاعات نمایشی» را انتخاب کنید.
-3. تأیید کنید.
+اگر در production این متغیر تنظیم نشود، صفحه اطلاع‌رسانی انتقال پنل نمایش داده می‌شود. قبل از انتشار مشتری آن را تنظیم و redirect را بررسی کنید.
 
-پیشنهادها، موجودی، سفارش‌ها، نظرها، پیگیری‌ها، اعلان‌ها و امور مالی به seed اولیه برمی‌گردند؛ پوسته روشن/تاریک حفظ می‌شود.
-
-## معماری store و service
-
-- مدل‌های strict مشترک: `types/demo.ts`
-- seed قطعی و روابط داده: `data/demo-seed.ts`
-- persistence و actionهای UI: `demo/DemoProvider.tsx`
-- قواعد دامنه و سرویس‌های mock: `demo/services.ts`
-- UI مشتری: `components/MoftPreview.tsx`
-- shell و صفحه‌های کسب‌وکار: `components/business/`
-
-صفحه‌ها مستقیماً آرایه mock جداگانه را تغییر نمی‌دهند. عملیات پیشنهاد، سفارش، تحویل، نظر، گزارش و مالی از سرویس‌ها و store مشترک عبور می‌کنند.
-
-## جایگزینی mock با Django REST API
-
-برای نسخه آینده:
-
-1. قراردادهای TypeScript در `types/demo.ts` را با serializerهای Django هم‌راستا کنید.
-2. متدهای `offerService`، `orderService`، `pickupService`، `reviewService` و `financeService` را با clientهای async HTTP جایگزین کنید.
-3. optimistic update و rollback را در `DemoProvider` یا یک لایه query جدا اضافه کنید.
-4. کنترل اتمیک موجودی، idempotency پرداخت و یک‌بارمصرف‌بودن کد تحویل را روی backend enforce کنید.
-5. احراز هویت و permission را سمت سرور هم بررسی کنید؛ محدودیت‌های فعلی صرفاً دموی UI هستند.
-6. کلیدها و secretها را فقط در محیط استقرار نگه دارید و هیچ `.env` واقعی را commit نکنید.
-
-## استقرار روی Vercel
-
-این پروژه به environment variable نیاز ندارد. Framework Preset روی Next.js و Build Command روی `npm run build` باشد.
-
-روش Git:
-
-```bash
-git push -u origin prototype-3
-```
-
-اگر Vercel به GitHub متصل باشد، Push همین شاخه یک Preview Deployment می‌سازد.
-
-روش CLI برای Preview:
-
-```bash
-npx vercel
-```
-
-انتشار Production فقط با تصمیم صریح پروژه:
-
-```bash
-npx vercel --prod
-```
-
-## PWA
-
-- manifest: `app/manifest.ts`
-- ثبت service worker: `components/ServiceWorkerRegister.tsx`
-- service worker نسخه‌بندی‌شده: `public/sw.js`
-- fallback آفلاین: `/offline`
-- start URL: `/` برای نمایش انتخاب نوع ورود
-
-PWA از یک service worker مشترک استفاده می‌کند و برای Customer و Business سرویس‌ورکر جداگانه‌ای ایجاد نشده است.
-
-## شاخه توسعه
-
-تمام تغییرات دموی یکپارچه روی شاخه `prototype-3` نگهداری می‌شوند.
+در Vercel دو پروژه مستقل برای دو مخزن ایجاد کنید؛ هرکدام Next.js و `npm run build`. از originهای جدا برای استقلال نصب، ذخیره‌سازی و cache استفاده کنید. نیازی به backend نیست. فایل `.env.example` فقط نمونه غیرحساس است؛ فایل `.env` واقعی وارد Git نشود.

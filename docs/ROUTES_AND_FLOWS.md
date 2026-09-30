@@ -1,28 +1,11 @@
-# مسیرها و Flowها
+# مسیرها و جریان‌های مشتری
 
-## Preview تک‌صفحه‌ای فعلی
+- `/` به `/customer` منتقل می‌شود.
+- `/customer/offers` و `/customer/offers/[id]`: کشف و جزئیات پیشنهاد
+- `/customer/favorites`: علاقه‌مندی‌ها
+- `/customer/cart` و `/customer/orders`: رزرو شبیه‌سازی‌شده و پیگیری دریافت حضوری
+- `/customer/profile`: پروفایل، پوسته و بازنشانی دمو
+- `/customer/support/[orderId]`: درخواست پشتیبانی مربوط به سفارش
+- `/offline`، `/manifest.webmanifest` و `/sw.js`: زیرساخت PWA
 
-- `/` خانه و تب‌های داخلی
-- `/offline` صفحه آفلاین
-- `/manifest.webmanifest` توسط Next.js
-- `/sw.js` سرویس‌ورکر
-
-## مسیرهای پیشنهادی نسخه توسعه‌یافته
-
-- `/explore`
-- `/offers/[offerId]`
-- `/reservations`
-- `/reservations/[reservationId]`
-- `/profile`
-- `/partner`
-- `/partner/offers/new`
-- `/partner/offers/[offerId]`
-
-## Flow شریک تجاری
-
-1. فروشگاه وارد پنل می‌شود.
-2. تعداد Surprise Box امروز را وارد می‌کند.
-3. بازه Pickup، قیمت و آلرژن‌های احتمالی را مشخص می‌کند.
-4. Offer منتشر می‌شود.
-5. رزروها و تعداد باقی‌مانده نمایش داده می‌شود.
-6. هنگام مراجعه مشتری، کد تحویل بررسی می‌شود.
+پنل کسب‌وکار در مخزن مستقل `moft-business-pwa` قرار دارد. لینک‌های قدیمی `/business/*` با `BUSINESS_PWA_URL` به origin جدید منتقل می‌شوند. داده نمایشی بین دو برنامه همگام نمی‌شود.

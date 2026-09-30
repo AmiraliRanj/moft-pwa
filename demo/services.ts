@@ -133,8 +133,10 @@ const allowedTransitions: Record<OrderStatus, OrderStatus[]> = {
   refunded: [],
 };
 
-export const orderService = {
-  place(state: DemoState, offerId: string, quantity: number): ServiceResult<Order> {
+export type CartCheckoutInput = { offerId: string; quantity: number };
+export type CartCheckoutFailure = CartCheckoutInput & { error: string };
+
+const placeOrder = (state: DemoState, offerId: string, quantity: number): ServiceResult<Order> => {
     const offer = state.offers.find((item) => item.id === offerId);
     if (!offer || offer.status !== "active") return { ok: false, state, error: "این پیشنهاد در حال حاضر قابل رزرو نیست." };
     if (!Number.isInteger(quantity) || quantity < 1 || quantity > 3) return { ok: false, state, error: "تعداد انتخاب‌شده معتبر نیست." };
@@ -176,6 +178,24 @@ export const orderService = {
         notifications: [{ id: entityId("notification"), kind: "new_order", title: "سفارش تازه", text: `${state.customer.name} یک ${offer.title} رزرو کرد.`, href: "/business/orders", read: false, createdAt }, ...state.notifications],
         auditLog: [{ id: entityId("audit"), actor: "customer", action: "order_created", entityType: "order", entityId: orderId, at: createdAt, detail: "سفارش و پرداخت ثبت شد." }, ...state.auditLog],
       },
+    };
+  };
+
+export const orderService = {
+  place: placeOrder,
+
+  placeMany(state: DemoState, items: CartCheckoutInput[]) {
+    let nextState = state;
+    const failedItems: CartCheckoutFailure[] = [];
+    for (const item of items) {
+      const result = placeOrder(nextState, item.offerId, item.quantity);
+      if (result.ok) nextState = result.state;
+      else failedItems.push({ ...item, error: result.error });
+    }
+    return {
+      state: nextState,
+      failedItems,
+      succeededCount: items.length - failedItems.length,
     };
   },
 

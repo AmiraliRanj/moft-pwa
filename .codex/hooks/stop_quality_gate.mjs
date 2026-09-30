@@ -24,7 +24,10 @@ if (missing.length) problems.push(`Missing required files: ${missing.join(", ")}
 const pagePath = join(root, "app/page.tsx");
 if (existsSync(pagePath)) {
   const page = readFileSync(pagePath, "utf8");
-  if (!page.includes("MoftPreview")) problems.push("app/page.tsx no longer renders the main Moft preview component.");
+  const customerPage = join(root, "app/customer/[[...path]]/page.tsx");
+  if (!page.includes('redirect("/customer")') || !existsSync(customerPage) || !readFileSync(customerPage, "utf8").includes("MoftPreview")) {
+    problems.push("The customer entry point must redirect to the customer preview.");
+  }
 }
 
 const agentsPath = join(root, "AGENTS.md");

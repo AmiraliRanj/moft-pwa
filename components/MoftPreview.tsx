@@ -135,7 +135,7 @@ export default function MoftPreview({
   initialFavoritesOnly = false,
   initialOfferId,
 }: MoftPreviewProps) {
-  const { state, placeOrder, transitionOrder, submitReview } = useDemo();
+  const { state, placeOrder, checkoutCart, transitionOrder, submitReview } = useDemo();
   const [tab, setTab] = useState<AppTab>(initialTab);
   const [discoverMode, setDiscoverMode] = useState<"feed" | "map">("feed");
   const handleDiscoverModeChange = useCallback((nextMode: "feed" | "map") => {
@@ -453,13 +453,15 @@ export default function MoftPreview({
   };
 
   const handleConfirmCartOrder = (items: CartItem[]) => {
-    for (const item of items) {
-      const result = placeOrder(item.offer.id, item.quantity);
-      if (!result.ok) {
-        showToast(result.error, "error");
-      }
-    }
-    setCartItems([]);
+    const result = checkoutCart(items.map((item) => ({ offerId: item.offer.id, quantity: item.quantity })));
+    const failedItems = result.failedItems.map((failure) => ({
+      item: items.find((item) => item.offer.id === failure.offerId && item.quantity === failure.quantity) ?? items[0],
+      error: failure.error,
+    }));
+    const failedItemSet = new Set(failedItems.map((failure) => failure.item));
+    const succeededItems = items.filter((item) => !failedItemSet.has(item));
+    setCartItems(failedItems.map((failure) => failure.item));
+    return { succeededItems, failedItems };
   };
 
   const openReceipt = (target: Reservation | GroupedReservation) => {
@@ -904,7 +906,7 @@ export default function MoftPreview({
               showToast(result.error);
               return false;
             }
-            showToast("نظرت ثبت شد و در پنل کیفیت کسب‌وکار دیده می‌شود.");
+            showToast("نظرت در دموی مشتری ثبت شد.");
             setLayer(null);
             setReviewOrderId(null);
             return true;
