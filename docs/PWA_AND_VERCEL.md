@@ -1,38 +1,20 @@
-# PWA و Vercel
+# PWA و استقرار مستقل
 
-## PWA
+نسخه مشتری و کسب‌وکار دو پروژه Next.js مستقل روی دو origin جدا هستند. هرکدام manifest، service worker، cache و داده نمایشی خود را دارند.
 
-فایل‌های اصلی:
+## مشتری
 
-- `app/manifest.ts`
-- `public/sw.js`
-- `components/ServiceWorkerRegister.tsx`
-- `app/offline/page.tsx`
-- آیکن‌های Home Screen در `public/icons/dibz-ios-default-180-v2.png`، `public/icons/dibz-ios-default-192-v2.png` و `public/icons/dibz-ios-default-512-v2.png`
+- start URL و هویت نصب قبلی مشتری حفظ می‌شود.
+- cache جدید: `dibz-customer-shell-v8`؛ cacheهای قدیمی `dibz-shell-*` پاک می‌شوند.
+- `/business/*` توسط service worker cache نمی‌شود.
+- در Vercel قبل از build مقدار `BUSINESS_PWA_URL` را روی origin کسب‌وکار تنظیم کنید. ادامه مسیر و query در redirect حفظ می‌شود.
 
-سرویس‌ورکر Preview فقط App Shell و پاسخ‌های موفق same-origin را cache می‌کند. داده حساس، API خصوصی یا پرداخت نباید با همین سیاست cache شود.
+## کسب‌وکار
 
-## تست نصب
+مخزن `moft-business-pwa` پروژه جداگانه Vercel است. manifest با نام `Dibz Business` و start URL برابر `/business`، cache و storage مختص کسب‌وکار دارد؛ به متغیر محیطی نیاز ندارد.
 
-- روی HTTPS یا localhost اجرا شود.
-- Manifest در DevTools بررسی شود.
-- Service Worker فعال باشد.
-- آیکن 192 و 512 موجود باشد.
-- نام و رنگ theme صحیح باشد.
+## بررسی نصب و آفلاین
 
-## Vercel
+بعد از `npm run build` و `npm run start` روی HTTPS یا localhost، manifest، آیکن‌ها، حالت standalone، فعال‌شدن worker، بارگذاری دوباره صفحه بازدیدشده در حالت آفلاین و fallback `/offline` را بررسی کنید. اجرای dev سرویس‌ورکر را ثبت نمی‌کند.
 
-برای این Preview تنظیم خاصی لازم نیست. Build command همان `npm run build` است.
-
-## متغیرهای محیطی آینده
-
-نمونه نام‌ها:
-
-```text
-DATABASE_URL=
-AUTH_SECRET=
-PAYMENT_PROVIDER_SECRET=
-PAYMENT_WEBHOOK_SECRET=
-```
-
-مقادیر واقعی هرگز در Git قرار نگیرند. فقط `.env.example` بدون مقدار حساس commit شود.
+قبل از انتشار مشتری، redirectهای `/business` و `/business/orders?status=paid` را به origin واقعی کسب‌وکار آزمایش کنید. هیچ backend، پرداخت یا انتشار واقعی بخشی از این تغییر نیست.

@@ -6,7 +6,7 @@ export function BrandMark({ href = "/", subtitle }: { href?: string; subtitle?: 
     <Link
       className="inline-flex min-w-0 items-center gap-2.5 text-ink no-underline"
       href={href}
-      aria-label="دیبز؛ بازگشت به انتخاب نوع ورود"
+      aria-label="دیبز؛ بازگشت به خانه"
     >
       <span className="grid h-[42px] w-[42px] shrink-0 place-items-center">
         <Image src="/icons/dibz-ios-dark.png" alt="" width={42} height={42} className="h-full w-full object-contain" />

@@ -2,7 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { createDemoSeed, DEMO_STATE_VERSION, DEMO_STORAGE_KEY } from "@/data/demo-seed";
-import { offerService, orderService, pickupService, reviewService, type ServiceResult } from "@/demo/services";
+import { offerService, orderService, pickupService, reviewService, type CartCheckoutInput, type ServiceResult } from "@/demo/services";
 import type {
   Branch,
   Business,
@@ -34,6 +34,7 @@ type DemoContextValue = {
   duplicateTemplate: (id: string) => Feedback;
   deleteTemplate: (id: string) => Feedback;
   placeOrder: (offerId: string, quantity: number) => ServiceResult<Order>;
+  checkoutCart: (items: CartCheckoutInput[]) => ReturnType<typeof orderService.placeMany>;
   transitionOrder: (id: string, status: OrderStatus) => ServiceResult<Order>;
   verifyPickup: (code: string) => ReturnType<typeof pickupService.verify>;
   submitReview: (orderId: string, rating: number, comment: string) => ServiceResult<Review>;
@@ -193,6 +194,12 @@ export function DemoProvider({ children }: { children: ReactNode }) {
     return result;
   }, [commit]);
 
+  const checkoutCart = useCallback((items: CartCheckoutInput[]) => {
+    const result = orderService.placeMany(stateRef.current, items);
+    if (result.succeededCount > 0) commit(result.state);
+    return result;
+  }, [commit]);
+
   const transitionOrder = useCallback((id: string, status: OrderStatus) => {
     const result = orderService.transition(stateRef.current, id, status);
     if (result.ok) commit(result.state);
@@ -285,12 +292,12 @@ export function DemoProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<DemoContextValue>(() => ({
     state, hydrated, createOffer, updateOffer, setOfferStatus, adjustStock, duplicateOffer, removeDraft,
-    publishTemplate, createTemplate, updateTemplate, duplicateTemplate, deleteTemplate, placeOrder, transitionOrder, verifyPickup,
+    publishTemplate, createTemplate, updateTemplate, duplicateTemplate, deleteTemplate, placeOrder, checkoutCart, transitionOrder, verifyPickup,
     submitReview, respondReview, updateComplaint, markNotificationRead, markAllNotificationsRead,
     updateBusiness, updateCustomer, updateBranch, addBranch, removeBranch, updateStaff, addStaff, setActiveStaff, resetDemo,
   }), [
     state, hydrated, createOffer, updateOffer, setOfferStatus, adjustStock, duplicateOffer, removeDraft,
-    publishTemplate, createTemplate, updateTemplate, duplicateTemplate, deleteTemplate, placeOrder, transitionOrder, verifyPickup,
+    publishTemplate, createTemplate, updateTemplate, duplicateTemplate, deleteTemplate, placeOrder, checkoutCart, transitionOrder, verifyPickup,
     submitReview, respondReview, updateComplaint, markNotificationRead, markAllNotificationsRead,
     updateBusiness, updateCustomer, updateBranch, addBranch, removeBranch, updateStaff, addStaff, setActiveStaff, resetDemo,
   ]);
