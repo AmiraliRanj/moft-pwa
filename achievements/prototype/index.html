@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Dibz · Collectible Achievement Cards — Visual Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alfa+Slab+One&family=Oswald:wght@500;600&family=Vazirmatn:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="prototype.css"/>
+</head>
+<body>
+<div id="errBanner" role="alert"></div>
+
+<header class="hero">
+  <p class="eyebrow">DIBZ · VISUAL PROTOTYPE SYSTEM · V1</p>
+  <h1>Collectible <em>Achievement Cards</em></h1>
+  <p class="lede">One persistent card per achievement — five stages, never replaced, only evolved. Below: 3 card families × 5 stages, rendered live as procedural SVG from JSON configs. Vintage 1930s rubber-hose world, printed like old coupons, tickets and food packaging.</p>
+  <div class="ladder" aria-label="tier ladder">
+    <span class="step t0">Locked</span><span class="arr">→</span>
+    <span class="step t1">Tier 1</span><span class="arr">→</span>
+    <span class="step t2">Tier 2</span><span class="arr">→</span>
+    <span class="step t3">Tier 3</span><span class="arr">→</span>
+    <span class="step t4">Final</span>
+  </div>
+  <p class="hintline">Hover any card for tilt + shine · click any card to inspect its JSON in the Edition Lab.</p>
+</header>
+
+<main>
+  <div id="families"></div>
+
+  <section class="lab" id="lab">
+    <div class="lab-head">
+      <span class="fam-tag">EDITIONS</span>
+      <h2>Edition Lab</h2>
+      <p>Editions are a separate axis from tiers: the same achievement, the same illustration, a different print treatment. The renderer recolors the whole layer stack from the edition palette and adds a single overlay layer (star field / newspaper masthead / bazaar tiles). Intentional, not procedurally random.</p>
+      <p class="lab-card-name">Card: <b id="labCardName" dir="rtl"></b> <span class="muted">— click any card above to load it here</span></p>
+    </div>
+    <div class="lab-grid">
+      <div class="tilt lab-tilt"><div id="labMount"></div></div>
+      <div class="lab-side">
+        <div id="labTabs" class="tabs" role="tablist" aria-label="edition"></div>
+        <pre id="jsonView" dir="ltr" aria-label="card JSON configuration"></pre>
+        <p class="muted small">The prototype draws straight from this JSON · production contract: <code>dibz.card/1</code></p>
+      </div>
+    </div>
+  </section>
+
+  <section class="reveal" id="revealSec">
+    <div class="lab-head">
+      <span class="fam-tag">REVEAL</span>
+      <h2>Reveal moment</h2>
+      <p>The cinematic reveal: the card floats in as a mystery back, flips, the stamp lands with a bounce, paper confetti bursts, CTAs fade up. Tier upgrades reuse this stage with a before → after morph — the card evolves on screen (storyboard in the README).</p>
+    </div>
+    <div class="reveal-stage">
+      <div class="tilt reveal-tilt">
+        <div class="flip-scene">
+          <div class="flip-card" id="flipCard">
+            <div class="face front" id="revealFront"></div>
+            <div class="face back" id="revealBack"></div>
+          </div>
+        </div>
+        <div class="burst" id="burstLayer" aria-hidden="true"></div>
+      </div>
+      <div class="stamp-pop" id="stampPop" dir="rtl">کارت تکمیل شد ✦</div>
+      <div class="reveal-ctas" id="revealCtas">
+        <button class="btn primary" type="button" dir="rtl">مجموعه من</button>
+        <button class="btn ghostb" type="button" dir="rtl">اشتراک‌گذاری</button>
+      </div>
+    </div>
+    <div class="reveal-controls">
+      <button class="btn primary big" id="revealBtn" type="button" dir="rtl">نمایش کارت</button>
+      <button class="btn ghostb" id="resetReveal" type="button" dir="rtl">دوباره</button>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <p>Dibz achievement-card prototype · static demo — no backend, no real rewards, all numbers are mock data · motion respects <code>prefers-reduced-motion</code> · original artwork, no third-party IP.</p>
+</footer>
+
+<script src="cards.js"></script>
+<script src="layers.js"></script>
+<script src="scenes.js"></script>
+</body>
+</html>
