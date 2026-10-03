@@ -78,12 +78,12 @@ export function DialogShell({
         ref={dialogRef}
         className={`relative w-full ${
           isFullscreen
-            ? "max-w-none sm:max-w-lg h-dvh max-h-dvh sm:max-h-[92vh] sm:h-[92vh]"
+            ? "max-w-none sm:max-w-lg md:max-w-xl lg:max-w-2xl h-dvh max-h-dvh sm:max-h-[92vh] sm:h-[92vh]"
             : size === "detail"
-            ? "max-w-md max-h-[92dvh] sm:max-h-[90vh]"
+            ? "max-w-md md:max-w-lg max-h-[92dvh] sm:max-h-[90vh]"
             : isCentered
-            ? "max-w-sm max-h-[85dvh] sm:max-h-[85vh]"
-            : "max-w-md max-h-[85dvh] sm:max-h-[85vh]"
+            ? "max-w-sm sm:max-w-md max-h-[85dvh] sm:max-h-[85vh]"
+            : "max-w-md md:max-w-lg max-h-[85dvh] sm:max-h-[85vh]"
         } overflow-hidden flex flex-col ${
           isFullscreen
             ? "rounded-none sm:rounded-3xl border-0 sm:border sm:border-line"

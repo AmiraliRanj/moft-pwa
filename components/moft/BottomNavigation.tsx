@@ -19,7 +19,7 @@ export function BottomNavigation({
 }) {
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-40 pointer-events-auto bg-surface/95 dark:bg-[#1D1E21]/95 backdrop-blur-xl border-t border-line"
+      className="fixed inset-x-0 bottom-0 z-40 pointer-events-auto bg-surface/95 dark:bg-[#1D1E21]/95 backdrop-blur-xl border-t border-line md:hidden"
       style={{ paddingBottom: "max(10px, calc(env(safe-area-inset-bottom, 0px) - 8px))" }}
       aria-label="ناوبری اصلی"
     >

@@ -32,6 +32,8 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
   viewportFit: "cover"
 };
 
@@ -51,6 +53,31 @@ const themeBootScript = `
     const resolved = "light";
     root.dataset.theme = resolved;
     root.style.colorScheme = resolved;
+  }
+
+  // Prevent mobile browser pinch & double-tap zoom across the webapp except on the map
+  try {
+    document.addEventListener("gesturestart", (e) => {
+      if (!e.target || typeof e.target.closest !== "function" || !e.target.closest('[data-allow-zoom="true"]')) {
+        e.preventDefault();
+      }
+    }, { passive: false });
+
+    document.addEventListener("gesturechange", (e) => {
+      if (!e.target || typeof e.target.closest !== "function" || !e.target.closest('[data-allow-zoom="true"]')) {
+        e.preventDefault();
+      }
+    }, { passive: false });
+
+    document.addEventListener("touchstart", (e) => {
+      if (e.touches && e.touches.length > 1) {
+        if (!e.target || typeof e.target.closest !== "function" || !e.target.closest('[data-allow-zoom="true"]')) {
+          e.preventDefault();
+        }
+      }
+    }, { passive: false });
+  } catch {
+    /* Safe fallback if gesture events unavailable */
   }
 })();
 `;

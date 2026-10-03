@@ -154,7 +154,7 @@ export function CartPipelinePage({
   if (trackingReservation) {
     const stage = getStageIndex(trackingReservation.orderStatus);
     return (
-      <div className="space-y-4 pb-24 animate-in fade-in duration-200">
+      <div className="space-y-4 pb-24 md:pb-12 max-w-2xl mx-auto animate-in fade-in duration-200">
         <header className="flex items-center justify-between pb-2 border-b border-line/60">
           <div className="flex items-center gap-2">
             <span className="w-8 h-8 rounded-xl bg-brand-soft text-brand-2 grid place-items-center">
@@ -268,7 +268,7 @@ export function CartPipelinePage({
   // -------------------------------------------------------------
   if (phase === "payment_method" || phase === "confirm") {
     return (
-      <div className="space-y-4 pb-24 animate-in fade-in duration-200">
+      <div className="space-y-4 pb-24 md:pb-12 max-w-xl mx-auto animate-in fade-in duration-200">
         {/* Header & Step Breadcrumbs */}
         <header className="p-3.5 sm:p-4 rounded-3xl bg-surface border border-line shadow-xs space-y-2.5">
           <div className="flex items-center justify-between">
@@ -495,7 +495,7 @@ export function CartPipelinePage({
     const totalOrderedPacks = successItems.reduce((acc, it) => acc + it.quantity, 0);
 
     return (
-      <div className="space-y-4 pt-2 sm:pt-3 pb-24 animate-in fade-in duration-200 text-start" dir="rtl">
+      <div className="space-y-4 pt-2 sm:pt-3 pb-24 md:pb-12 max-w-xl mx-auto animate-in fade-in duration-200 text-start" dir="rtl">
         <div className="p-4 sm:p-5 rounded-3xl bg-surface border border-line shadow-xs space-y-4">
           {/* 1. Header: Checkmark badge + Title + Subtitle (RTL Aligned) */}
           <div className="flex items-start gap-3 pb-3 border-b border-line">
@@ -657,119 +657,125 @@ export function CartPipelinePage({
   // VIEW: Main Cart Screen (Clean, Minimal & Synced to App Style)
   // -------------------------------------------------------------
   return (
-    <div className="space-y-4 pb-24 animate-in fade-in duration-200">
+    <div className="space-y-4 pb-24 md:pb-12 max-w-5xl mx-auto animate-in fade-in duration-200">
 
-      {/* SECTION 1: Pending Cart Items (All in ONE single container despite various items) */}
+      {/* SECTION 1: Pending Cart Items & Checkout Panel */}
       {effectiveItems.length > 0 ? (
-        <section className="p-3.5 sm:p-4 rounded-3xl bg-surface border border-line shadow-xs space-y-4">
-          {/* Header of the container: Order Items Count & Clear action */}
-          <div className="flex items-center justify-between pb-2 border-b border-line/60">
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-brand-2" />
-              <h2 className="text-xs sm:text-sm font-black text-ink font-morabba">اقلام سفارش ({numberFa(effectiveItems.length)} مورد)</h2>
-            </div>
-            {onClearCart && effectiveItems.length > 1 && (
-              <button
-                type="button"
-                onClick={onClearCart}
-                className="text-[11px] font-bold text-muted hover:text-rose-500 transition-colors cursor-pointer"
-              >
-                حذف همه
-              </button>
-            )}
-          </div>
-
-          {/* List of items inside this ONE container */}
-          <div className="divide-y divide-line/60 space-y-3.5">
-            {effectiveItems.map(({ offer, quantity: itQty }) => {
-              const itemTotal = offer.price * itQty;
-              const itemOriginal = offer.originalPrice * itQty;
-              const itemDiscount = discountPercent(offer.originalPrice, offer.price);
-
-              return (
-                <div key={offer.id} className="pt-3.5 first:pt-0 space-y-3">
-                  <div className="flex items-start justify-between gap-3">
-                    {/* Store & Cutout Info */}
-                    <div className="flex items-start gap-2.5 min-w-0 flex-1">
-                      <div className="relative w-16 h-16 sm:w-18 sm:h-18 rounded-2xl overflow-hidden bg-canvas border border-line/60 shrink-0">
-                        <Image
-                          src={offer.image || "/images/products/dibz-dessert-box-cutout.png"}
-                          alt={offer.title}
-                          fill
-                          sizes="72px"
-                          className="object-contain p-1"
-                        />
-                      </div>
-
-                      <div className="min-w-0 flex-1 space-y-0.5">
-                        <span className="text-xs font-bold text-ink truncate block">{offer.merchantName}</span>
-                        <h3 className="text-xs sm:text-sm font-black text-ink truncate leading-tight">{offer.title}</h3>
-                        <p className="text-[11px] text-muted flex items-center gap-1 pt-0.5 truncate">
-                          <Icon name="clock" className="w-3.5 h-3.5 text-muted shrink-0" />
-                          <span>{formatPickupDate(offer.pickup)}</span>
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Trash button for this item */}
-                    <button
-                      type="button"
-                      onClick={() => (onRemoveItem ? onRemoveItem(offer.id) : onClearPending?.())}
-                      aria-label={`حذف ${offer.title} از سبد خرید`}
-                      className="w-8 h-8 rounded-full flex items-center justify-center text-muted hover:text-rose-500 hover:bg-rose-500/10 transition-colors cursor-pointer shrink-0"
-                    >
-                      <Icon name="trash" className="w-4 h-4" />
-                    </button>
-                  </div>
-
-                  {/* Pricing Row for this item */}
-                  <div className="flex items-center justify-between text-xs px-1">
-                    <div className="flex items-center gap-2">
-                      <del className="text-muted line-through text-[11px]">{money(itemOriginal)}</del>
-                      {itemDiscount > 0 && (
-                        <span className="text-[10px] font-bold text-rose-600 bg-rose-500/10 px-1.5 py-0.5 rounded-full">
-                          {numberFa(itemDiscount)}٪ تخفیف
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex items-baseline gap-1">
-                      <span className="text-muted text-[11px]">مبلغ:</span>
-                      <strong className="font-bold text-xs text-ink">{money(itemTotal)}</strong>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Pricing Summary of the entire order session */}
-          <div className="pt-3 border-t border-line space-y-2">
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-muted font-medium">مجموع قیمت اصلی:</span>
-              <del className="text-muted font-bold line-through">{money(originalTotal)}</del>
-            </div>
-            {discount > 0 && (
-              <div className="flex items-center justify-between text-xs text-rose-600 font-bold">
-                <span>تخفیف کل سفارش:</span>
-                <span>{money(originalTotal - totalAmount)} ({numberFa(discount)}٪)</span>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 items-start">
+          <section className="lg:col-span-2 p-3.5 sm:p-5 rounded-3xl bg-surface border border-line shadow-xs space-y-4">
+            {/* Header of the container: Order Items Count & Clear action */}
+            <div className="flex items-center justify-between pb-2 border-b border-line/60">
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-brand-2" />
+                <h2 className="text-xs sm:text-sm font-black text-ink font-morabba">اقلام سفارش ({numberFa(effectiveItems.length)} مورد)</h2>
               </div>
-            )}
-            <div className="flex items-center justify-between text-sm pt-2 border-t border-line/60">
-              <span className="font-black text-ink">مبلغ قابل پرداخت:</span>
-              <strong className="font-black text-base text-brand-2">{money(totalAmount)}</strong>
+              {onClearCart && effectiveItems.length > 1 && (
+                <button
+                  type="button"
+                  onClick={onClearCart}
+                  className="text-[11px] font-bold text-muted hover:text-rose-500 transition-colors cursor-pointer"
+                >
+                  حذف همه
+                </button>
+              )}
             </div>
-          </div>
 
-          {/* EXACTLY 1 PRIMARY CTA BUTTON FOR THE WHOLE ORDER */}
-          <button
-            type="button"
-            onClick={() => setPhase("payment_method")}
-            className="w-full min-h-[48px] py-2.5 px-4 rounded-2xl bg-brand-2 hover:bg-brand-2/90 active:scale-[0.99] text-white text-xs sm:text-sm font-black transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer"
-          >
-            <span>ادامه و پرداخت</span>
-            <Icon name="arrow" className="w-4 h-4 rtl:rotate-180 shrink-0" />
-          </button>
-        </section>
+            {/* List of items inside this ONE container */}
+            <div className="divide-y divide-line/60 space-y-3.5">
+              {effectiveItems.map(({ offer, quantity: itQty }) => {
+                const itemTotal = offer.price * itQty;
+                const itemOriginal = offer.originalPrice * itQty;
+                const itemDiscount = discountPercent(offer.originalPrice, offer.price);
+
+                return (
+                  <div key={offer.id} className="pt-3.5 first:pt-0 space-y-3">
+                    <div className="flex items-start justify-between gap-3">
+                      {/* Store & Cutout Info */}
+                      <div className="flex items-start gap-2.5 min-w-0 flex-1">
+                        <div className="relative w-16 h-16 sm:w-18 sm:h-18 rounded-2xl overflow-hidden bg-canvas border border-line/60 shrink-0">
+                          <Image
+                            src={offer.image || "/images/products/dibz-dessert-box-cutout.png"}
+                            alt={offer.title}
+                            fill
+                            sizes="72px"
+                            className="object-contain p-1"
+                          />
+                        </div>
+
+                        <div className="min-w-0 flex-1 space-y-0.5">
+                          <span className="text-xs font-bold text-ink truncate block">{offer.merchantName}</span>
+                          <h3 className="text-xs sm:text-sm font-black text-ink truncate leading-tight">{offer.title}</h3>
+                          <p className="text-[11px] text-muted flex items-center gap-1 pt-0.5 truncate">
+                            <Icon name="clock" className="w-3.5 h-3.5 text-muted shrink-0" />
+                            <span>{formatPickupDate(offer.pickup)}</span>
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Trash button for this item */}
+                      <button
+                        type="button"
+                        onClick={() => (onRemoveItem ? onRemoveItem(offer.id) : onClearPending?.())}
+                        aria-label={`حذف ${offer.title} از سبد خرید`}
+                        className="w-8 h-8 rounded-full flex items-center justify-center text-muted hover:text-rose-500 hover:bg-rose-500/10 transition-colors cursor-pointer shrink-0"
+                      >
+                        <Icon name="trash" className="w-4 h-4" />
+                      </button>
+                    </div>
+
+                    {/* Pricing Row for this item */}
+                    <div className="flex items-center justify-between text-xs px-1">
+                      <div className="flex items-center gap-2">
+                        <del className="text-muted line-through text-[11px]">{money(itemOriginal)}</del>
+                        {itemDiscount > 0 && (
+                          <span className="text-[10px] font-bold text-rose-600 bg-rose-500/10 px-1.5 py-0.5 rounded-full">
+                            {numberFa(itemDiscount)}٪ تخفیف
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-muted text-[11px]">مبلغ:</span>
+                        <strong className="font-bold text-xs text-ink">{money(itemTotal)}</strong>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+
+          {/* Pricing Summary and CTA on desktop sidebar */}
+          <aside className="lg:col-span-1 p-4 sm:p-5 rounded-3xl bg-surface border border-line shadow-xs space-y-4 lg:sticky lg:top-24">
+            <h3 className="text-xs sm:text-sm font-black text-ink font-morabba pb-2 border-b border-line/60">خلاصه صورت‌حساب</h3>
+
+            <div className="space-y-2.5">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-muted font-medium">مجموع قیمت اصلی:</span>
+                <del className="text-muted font-bold line-through">{money(originalTotal)}</del>
+              </div>
+              {discount > 0 && (
+                <div className="flex items-center justify-between text-xs text-rose-600 font-bold">
+                  <span>تخفیف کل سفارش:</span>
+                  <span>{money(originalTotal - totalAmount)} ({numberFa(discount)}٪)</span>
+                </div>
+              )}
+              <div className="flex items-center justify-between text-sm pt-2 border-t border-line/60">
+                <span className="font-black text-ink">مبلغ قابل پرداخت:</span>
+                <strong className="font-black text-base text-brand-2">{money(totalAmount)}</strong>
+              </div>
+            </div>
+
+            {/* EXACTLY 1 PRIMARY CTA BUTTON FOR THE WHOLE ORDER */}
+            <button
+              type="button"
+              onClick={() => setPhase("payment_method")}
+              className="w-full min-h-[48px] py-2.5 px-4 rounded-2xl bg-brand-2 hover:bg-brand-2/90 active:scale-[0.99] text-white text-xs sm:text-sm font-black transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <span>ادامه و پرداخت</span>
+              <Icon name="arrow" className="w-4 h-4 rtl:rotate-180 shrink-0" />
+            </button>
+          </aside>
+        </div>
       ) : (
         /* Empty State when no pending item in cart */
         <div className="p-8 rounded-3xl bg-surface border border-line text-center space-y-3">

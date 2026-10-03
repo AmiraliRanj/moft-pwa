@@ -22,7 +22,7 @@ export function CategorySelector({
 }) {
   return (
     <div
-      className="flex items-center gap-2 overflow-x-auto py-1 scrollbar-none"
+      className="flex items-center gap-2 sm:gap-3 md:gap-4 overflow-x-auto md:overflow-x-visible md:justify-center py-1 scrollbar-none"
       style={{ scrollbarWidth: "none" }}
       role="group"
       aria-label="دسته‌بندی فروشگاه‌ها"
@@ -35,22 +35,22 @@ export function CategorySelector({
             type="button"
             onClick={() => onChange(item.id)}
             aria-pressed={active}
-            className={`flex flex-col items-center gap-1.5 p-1.5 rounded-2xl shrink-0 transition-all ${
+            className={`flex flex-col items-center gap-1.5 p-1.5 rounded-2xl shrink-0 transition-all cursor-pointer ${
               active
                 ? "text-brand-2 font-bold"
                 : "text-muted hover:text-ink"
             }`}
           >
             <span
-              className={`w-12 h-12 rounded-2xl grid place-items-center transition-all ${
+              className={`w-12 h-12 md:w-14 md:h-14 rounded-2xl grid place-items-center transition-all ${
                 active
                   ? "bg-brand-soft text-brand-2 shadow-xs ring-2 ring-brand-2/30"
-                  : "bg-surface border border-line text-muted hover:border-brand-2/30"
+                  : "bg-surface border border-line text-muted hover:border-brand-2/30 hover:bg-surface-raised active:scale-95"
               }`}
             >
-              <Icon name={categoryIcons[item.id]} className="w-5 h-5" />
+              <Icon name={categoryIcons[item.id]} className="w-5 h-5 md:w-6 md:h-6" />
             </span>
-            <span className="text-[11px] whitespace-nowrap">{item.label}</span>
+            <span className="text-[11px] md:text-xs font-bold whitespace-nowrap">{item.label}</span>
           </button>
         );
       })}

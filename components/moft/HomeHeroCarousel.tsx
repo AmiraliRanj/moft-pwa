@@ -50,27 +50,27 @@ export function HomeHeroCarousel({ onDiscover }: { onDiscover: () => void }) {
         <CarouselContent>
           {slides.map((slide, index) => (
             <CarouselItem key={slide.title} aria-label={`${index + 1} از ${slides.length}`}>
-              <section className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-[#F87F45] via-[#EE7235] to-[#D96025] text-white p-3 sm:p-3.5 shadow-sm h-[120px] sm:h-[128px] max-h-[128px] flex items-center justify-between gap-2.5">
-                <div className="space-y-1 z-10 max-w-[66%] flex flex-col justify-center min-w-0">
-                  <p className="text-[9px] uppercase font-bold tracking-wider text-orange-100">دیبز برای امروز</p>
-                  <h1 className="text-xs sm:text-sm font-black leading-tight truncate font-morabba">{slide.title}</h1>
-                  <p className="text-[10px] text-white/90 line-clamp-1 leading-normal">{slide.text}</p>
+              <section className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-[#F87F45] via-[#EE7235] to-[#D96025] text-white p-3.5 sm:p-5 md:p-6 lg:p-8 shadow-sm h-[130px] sm:h-[145px] md:h-[185px] lg:h-[210px] flex items-center justify-between gap-4">
+                <div className="space-y-1.5 md:space-y-2.5 z-10 max-w-[68%] flex flex-col justify-center min-w-0">
+                  <p className="text-[9px] sm:text-[10px] md:text-xs uppercase font-bold tracking-wider text-orange-100">دیبز برای امروز</p>
+                  <h1 className="text-xs sm:text-base md:text-xl lg:text-2xl font-black leading-tight truncate font-morabba">{slide.title}</h1>
+                  <p className="text-[10px] sm:text-xs md:text-sm text-white/90 line-clamp-1 md:line-clamp-2 leading-normal">{slide.text}</p>
                   <button
                     type="button"
                     onClick={onDiscover}
-                    className="inline-flex items-center gap-1 min-h-[36px] px-3 py-1 text-[11px] font-bold rounded-lg bg-white text-[#D96025] hover:bg-[#FFF2EB] transition-colors shadow-2xs w-fit cursor-pointer active:scale-95 mt-0.5"
+                    className="inline-flex items-center gap-1.5 min-h-[36px] md:min-h-[42px] px-3 md:px-5 py-1 md:py-2 text-[11px] md:text-xs font-black rounded-xl bg-white text-[#D96025] hover:bg-[#FFF2EB] transition-colors shadow-2xs w-fit cursor-pointer active:scale-95 mt-0.5"
                   >
                     <span>{slide.action}</span>
-                    <Icon name="arrow" className="w-3 h-3 rtl:rotate-180" />
+                    <Icon name="arrow" className="w-3 md:w-3.5 h-3 md:h-3.5 rtl:rotate-180" />
                   </button>
                 </div>
-                <div className="w-18 h-18 sm:w-20 sm:h-20 shrink-0 relative flex items-center justify-center overflow-hidden">
+                <div className="w-20 h-20 sm:w-24 sm:h-24 md:w-36 md:h-36 lg:w-44 lg:h-44 shrink-0 relative flex items-center justify-center overflow-hidden">
                   <Image
                     src={slide.image}
                     alt={slide.title}
-                    width={84}
-                    height={84}
-                    className="w-full h-full max-w-[84px] max-h-[84px] object-contain drop-shadow-md select-none pointer-events-none"
+                    width={180}
+                    height={180}
+                    className="w-full h-full object-contain drop-shadow-md select-none pointer-events-none"
                     priority={index === 0}
                   />
                 </div>

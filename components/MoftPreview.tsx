@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { BottomNavigation } from "@/components/moft/BottomNavigation";
+import { DesktopHeader } from "@/components/moft/DesktopHeader";
 import { CategorySelector } from "@/components/moft/CategorySelector";
 import { DialogShell } from "@/components/moft/DialogShell";
 import { EmptyState } from "@/components/moft/EmptyState";
@@ -538,7 +539,7 @@ export default function MoftPreview({
 
   return (
     <div className="min-h-screen bg-canvas text-ink font-sans w-full max-w-full overflow-x-clip">
-      <main className={`w-full max-w-full overflow-x-clip ${tab === "discover" && discoverMode === "map" ? "h-dvh max-h-dvh overflow-hidden pb-0 overscroll-none select-none" : "pb-28 sm:pb-32"}`}>
+      <main className={`w-full max-w-full overflow-x-clip ${tab === "discover" && discoverMode === "map" ? "h-dvh max-h-dvh overflow-hidden pb-0 md:pt-28 overscroll-none select-none" : "pb-28 sm:pb-32 md:pb-12 md:pt-28"}`}>
         <a
         className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:start-2 focus:z-50 px-3 py-1 bg-surface text-ink rounded-lg border border-line"
         href="#main-content"
@@ -576,8 +577,28 @@ export default function MoftPreview({
         </div>
       )}
 
-      {/* Fixed/Sticky Top Header & Collapsible Search Bar */}
-      <div className="sticky top-0 z-30 w-full bg-canvas/90 backdrop-blur-xl transition-shadow">
+      {/* Desktop Fixed Top Header (Nav bar turned into top header on desktop) */}
+      <div className="hidden md:block">
+        <DesktopHeader
+          tab={tab}
+          onTabChange={switchTab}
+          location={location}
+          onOpenLocation={() => setLayer("location")}
+          cartCount={cartItems.reduce((acc, it) => acc + it.quantity, 0)}
+          onOpenCart={toggleReservations}
+          activeOrdersCount={activeReservations.length}
+          query={query}
+          onQueryChange={(val) => {
+            setQuery(val);
+            if (tab !== "home" && tab !== "discover" && val.trim()) {
+              switchTab("home");
+            }
+          }}
+        />
+      </div>
+
+      {/* Mobile Fixed/Sticky Top Header & Collapsible Search Bar */}
+      <div className="md:hidden sticky top-0 z-30 w-full bg-canvas/90 backdrop-blur-xl transition-shadow">
         <div className="max-w-md mx-auto px-4">
           <header className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 min-h-[56px] sm:min-h-[60px] py-3">
             <div className="flex items-center justify-start">
@@ -631,12 +652,12 @@ export default function MoftPreview({
                 onClick={() => setLayer("location")}
                 aria-label={`تغییر موقعیت فعلی؛ ${location}`}
               >
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-1.5 min-w-0">
                   <span className="w-5 h-5 text-brand-2 shrink-0 flex items-center justify-center">
                     <Icon name="pin" className="w-4.5 h-4.5" />
                   </span>
-                  <strong className="text-sm sm:text-base font-black text-ink tracking-tight">{location}</strong>
-                  <Icon name="chevron" className="w-4 h-4 text-muted rotate-90 opacity-80 group-hover:text-brand-2 transition-transform group-hover:translate-y-0.5" />
+                  <strong className="text-sm sm:text-base font-black text-ink tracking-tight truncate max-w-[130px] sm:max-w-[180px]">{location}</strong>
+                  <Icon name="chevron" className="w-4 h-4 text-muted rotate-90 opacity-80 group-hover:text-brand-2 transition-transform group-hover:translate-y-0.5 shrink-0" />
                 </div>
                 <div className="w-10 h-[3px] bg-brand-2 rounded-full mt-1.5 transition-all group-hover:w-14" aria-hidden="true" />
               </button>
@@ -725,7 +746,7 @@ export default function MoftPreview({
           tabIndex={-1}
           className={
             discoverMode === "map"
-              ? "w-full h-[calc(100dvh-56px-64px)] sm:h-[calc(100vh-60px-70px)] relative overflow-hidden overscroll-none touch-none select-none"
+              ? "w-full h-[calc(100dvh-56px-64px)] sm:h-[calc(100vh-60px-70px)] md:h-[calc(100vh-112px)] relative overflow-hidden overscroll-none touch-none select-none"
               : "w-full min-h-full"
           }
         >
@@ -742,8 +763,8 @@ export default function MoftPreview({
           />
         </div>
       ) : (
-        <section className="w-full max-w-md mx-auto px-4 pt-3 space-y-4">
-          <div id="main-content" tabIndex={-1} className="space-y-4">
+        <section className="w-full max-w-md md:max-w-3xl lg:max-w-4xl xl:max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-3 md:pt-4 space-y-4 md:space-y-6">
+          <div id="main-content" tabIndex={-1} className="space-y-4 md:space-y-6">
             {tab === "home" && (
               <HomePage
                 query={query}
@@ -764,17 +785,46 @@ export default function MoftPreview({
               />
             )}
             {(tab === "orders" || tab === "reservations") && (
-              <OrdersPage
-                active={activeReservations}
-                reservations={reservations}
-                subTab={ordersSubTab}
-                onCancel={requestCancel}
-                onReview={requestReview}
-                onReceipt={openReceipt}
-                onDiscover={() => switchTab("discover")}
-                onDirections={() => showToast("مسیریابی این فروشگاه اکنون در دسترس نیست.")}
-                onTrackPipeline={() => switchTab("cart")}
-              />
+              <div className="space-y-4">
+                {/* Desktop sub-tab switcher for orders */}
+                <div className="hidden md:flex items-center justify-center pb-2">
+                  <div className="w-full max-w-sm flex items-center p-1 rounded-2xl bg-surface border border-line overflow-hidden shadow-2xs">
+                    <button
+                      type="button"
+                      onClick={() => setOrdersSubTab("active")}
+                      className={`flex-1 min-w-0 min-h-[38px] rounded-xl text-xs font-bold transition-all cursor-pointer text-center truncate px-3 ${
+                        ordersSubTab === "active"
+                          ? "bg-brand-soft text-brand-2 font-black shadow-2xs"
+                          : "text-muted hover:text-ink"
+                      }`}
+                    >
+                      سفارش‌های جاری ({numberFa(activeReservationGroups.length)})
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setOrdersSubTab("history")}
+                      className={`flex-1 min-w-0 min-h-[38px] rounded-xl text-xs font-bold transition-all cursor-pointer text-center truncate px-3 ${
+                        ordersSubTab === "history"
+                          ? "bg-brand-soft text-brand-2 font-black shadow-2xs"
+                          : "text-muted hover:text-ink"
+                      }`}
+                    >
+                      تاریخچه ({numberFa(pastReservationGroups.length)})
+                    </button>
+                  </div>
+                </div>
+                <OrdersPage
+                  active={activeReservations}
+                  reservations={reservations}
+                  subTab={ordersSubTab}
+                  onCancel={requestCancel}
+                  onReview={requestReview}
+                  onReceipt={openReceipt}
+                  onDiscover={() => switchTab("discover")}
+                  onDirections={() => showToast("مسیریابی این فروشگاه اکنون در دسترس نیست.")}
+                  onTrackPipeline={() => switchTab("cart")}
+                />
+              </div>
             )}
             {tab === "cart" && (
               <CartPipelinePage
@@ -1098,11 +1148,11 @@ function HomePage({
               {filterBar}
             </div>
             <OfferList offers={allOffers.slice(0, 4)} favorites={favorites} onFavorite={onFavorite} onSelect={onSelect} />
-            <div className="pt-1">
+            <div className="pt-1 flex justify-center">
               <button
                 type="button"
                 onClick={onDiscover}
-                className="w-full flex items-center justify-center gap-2 py-3 px-4 min-h-[44px] rounded-2xl bg-brand-2 hover:bg-brand-2/90 text-white text-xs font-black active:scale-[0.99] transition-all shadow-xs cursor-pointer"
+                className="w-full sm:w-auto sm:min-w-[280px] flex items-center justify-center gap-2 py-3 px-6 min-h-[44px] rounded-2xl bg-brand-2 hover:bg-brand-2/90 text-white text-xs sm:text-sm font-black active:scale-[0.99] transition-all shadow-xs cursor-pointer"
               >
                 <span>دیدن همه پیشنهادهای امروز</span>
                 <Icon name="arrow" className="w-4 h-4 text-white rtl:rotate-180" />
@@ -1510,10 +1560,10 @@ function DiscoverPage({
       {/* Top Header Panel: View Switcher (Feed vs Map) and Category / Smart Filters */}
       <div
         className={`w-full bg-canvas/95 backdrop-blur-xl border-b border-line shadow-2xs px-4 py-2 z-20 shrink-0 ${
-          mode === "map" ? "sticky top-0" : "sticky top-[56px] sm:top-[60px]"
+          mode === "map" ? "sticky top-0 md:top-[112px]" : "sticky top-[56px] sm:top-[60px] md:top-[112px]"
         }`}
       >
-        <div className="max-w-md mx-auto">
+        <div className="max-w-md md:max-w-3xl lg:max-w-4xl xl:max-w-5xl mx-auto">
           {/* Row 1: Segmented Switcher & Filter Button (collapsible on scroll like search bar) */}
           <div
             className={`overflow-hidden transition-all duration-300 ease-in-out ${
@@ -1618,6 +1668,7 @@ function DiscoverPage({
         {/* Scrollable / Draggable Map Canvas Container */}
         <div
           ref={mapScrollRef}
+          data-allow-zoom="true"
           onMouseDown={onMouseDown}
           onMouseMove={onMouseMove}
           onMouseUp={onMouseUp}
@@ -1630,6 +1681,7 @@ function DiscoverPage({
           style={{ touchAction: "pan-x pan-y", WebkitOverflowScrolling: "touch" }}
         >
           <div
+            data-allow-zoom="true"
             className="relative shrink-0 transition-all duration-200 ease-out origin-center m-auto"
             style={{
               width: `${Math.round(1100 * zoom)}px`,
@@ -2077,7 +2129,7 @@ function DiscoverPage({
       </div>
     ) : (
       /* Feed Area Container */
-      <div className="w-full max-w-md mx-auto px-4 pt-3.5 space-y-6">
+      <div className="w-full max-w-md md:max-w-3xl lg:max-w-4xl xl:max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-3.5 md:pt-4 space-y-6 md:space-y-8">
         {/* Section 1: ساعت صفر نجات | Urgent Rescue Deadline Countdown */}
         <section className="space-y-3" aria-labelledby="deadline-heading">
           <div className="flex items-center justify-between gap-2">
@@ -2086,7 +2138,7 @@ function DiscoverPage({
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
                 <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500" />
               </span>
-              <h2 id="deadline-heading" className="text-sm font-black text-ink tracking-tight">
+              <h2 id="deadline-heading" className="text-sm sm:text-base font-black text-ink tracking-tight font-morabba">
                 ساعت صفر نجات
               </h2>
             </div>
@@ -2384,7 +2436,7 @@ function OrdersPage({
     <div className="space-y-4">
       {subTab === "active" ? (
         activeGroups.length ? (
-          <div className="grid gap-3 min-w-0 w-full max-w-full">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 min-w-0 w-full max-w-full">
             {activeGroups.map((group) => (
               <ReservationCard
                 key={group.groupKey}
@@ -2407,7 +2459,7 @@ function OrdersPage({
           />
         )
       ) : pastGroups.length ? (
-        <div className="grid gap-3 min-w-0 w-full max-w-full">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 min-w-0 w-full max-w-full">
           {pastGroups.map((group) => (
             <ReservationCard
               key={group.groupKey}
@@ -2681,8 +2733,8 @@ function ReservationCard({
             />
           </div>
           <div className="min-w-0 flex-1 space-y-1">
-            <div className="flex items-center gap-2 min-w-0">
-              <h2 className="text-sm sm:text-base font-black text-ink truncate leading-tight">
+            <div className="flex flex-wrap items-center gap-2 min-w-0">
+              <h2 className="text-sm sm:text-base font-black text-ink leading-tight break-words">
                 {group.merchantName}
               </h2>
               {group.items.length > 1 && (
@@ -2781,12 +2833,12 @@ function ReservationCard({
               </span>
             </div>
 
-            <h3 className="text-xs sm:text-sm font-black text-ink truncate leading-tight min-w-0 flex-1">
+            <h3 className="text-xs sm:text-sm font-black text-ink leading-snug break-words min-w-0 flex-1">
               {group.items[0].title}
             </h3>
           </div>
 
-          <div className="shrink-0 text-start sm:text-end">
+          <div className="shrink-0 text-start sm:text-end ps-1">
             <span className="text-sm sm:text-base font-black text-ink whitespace-nowrap">
               {money(group.total)}
             </span>
@@ -2815,7 +2867,7 @@ function ReservationCard({
                 </div>
 
                 <div className="min-w-0 flex-1">
-                  <h3 className="text-xs sm:text-sm font-black text-ink truncate leading-tight">
+                  <h3 className="text-xs sm:text-sm font-black text-ink leading-snug break-words">
                     {item.title}
                   </h3>
                   {item.quantity > 1 && (
@@ -2826,7 +2878,7 @@ function ReservationCard({
                 </div>
               </div>
 
-              <div className="shrink-0 text-start sm:text-end">
+              <div className="shrink-0 text-start sm:text-end ps-1">
                 <span className="text-xs sm:text-sm font-black text-ink whitespace-nowrap">
                   {money(item.total)}
                 </span>
@@ -2974,7 +3026,7 @@ function ProfilePage({
 
   if (profileSubpage === "history") {
     return (
-      <div className="space-y-4 animate-in fade-in slide-in-from-start-2 duration-200">
+      <div className="space-y-4 max-w-3xl mx-auto md:space-y-6 animate-in fade-in slide-in-from-start-2 duration-200">
         <div className="flex items-center justify-between pb-1">
           <button
             type="button"
@@ -2996,7 +3048,7 @@ function ProfilePage({
         </div>
 
         {historyGroups.length ? (
-          <div className="grid gap-3.5">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
             {historyGroups.map((group) => (
               <ReservationCard
                 key={group.groupKey}
@@ -3020,7 +3072,7 @@ function ProfilePage({
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 max-w-3xl mx-auto md:space-y-6">
       {/* 1. Profile Info Card (Clickable with edit icon to edit personal info) */}
       <button
         type="button"
